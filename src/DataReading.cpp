@@ -4,6 +4,7 @@
 #include <boost/fusion/adapted.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/phoenix.hpp>
+#include <fstream>
 #include "../include/DataReading.h"
 
 // Parser shamelessly stolen from https://www.boost.org/doc/libs/1_68_0/libs/spirit/example/qi/num_list2.cpp
@@ -94,4 +95,47 @@ WCData ReadWCDataFile(const std::string &fileName) {
 	if (line)
 		free(line);
 	return readData;
+}
+
+
+/**
+ *
+ * @param array Array of length equal to the number of channels being read in, where each entry is an array of the ideal
+ * waveform for the corresponding channel.
+ * @param ch The channel to fill in.
+ * @param interpFactor Number of points in interpolated waveform divided by number of points in original waveform.
+ */
+std::vector<float> readIdealWFs(unsigned int ch, int interpFactor, const std::string& idealWFPath, unsigned int expectedSize){
+	std::ifstream idealWFFile(idealWFPath, std::ifstream::in);
+
+	if (!idealWFFile.is_open()) {
+		throw std::runtime_error(idealWFPath + " not found.");
+	}
+
+	float idealWFTime;
+	float idealWFAmp;
+	float prevAmp;
+
+	// Parse first line
+	idealWFFile >> idealWFTime >> idealWFAmp;
+	std::vector<float> waveform;
+	waveform.emplace_back(idealWFAmp);
+	prevAmp = idealWFAmp;
+
+	// Parse next line
+	while (idealWFFile >> idealWFTime >> idealWFAmp) {
+		float delta_v = (idealWFAmp - prevAmp) / float(interpFactor);
+
+		for (int step = 1; step < interpFactor; ++step)
+			waveform.emplace_back(prevAmp + float(step) * delta_v);
+
+		waveform.emplace_back(idealWFAmp);
+		prevAmp = idealWFAmp;
+	}
+
+	if (waveform.size() != expectedSize){
+		throw std::runtime_error("Unexpected number of samples in " + idealWFPath);
+	}
+
+	return waveform;
 }
