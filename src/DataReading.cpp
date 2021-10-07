@@ -1,15 +1,12 @@
 #include <string>
-#include <fstream>
-#include <sstream>
 #include <cstring>
 #include <regex>
-#include <c++/10/iostream>
 #include <boost/fusion/adapted.hpp>
 #include <boost/spirit/include/qi.hpp>
-#include <boost/iostreams/device/mapped_file.hpp>
 #include <boost/phoenix.hpp>
 #include "../include/DataReading.h"
 
+// Parser shamelessly stolen from https://www.boost.org/doc/libs/1_68_0/libs/spirit/example/qi/num_list2.cpp
 namespace qi = boost::spirit::qi;
 
 namespace client {
@@ -45,6 +42,7 @@ WCData ReadWCDataFile(const std::string &fileName) {
 	using qi::double_;
 	using qi::phrase_parse;
 
+	// Defining regular expression searches to be used for getting event and channel numbers.
 	std::regex eventNumberRegex("=== EVENT (\\d*) ===\\r");
 	std::regex channelNumberRegex(R"(=== CH: (\d*) EVENTID: (\d*) FCR: (\d*) ===\r)");
 
@@ -58,6 +56,8 @@ WCData ReadWCDataFile(const std::string &fileName) {
 
 	char *line = nullptr;
 	size_t len = 0;
+
+	// Skipping lines of unneeded metadata.
 	getline(&line, &len, fp);
 	getline(&line, &len, fp);
 	getline(&line, &len, fp);
@@ -65,18 +65,23 @@ WCData ReadWCDataFile(const std::string &fileName) {
 	getline(&line, &len, fp);
 
 	std::cmatch eventMatch;
+	// This loop has should bring the variable `line` to the next line in the data file that gives the event number.
+	//  when it doesn't it means that the end of the file has been reached.
 	while (std::regex_search(&line[0], eventMatch, eventNumberRegex)) {
 		wf.event_ = stoi(eventMatch[1].str());
 		getline(&line, &len, fp);
 		getline(&line, &len, fp);
 
 		std::cmatch channelMatch;
+		// Loop over all the channels for a given event. Will stop being true if you've just parsed the last channel for
+		//  the event.
 		while (std::regex_search(&line[0], channelMatch, channelNumberRegex)) {
 			wf.channel_ = stoi(channelMatch[1].str());
 			getline(&line, &len, fp);
 
 			std::vector<float> temp;
 			temp.reserve(1000);
+
 			std::string lineStr = std::string(line);
 			client::parse_numbers(lineStr.begin(), lineStr.end(), temp);
 			wf.waveform_ = temp;
