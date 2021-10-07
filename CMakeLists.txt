@@ -5,8 +5,8 @@ set(CMAKE_CXX_STANDARD 14)
 
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CMAKE_C_FLAGS -Og -g3 -fno-omit-frame-pointer)
-    set(CMAKE_CXX_FLAGS -Og -g3 -fno-omit-frame-pointer)
+    set(CMAKE_C_FLAGS -g3 -fno-omit-frame-pointer)
+    set(CMAKE_CXX_FLAGS -g3)
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_C_FLAGS -O3)
     set(CMAKE_CXX_FLAGS -O3)
@@ -18,4 +18,4 @@ if (NOT "${ARCHITECTURE}" STREQUAL "arm64")
 endif ()
 
 
-add_executable(RecoMore main.cpp src/DataWriting.cpp src/DataReading.cpp include/DataStructures.h)
+add_executable(RecoMore main.cpp src/DataWriting.cpp src/DataReading.cpp src/DataStructures.cpp)
