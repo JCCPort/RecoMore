@@ -31,26 +31,16 @@ typedef struct {
 } PEData;
 
 typedef struct {
-	unsigned short ch; // channel_id
-	unsigned short id; // sipm_id
+	unsigned short ch;
 	float chi2ndf;
 	float baseline;
 	std::vector<PEData> pes;
 } waveformData;
 
-typedef struct {
-	float amplitude;
-	float time;
-} PMTData;
 
 typedef struct {
 	unsigned int eventID;
-	double time;
-	double deltaTime;
 	std::vector<waveformData> sipm;
-	PMTData pmt;
-	PMTData topVeto;
-	PMTData bottomVeto;
-} eventDataV2;
+} eventData;
 
 #endif //RECOMORE_DATASTRUCTURES_H

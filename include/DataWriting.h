@@ -47,6 +47,7 @@ public:
 
 	void writeWaveformInfo(const waveformData&);
 	void writeFitPE(PEData);
+	void writeEventInfo(const eventData& evData);
 
 private:
 	std::shared_ptr<SyncFile> _sf;
