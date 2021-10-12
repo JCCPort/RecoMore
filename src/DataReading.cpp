@@ -103,7 +103,7 @@ WCData ReadWCDataFile(const std::string &fileName) {
  * @param interpFactor Number of points in interpolated waveform divided by number of points in original waveform.
  */
 std::vector<float> readIdealWFs(unsigned int ch, int interpFactor, const std::string& idealWFDir, unsigned int expectedSize){
-	std::string idealWFPath = idealWFDir + "ch" + std::to_string(ch);
+	std::string idealWFPath = idealWFDir + "ch" + std::to_string(ch) + ".txt";
 	std::ifstream idealWFFile(idealWFPath, std::ifstream::in);
 
 	if (!idealWFFile.is_open()) {
