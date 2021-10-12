@@ -45,8 +45,7 @@ WCData ReadWCDataFile(const std::string &fileName) {
 	std::regex channelNumberRegex(R"(=== CH: (\d*) EVENTID: (\d*) FCR: (\d*) ===\r)");
 
 	WCData readData;
-	Waveform wf;
-
+	WaveformData wf;
 
 	FILE *fp = fopen(fileName.c_str(), "r");
 	if (fp == nullptr)
@@ -66,7 +65,8 @@ WCData ReadWCDataFile(const std::string &fileName) {
 	// This loop has should bring the variable `line` to the next line in the data file that gives the event number.
 	//  when it doesn't it means that the end of the file has been reached.
 	while (std::regex_search(&line[0], eventMatch, eventNumberRegex)) {
-		wf.event_ = stoi(eventMatch[1].str());
+		EventData event;
+		event.eventID = stoi(eventMatch[1].str());
 		getline(&line, &len, fp);
 		getline(&line, &len, fp);
 
@@ -74,7 +74,7 @@ WCData ReadWCDataFile(const std::string &fileName) {
 		// Loop over all the channels for a given event. Will stop being true if you've just parsed the last channel for
 		//  the event.
 		while (std::regex_search(&line[0], channelMatch, channelNumberRegex)) {
-			wf.channel_ = stoi(channelMatch[1].str());
+			wf.channel = stoi(channelMatch[1].str());
 			getline(&line, &len, fp);
 
 			std::vector<float> temp;
@@ -82,11 +82,11 @@ WCData ReadWCDataFile(const std::string &fileName) {
 
 			std::string lineStr = std::string(line);
 			client::parse_numbers(lineStr.begin(), lineStr.end(), temp);
-			wf.waveform_ = temp;
-			readData.addRow(wf);
-
+			wf.waveform = temp;
+			event.chData.push_back(wf);
 			getline(&line, &len, fp);
 		}
+		readData.addRow(event);
 	}
 	fclose(fp);
 	if (line)
@@ -102,7 +102,8 @@ WCData ReadWCDataFile(const std::string &fileName) {
  * @param ch The channel to fill in.
  * @param interpFactor Number of points in interpolated waveform divided by number of points in original waveform.
  */
-std::vector<float> readIdealWFs(unsigned int ch, int interpFactor, const std::string& idealWFPath, unsigned int expectedSize){
+std::vector<float> readIdealWFs(unsigned int ch, int interpFactor, const std::string& idealWFDir, unsigned int expectedSize){
+	std::string idealWFPath = idealWFDir + "ch" + std::to_string(ch);
 	std::ifstream idealWFFile(idealWFPath, std::ifstream::in);
 
 	if (!idealWFFile.is_open()) {

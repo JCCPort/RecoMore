@@ -45,9 +45,9 @@ public:
 
 	void write(std::string &dataToWrite) { _sf->write(dataToWrite); }
 
-	void writeWaveformInfo(const WaveformData&);
+	void writeWaveformInfo(const ChannelFitData&);
 	void writeFitPE(PEData);
-	void writeEventInfo(const EventData& evData);
+	void writeEventInfo(const EventFitData& evData);
 
 private:
 	std::shared_ptr<SyncFile> _sf;

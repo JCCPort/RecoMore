@@ -4,20 +4,24 @@
 #include <utility>
 #include <vector>
 
-struct Waveform {
-	unsigned short channel_;
-	unsigned int event_;
-	std::vector<float> waveform_{};
+struct WaveformData {
+	unsigned short channel;
+	std::vector<float> waveform{};
 };
+
+typedef struct {
+	unsigned int eventID;
+	std::vector<WaveformData> chData;
+} EventData;
 
 
 class WCData {
 public:
-	void addRow(const Waveform &);
+	void addRow(const EventData &);
 
-	std::vector<Waveform> getWaveforms() { return waveforms_; };
+	std::vector<EventData> getEvents() { return events_; };
 private:
-	std::vector<Waveform> waveforms_{};
+	std::vector<EventData> events_{};
 };
 
 
@@ -37,12 +41,12 @@ typedef struct {
 	float chi2ndf;
 	float baseline;
 	std::vector<PEData> pes;
-} WaveformData;
+} ChannelFitData;
 
 
 typedef struct {
 	unsigned int eventID;
-	std::vector<WaveformData> sipm;
-} EventData;
+	std::vector<ChannelFitData> sipm;
+} EventFitData;
 
 #endif //RECOMORE_DATASTRUCTURES_H
