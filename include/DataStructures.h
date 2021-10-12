@@ -4,7 +4,7 @@
 #include <utility>
 #include <vector>
 
-struct Waveform{
+struct Waveform {
 	unsigned short channel_;
 	unsigned int event_;
 	std::vector<float> waveform_{};
@@ -13,7 +13,9 @@ struct Waveform{
 
 class WCData {
 public:
-	void addRow(const Waveform&);
+	void addRow(const Waveform &);
+
+	std::vector<Waveform> getWaveforms() { return waveforms_; };
 private:
 	std::vector<Waveform> waveforms_{};
 };
@@ -35,12 +37,12 @@ typedef struct {
 	float chi2ndf;
 	float baseline;
 	std::vector<PEData> pes;
-} waveformData;
+} WaveformData;
 
 
 typedef struct {
 	unsigned int eventID;
-	std::vector<waveformData> sipm;
-} eventData;
+	std::vector<WaveformData> sipm;
+} EventData;
 
 #endif //RECOMORE_DATASTRUCTURES_H

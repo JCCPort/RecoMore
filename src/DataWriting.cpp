@@ -17,7 +17,7 @@ void Writer::writeFitPE(PEData PEVar) {
 	_sf->write(writeString);
 }
 
-void Writer::writeWaveformInfo(const waveformData& wfDat) {
+void Writer::writeWaveformInfo(const WaveformData& wfDat) {
 	std::string writeString;
 	writeString += "WAVEFORM META INFO\n";
 	writeString += "Ch=";
@@ -36,7 +36,7 @@ void Writer::writeWaveformInfo(const waveformData& wfDat) {
 }
 
 
-void Writer::writeEventInfo(const eventData& evData){
+void Writer::writeEventInfo(const EventData& evData){
     std::string writeString;
     writeString += "EVENT=";
     writeString += std::to_string(evData.eventID);
