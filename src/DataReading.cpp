@@ -40,9 +40,6 @@ namespace client {
 }
 
 WCData ReadWCDataFile(const std::string &fileName) {
-	using qi::double_;
-	using qi::phrase_parse;
-
 	// Defining regular expression searches to be used for getting event and channel numbers.
 	std::regex eventNumberRegex("=== EVENT (\\d*) ===\\r");
 	std::regex channelNumberRegex(R"(=== CH: (\d*) EVENTID: (\d*) FCR: (\d*) ===\r)");
@@ -81,7 +78,7 @@ WCData ReadWCDataFile(const std::string &fileName) {
 			getline(&line, &len, fp);
 
 			std::vector<float> temp;
-			temp.reserve(1000);
+			temp.reserve(10000);
 
 			std::string lineStr = std::string(line);
 			client::parse_numbers(lineStr.begin(), lineStr.end(), temp);

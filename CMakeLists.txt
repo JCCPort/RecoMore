@@ -22,8 +22,9 @@ set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
+SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/usr/include/boost")
 
-find_package(Boost 1.76.0 REQUIRED)
+find_package(Boost REQUIRED)
 
 if(NOT TARGET Boost::filesystem)
     add_library(Boost::filesystem IMPORTED INTERFACE)

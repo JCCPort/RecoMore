@@ -30,12 +30,15 @@ void Writer::writeWaveformInfo(const waveformData& wfDat) {
 	writeString += std::to_string(wfDat.baseline);
 	writeString += '\n';
 	_sf->write(writeString);
+	for(auto& pe : wfDat.pes){
+		writeFitPE(pe);
+	}
 }
 
 
 void Writer::writeEventInfo(const eventData& evData){
     std::string writeString;
-    writeString += "EVENT=\n";
+    writeString += "EVENT=";
     writeString += std::to_string(evData.eventID);
     writeString += '\n';
     _sf->write(writeString);
