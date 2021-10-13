@@ -32,19 +32,20 @@ bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long
 
 
 int main() {
-	WCData data = ReadWCDataFile("/home/josh/CLionProjects/RecoMore/R43.dat");
-	unsigned int numThreads = 10;
+	WCData data = ReadWCDataFile("/home/josh/CLionProjects/RecoMore/R45.dat");
+	unsigned int numThreads = 1;
 
 	static std::atomic<unsigned long> count{0};
 	std::mutex m;
 
 	auto PEList = std::make_shared<std::vector<EventFitData>>();
 
-	std::vector<std::vector<float>> idealWaveforms;
-	for (int ch = 0; ch < 64; ++ch) {
-		if (((ch - 32) % 4) != 0) {
-			idealWaveforms.emplace_back(readIdealWFs(ch, 10, "/home/josh/CLionProjects/RecoMore/pdf/", pdfNSamples));
+	std::vector<std::vector<float>> idealWaveforms{64};
+	for (int ch = 0; ch < 64; ch++) {
+		if((ch == 32) || (ch == 36) || (ch == 40) || (ch == 44) || (ch == 48) || (ch == 52) || (ch == 56) || (ch == 60)){
+			continue;
 		}
+		idealWaveforms.at(ch) = readIdealWFs(ch, 10, "/home/josh/CLionProjects/RecoMore/pdf/", pdfNSamples);
 	}
 
 
@@ -69,11 +70,14 @@ int main() {
 
 	std::vector<std::thread> threads;
 	// Carrying out the multi-threaded simulations.
+	unsigned int eventPos = 0;
+	std::cout << data.getEvents().size() << std::endl;
 	for (unsigned int i = 0; i < numThreads; i++) {
-		std::vector passData = slice(data.getEvents(), threadRepeatCount[i], threadRepeatCount[i + 1]);
+		std::vector passData = slice(data.getEvents(), eventPos, eventPos + threadRepeatCount[i] - 1);
 		std::thread t(fitBatchPEs, passData, std::reference_wrapper(count), std::reference_wrapper(m),
 		              std::reference_wrapper(PEList), idealWaveforms);
 		threads.push_back(std::move(t));
+		eventPos += threadRepeatCount[i];
 	}
 
 	// Waiting for all threads to complete before continuing code execution.
