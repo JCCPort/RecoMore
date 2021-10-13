@@ -17,6 +17,7 @@ if (NOT "${ARCHITECTURE}" STREQUAL "arm64")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 endif ()
 
+#### Finding BOOST
 
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
@@ -35,4 +36,9 @@ if(NOT TARGET Boost::filesystem)
 endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
+
+#### Finding Ceres
+
+find_package(Ceres REQUIRED)
+
 add_executable(RecoMore main.cpp src/DataWriting.cpp src/DataReading.cpp src/DataStructures.cpp Globals.h Globals.cpp src/PEFit.cpp utils.cpp utils.h)

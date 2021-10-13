@@ -2,6 +2,38 @@
 #include "../Globals.h"
 #include <cmath>
 #include <fstream>
+#include "ceres/ceres.h"
+#include "glog/logging.h"
+
+struct npe_pdf_functor {
+	npe_pdf_functor(double x, double y) : x_(x), y_(y) {};
+	template <typename T>
+	bool operator()(const T* &p, const T* idealWaveform, T* residual) const {
+		const int NPE = (int) (p[0]);
+		const double BASELINE = p[1];
+
+		double value = BASELINE;
+
+		// This is adding up the contribution of each fit PE to a specific bin
+		for (int PE = 0; PE < NPE; ++PE) {
+			const double PE_CHARGE = p[2 + PE * 2];
+			const double PE_TIME = p[3 + PE * 2];
+			const int PE_PDF_BIN =
+					pdfT0Sample + std::floor(0.5 + (x_ - PE_TIME) / (0.01 * pdfSamplingRate)); // v4 use PE_PDF[PE_PDF_CH]
+			if ((PE_PDF_BIN >= 0) && (PE_PDF_BIN < pdfNSamples)) {
+				float thing = idealWaveform[PE_PDF_BIN];
+				value += PE_CHARGE * thing;
+			}
+		}
+
+		residual[0] = y_ - value;
+		return true;
+	}
+private:
+	double x_;
+	double y_;
+};
+
 
 double npe_pdf_func(const double X, const std::vector<double> &p, std::vector<float> idealWaveform) {
 	// This way of passing x as a list then choosing the 0th index is from ROOT's syntax for fitting where you can fit
@@ -129,7 +161,7 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 				// of each sample... help a lot to resolve PEs very closed!
 				float time_sum = 0;
 				float ponderation_sum = 0;
-				for (int b = minTimePos - 1; b <= minTimePos + 1; ++b) {
+				for (unsigned int b = minTimePos - 1; b <= minTimePos + 1; ++b) {
 					float binCenter = (minTimePos - 0.5) * pdfSamplingRate;
 					float binVal = channelWaveform.waveform[minTimePos];
 					time_sum += binCenter * binVal;
@@ -143,6 +175,28 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 			channelWaveform = event.chData[i];
 
 		}
+
+		// The variable to solve for with its initial value.
+		double initial_x = 5.0;
+		double x = initial_x;
+
+		using namespace ceres;
+		// Build the problem.
+		Problem problem;
+
+		// Set up the only cost function (also known as residual). This uses
+		// auto-differentiation to obtain the derivative (jacobian).
+		CostFunction* cost_function =
+				new AutoDiffCostFunction<npe_pdf_functor, 1, 1>(new npe_pdf_functor);
+		problem.AddResidualBlock(cost_function, nullptr, &x);
+
+		// Run the solver!
+		Solver::Options options;
+		options.linear_solver_type = ceres::DENSE_QR;
+		options.minimizer_progress_to_stdout = true;
+		Solver::Summary summary;
+		Solve(options, &problem, &summary);
+
 
 		std::cout << "hey ho" << std::endl;
 	}
