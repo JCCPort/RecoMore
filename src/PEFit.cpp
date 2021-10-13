@@ -4,6 +4,7 @@
 #include <fstream>
 #include "ceres/ceres.h"
 #include "glog/logging.h"
+#include <eigen3/Eigen/Core>
 
 struct npe_pdf_functor {
 	npe_pdf_functor(double x, double y) : x_(x), y_(y) {};
@@ -176,9 +177,19 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 
 		}
 
-		// The variable to solve for with its initial value.
-		double initial_x = 5.0;
-		double x = initial_x;
+		std::vector<double> params;
+		params.push_back(pesFound.size());
+		params.push_back(baseline);
+		for (auto pe2: pesFound) {
+			params.push_back(pe2.amplitude);
+			params.push_back(pe2.time);
+		}
+
+		std::vector<double> xValues;
+		for(unsigned int j = 0; j <= channelWaveform.waveform.size(); j++){
+			xValues.push_back((i - 0.5) * pdfSamplingRate);
+		}
+
 
 		using namespace ceres;
 		// Build the problem.
@@ -186,9 +197,14 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 
 		// Set up the only cost function (also known as residual). This uses
 		// auto-differentiation to obtain the derivative (jacobian).
-		CostFunction* cost_function =
-				new AutoDiffCostFunction<npe_pdf_functor, 1, 1>(new npe_pdf_functor);
-		problem.AddResidualBlock(cost_function, nullptr, &x);
+		for(unsigned int j = 0; j <= xValues.size(); ++j){
+			CostFunction* cost_function =
+					new AutoDiffCostFunction<npe_pdf_functor, 1, 1, 1>(new npe_pdf_functor(xValues[j],
+																						   channelWaveform.waveform[j],
+																						   idealWaveforms[ch]));
+			problem.AddResidualBlock(cost_function, nullptr, &params);
+		}
+
 
 		// Run the solver!
 		Solver::Options options;
