@@ -9,6 +9,6 @@
 
 double npe_pdf_func(const double *x, const std::vector<double>& p, std::vector<float> idealWaveform);
 
-[[noreturn]] void fitPE(const EventData& event, const std::shared_ptr<std::vector<EventFitData>>& PEList, const std::vector<std::vector<float>>&);
+void fitPE(const EventData& event, const std::shared_ptr<std::vector<EventFitData>>& PEList, const std::vector<std::vector<float>>&);
 
 #endif //RECOMORE_PEFIT_H

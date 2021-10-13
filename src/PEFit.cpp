@@ -84,7 +84,7 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 			}
 
 			std::ofstream myfile;
-			myfile.open ("testFit.csv");
+			myfile.open ("rawWaveform.csv");
 			for(float k : channelWaveform.waveform){
 				myfile << k << "\n";
 			}
@@ -93,13 +93,21 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 
 			// Compute residual
 			std::ofstream myfile2;
-			myfile2.open ("testFitVals.csv");
+			myfile2.open ("fit.csv");
 			for(unsigned int k = 1; k <= channelWaveform.waveform.size(); ++k){
-				double val = npe_pdf_func((k - 0.5) * pdfSamplingRate, params, idealWaveforms[ch]);
+				double val = npe_pdf_func((k - 0.5 + 1) * pdfSamplingRate, params, idealWaveforms[ch]);
 				myfile2 << val << "\n";
 				channelWaveform.waveform[k] = channelWaveform.waveform[k] - val;
 			}
 			myfile2.close();
+
+
+			std::ofstream myfile3;
+			myfile3.open ("residual.csv");
+			for(float k : channelWaveform.waveform){
+				myfile3 << k << "\n";
+			}
+			myfile3.close();
 
 
 
@@ -107,7 +115,7 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 			auto minPosIt = std::min_element(channelWaveform.waveform.begin(), channelWaveform.waveform.end());
 			unsigned int minTimePos = std::distance(channelWaveform.waveform.begin(), minPosIt);
 
-			if(-channelWaveform.waveform[minTimePos] > -0.03){
+			if(-channelWaveform.waveform[minTimePos] < 0.015){
 				break;
 			}
 
@@ -115,10 +123,28 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 			guessPE.amplitude = -channelWaveform.waveform[minTimePos];
 			guessPE.time = minTimePos * pdfSamplingRate;
 
-			pesFound.push_back(guessPE);
+			if ((minTimePos > 1) && (minTimePos < 1024)) {
+				// improve initial time for a new PE based on average time
+				// over 3 consecutive sample ponderated by the amplitude
+				// of each sample... help a lot to resolve PEs very closed!
+				float time_sum = 0;
+				float ponderation_sum = 0;
+				for (int b = minTimePos - 1; b <= minTimePos + 1; ++b) {
+					float binCenter = (minTimePos - 0.5) * pdfSamplingRate;
+					float binVal = channelWaveform.waveform[minTimePos];
+					time_sum += binCenter * binVal;
+					ponderation_sum += binVal;
+				}
 
+				guessPE.time = (PEFinderTimeOffset * 0.15) + time_sum / ponderation_sum;
+			}
+
+			pesFound.push_back(guessPE);
+			channelWaveform = event.chData[i];
 
 		}
+
+		std::cout << "hey ho" << std::endl;
 	}
 
 }
