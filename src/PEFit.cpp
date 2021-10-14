@@ -17,13 +17,20 @@ struct npe_pdf_functor {
 	bool operator()(const T *const time, const T *const charge, T *residual) const {
 			// TODO(josh): Modify so that starting value of residual[0] = baseline
 			T f;
-			auto evalVal = ((double)pdfT0Sample + ((double)0.5 + (x_ - time[0]) / ((double)0.01 * pdfSamplingRate)));
+			auto evalVal = -((double)pdfT0Sample + ((double)0.5 + (x_ - time[0]) / ((double)0.01 * pdfSamplingRate)));
 			compute_distortion_.Evaluate(evalVal, &f);
+			if(evalVal <= (double)0){
+				residual[0] = -f * y_;
+				// TODO(josh): This isn't correct it's just I need to set residual to some value before
+				//  exiting the function, I believe it should be set to baseline - y_  or something like that...
+				return true;
+			}
+//			if((x_ >= ))
 //			std::cout << "x val:\t" << x_ << std::endl;
 //			std::cout << "PE test time:\t" << time[0] << std::endl;
 //			std::cout << "x Point for interpolation:\t" << evalVal << std::endl;
 			residual[0] = -(charge[0] * f);
-			std::cout << "Interpolated y value:\t" << residual[0] << std::endl;
+//			std::cout << "Interpolated y value:\t" << residual[0] << std::endl;
 //			std::cout << "Data y value:\t" << y_ << std::endl;
 //		}
 
@@ -36,6 +43,8 @@ private:
 	const double y_;
 	const ceres::CubicInterpolator<ceres::Grid1D<double> >&  compute_distortion_;
 };
+
+// y_obs,i -  (baseline + sum_i=0^NPE y_func,i)
 
 
 double npe_pdf_func(double X, const std::vector<double> &p, std::vector<double> idealWaveform) {
@@ -207,10 +216,11 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 		ceres::Grid1D grid = ceres::Grid1D<double>(idealWaveforms[ch].data(), 0, idealWaveforms[ch].size());
 		auto compute_distortion = ceres::CubicInterpolator<ceres::Grid1D<double> >(grid);
 		double f;
-		for(int o = -10000; o <= 10000; o++){
-			compute_distortion.Evaluate(o, &f);
-			std::cout << f << std::endl;
-		}
+		// Running this will give non-zero evaluation values from o=11 -> o=102809 inclusive
+//		for(int o = 0; o <= 110000; o++){
+//			compute_distortion.Evaluate(o, &f);
+//			std::cout << o << "\t" << f << std::endl;
+//		}
 
 		// Set up the only cost function (also known as residual). This uses
 		// auto-differentiation to obtain the derivative (Jacobian).
@@ -222,25 +232,33 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 
 			for (auto & k : pesFound) {
 				initialTime = k.time;
-				initialAmp = k.amplitude;
+				initialAmp = k.amplitude/10;
 
 				time = initialTime;
 				amplitude = initialAmp;
 
 				problem.AddResidualBlock(cost_function, nullptr, &time, &amplitude);
+				problem.SetParameterLowerBound(&time, 0, 0);
+				problem.SetParameterLowerBound(&amplitude, 0, 0);
 			}
 		}
 
 
 		// Run the solver!
 		Solver::Options options;
-		options.linear_solver_type = ceres::DENSE_QR;
+//		options.linear_solver_type = ceres::DENSE_QR;
+//		options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+//		options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
 		options.minimizer_progress_to_stdout = true;
 		Solver::Summary summary;
 		Solve(options, &problem, &summary);
 
 		std::cout << summary.FullReport() << "\n";
 
+
+		// TODO(josh): At the moment we're only able to get the params for the last PE fit, I think creating a vector of
+		//  amplitudes and times (initial guesses) to go into AddResidualBlock (reference to one element at a time), will
+		//  then allow us to get all the fit values down here by accessing the individual elements.
 		std::cout << "Amplitude:\t" << initialAmp << " -> " << amplitude << std::endl;
 		std::cout << "Time:\t" << initialTime << " -> " << time << std::endl;
 

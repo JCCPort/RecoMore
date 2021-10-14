@@ -17,11 +17,11 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_CXX_FLAGS "-O3 -pthread")
 endif ()
 
-#EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
-#if (NOT "${ARCHITECTURE}" STREQUAL "arm64") # TODO(josh): Also don't want to add this flag if we're in debug mode
-#    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-#endif ()
+EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
+if (NOT "${ARCHITECTURE}" STREQUAL "arm64") # TODO(josh): Also don't want to add this flag if we're in debug mode
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+endif ()
 
 #### Finding BOOST
 
