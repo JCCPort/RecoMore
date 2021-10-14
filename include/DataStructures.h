@@ -26,14 +26,14 @@ private:
 
 
 typedef struct {
-	float amplitude;
-	float amplitudeError;
-	float time;
-	float timeError;
+	double amplitude;
+	double amplitudeError;
+	double time;
+	double timeError;
 
 	// For debugging purpose, initial estimates of parameters.
-	float foundAmplitude;
-	float foundTime;
+	double foundAmplitude;
+	double foundTime;
 } PEData;
 
 typedef struct {

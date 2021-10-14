@@ -18,7 +18,7 @@ std::vector<T> slice(std::vector<T> const &v, unsigned int m, unsigned int n) {
 
 bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long> &count, std::mutex &m,
                  const std::shared_ptr<std::vector<EventFitData>> &PEList,
-                 const std::vector<std::vector<float>> &idealWaveforms) {
+                 const std::vector<std::vector<double>> &idealWaveforms) {
 
 	for (auto &event: events) {
 		m.lock();
@@ -40,7 +40,7 @@ int main() {
 
 	auto PEList = std::make_shared<std::vector<EventFitData>>();
 
-	std::vector<std::vector<float>> idealWaveforms{64};
+	std::vector<std::vector<double>> idealWaveforms{64};
 	for (int ch = 0; ch < 64; ch++) {
 		if((ch == 32) || (ch == 36) || (ch == 40) || (ch == 44) || (ch == 48) || (ch == 52) || (ch == 56) || (ch == 60)){
 			continue;

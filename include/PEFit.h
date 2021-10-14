@@ -7,8 +7,8 @@
 #include <thread>
 #include "../include/DataStructures.h"
 
-double npe_pdf_func(const double *x, const std::vector<double>& p, std::vector<float> idealWaveform);
+double npe_pdf_func(double x, const std::vector<double>& p, std::vector<double> idealWaveform);
 
-void fitPE(const EventData& event, const std::shared_ptr<std::vector<EventFitData>>& PEList, const std::vector<std::vector<float>>&);
+void fitPE(const EventData& event, const std::shared_ptr<std::vector<EventFitData>>& PEList, const std::vector<std::vector<double>>&);
 
 #endif //RECOMORE_PEFIT_H

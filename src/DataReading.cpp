@@ -102,7 +102,7 @@ WCData ReadWCDataFile(const std::string &fileName) {
  * @param ch The channel to fill in.
  * @param interpFactor Number of points in interpolated waveform divided by number of points in original waveform.
  */
-std::vector<float> readIdealWFs(unsigned int ch, int interpFactor, const std::string& idealWFDir, unsigned int expectedSize){
+std::vector<double> readIdealWFs(unsigned int ch, int interpFactor, const std::string& idealWFDir, unsigned int expectedSize){
 	std::string idealWFPath = idealWFDir + "ch" + std::to_string(ch) + ".txt";
 	std::ifstream idealWFFile(idealWFPath, std::ifstream::in);
 
@@ -110,22 +110,22 @@ std::vector<float> readIdealWFs(unsigned int ch, int interpFactor, const std::st
 		throw std::runtime_error(idealWFPath + " not found.");
 	}
 
-	float idealWFTime;
-	float idealWFAmp;
-	float prevAmp;
+	double idealWFTime;
+	double idealWFAmp;
+	double prevAmp;
 
 	// Parse first line
 	idealWFFile >> idealWFTime >> idealWFAmp;
-	std::vector<float> waveform;
+	std::vector<double> waveform;
 	waveform.emplace_back(idealWFAmp);
 	prevAmp = idealWFAmp;
 
 	// Parse next line
 	while (idealWFFile >> idealWFTime >> idealWFAmp) {
-		float delta_v = (idealWFAmp - prevAmp) / float(interpFactor);
+		double delta_v = (idealWFAmp - prevAmp) / double(interpFactor);
 
 		for (int step = 1; step < interpFactor; ++step)
-			waveform.emplace_back(prevAmp + float(step) * delta_v);
+			waveform.emplace_back(prevAmp + double(step) * delta_v);
 
 		waveform.emplace_back(idealWFAmp);
 		prevAmp = idealWFAmp;
