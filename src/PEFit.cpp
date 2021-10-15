@@ -20,7 +20,7 @@ struct npe_pdf_functor {
 	bool operator()(const T *const time, const T *const charge, T *residual) const {
 			// TODO(josh): Modify so that starting value of residual[0] = baseline
 			T f;
-			auto evalVal = -((double)pdfT0Sample + (0.5 + (x_ - time[0]) / (samplingRate2)));
+			auto evalVal = ((double)pdfT0Sample + ((x_ - time[0]) / (samplingRate2)));
 			compute_distortion_.Evaluate(evalVal, &f);
 //			if(evalVal <= (double)0){
 //				T k;
@@ -205,8 +205,8 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 		}
 
 		std::vector<float> xValues;
-		for (unsigned int j = 0; j <= channelWaveform.waveform.size(); j++) {
-			xValues.push_back((j - 0.5) * pdfSamplingRate);
+		for (unsigned int j = 0; j <= 1024; j++) {
+			xValues.push_back(j * pdfSamplingRate);
 		}
 
 
@@ -230,7 +230,7 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 
 		// Set up the only cost function (also known as residual). This uses
 		// auto-differentiation to obtain the derivative (Jacobian).
-		for (unsigned int j = 0; j <= xValues.size(); ++j) {
+		for (unsigned int j = 0; j < channelWaveform.waveform.size(); ++j) {
 			CostFunction *cost_function =
 					new AutoDiffCostFunction<npe_pdf_functor, 1, 1, 1>(new npe_pdf_functor(xValues[j],
 					                                                                       channelWaveform.waveform[j],
@@ -241,26 +241,29 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 			for (int k = 0; k < pesFound.size(); k++) {
 
 				double f2;
-				auto evalVal = -((double)pdfT0Sample + (0.5 + (xValues[j] - times[k]) / (samplingRate2)));
+				auto evalVal = ((double)pdfT0Sample + ((xValues[j] - times[k]) / (samplingRate2)));
 				compute_distortion.Evaluate(evalVal, &f2);
 				auto thing = (amplitudes[k] * f2);
 				sumThing += thing;
 				problem.AddResidualBlock(cost_function, nullptr, &times[k], &amplitudes[k]);
-//				problem.SetParameterLowerBound(&times[k], 0,  times[k]*0.97);
-//				problem.SetParameterLowerBound(&amplitudes[k], 0, amplitudes[k]*0.97);
-//				problem.SetParameterUpperBound(&times[k], 0,  times[k]*1.03);
-//				problem.SetParameterUpperBound(&amplitudes[k], 0, amplitudes[k]*1.03);
+//				problem.SetParameterLowerBound(&times[k], 0,  times[k]*0.99);
+//				problem.SetParameterLowerBound(&amplitudes[k], 0, amplitudes[k]*0.99);
+//				problem.SetParameterUpperBound(&times[k], 0,  times[k]*1.01);
+//				problem.SetParameterUpperBound(&amplitudes[k], 0, amplitudes[k]*1.01);
 			}
-			std::cout << "Actual waveform height:\t" << channelWaveform.waveform[j] << "\t\tFunctor calc waveform height:\t" << sumThing << std::endl;
-			std::cout << "hello" << std::endl;
+			// TODO(josh): The minimum amplitude for the actual data is always 63-64 entries ahead of the minimum amplitude for the ideal waveform.
+			//  This is likely relevant to the length of the waveform I'm using being 960 entries, but the ideal waveform being made for 1024 entries
+//			std::cout << j << "\t" << "Actual waveform height:\t" << channelWaveform.waveform[j] << "\t\tFunctor calc waveform height:\t" << sumThing << std::endl;
+//			std::cout << "hello" << std::endl;
 		}
 
 
 		// Run the solver!
 		Solver::Options options;
-//		options.function_tolerance = 1e-15;
-//		options.gradient_tolerance = 1e-15;
-//		options.linear_solver_type = ceres::DENSE_QR;
+		options.function_tolerance = 1e-12;
+		options.gradient_tolerance = 1e-12;
+		options.parameter_tolerance = 1e-12;
+		options.linear_solver_type = ceres::DENSE_QR;
 //		options.linear_solver_type = ceres::DENSE_SCHUR;
 //		options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
 //		options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
@@ -281,8 +284,8 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 		}
 		std::ofstream myfile4;
 		myfile4.open("fullFit.csv");
-		for (unsigned int k = 1; k <= channelWaveform.waveform.size(); ++k) {
-			auto thing = npe_pdf_func((k - 0.5 + 1) * pdfSamplingRate, params2, idealWaveforms[ch]);
+		for (unsigned int k = 0; k < channelWaveform.waveform.size(); k++) {
+			auto thing = npe_pdf_func(k * pdfSamplingRate, params2, idealWaveforms[ch]);
 			myfile4 << thing << "\n";
 		}
 		myfile4.close();
@@ -295,6 +298,12 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 
 
 		std::cout << "hey ho" << std::endl;
+		// TODO(josh): Check if chisq is better with the fit, if not, keep initial params.
+		//  BUT THIS IS VERY HACKY AND WE SHOULD FIGURE OUT WHY IT ISN'T WORKING
+
+		// TODO(josh): No magic numbers for different lengths of data
+
+		// TODO(josh): It's worsening the fit when there are two PEs very close to each other
 	}
 
 }
