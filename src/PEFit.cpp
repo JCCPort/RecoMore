@@ -4,11 +4,14 @@
 #include <fstream>
 #include "ceres/ceres.h"
 #include "ceres/cubic_interpolation.h"
+#include "ceres/loss_function.h"
 #include "glog/logging.h"
 #include <eigen3/Eigen/Core>
 #include <memory>
 #include <utility>
 #include <memory>
+
+double samplingRate2 = 0.01 * pdfSamplingRate;
 
 struct npe_pdf_functor {
 	npe_pdf_functor(double x, double y, const ceres::CubicInterpolator<ceres::Grid1D<double, true>>& compute_distortion) : x_(x), y_(y), compute_distortion_(compute_distortion) {};
@@ -17,24 +20,27 @@ struct npe_pdf_functor {
 	bool operator()(const T *const time, const T *const charge, T *residual) const {
 			// TODO(josh): Modify so that starting value of residual[0] = baseline
 			T f;
-			auto evalVal = -((double)pdfT0Sample + ((double)0.5 + (x_ - time[0]) / ((double)0.01 * pdfSamplingRate)));
+			auto evalVal = -((double)pdfT0Sample + (0.5 + (x_ - time[0]) / (samplingRate2)));
 			compute_distortion_.Evaluate(evalVal, &f);
-			if(evalVal <= (double)0){
-				residual[0] = -f * y_;
-				// TODO(josh): This isn't correct it's just I need to set residual to some value before
-				//  exiting the function, I believe it should be set to baseline - y_  or something like that...
-				return true;
-			}
+//			if(evalVal <= (double)0){
+//				T k;
+//				compute_distortion_.Evaluate(-((double)pdfT0Sample + (0.5 + (x_ - time[0]) / (samplingRate2)) - (double)100000), &f);
+//				residual[0] = k;
+//				// TODO(josh): This isn't correct it's just I need to set residual to some value before
+//				//  exiting the function, I believe it should be set to baseline - y_  or something like that...
+//				return true;
+//			}
 //			if((x_ >= ))
 //			std::cout << "x val:\t" << x_ << std::endl;
 //			std::cout << "PE test time:\t" << time[0] << std::endl;
 //			std::cout << "x Point for interpolation:\t" << evalVal << std::endl;
-			residual[0] = -(charge[0] * f);
+//			residual[0] = -(charge[0] * f);
 //			std::cout << "Interpolated y value:\t" << residual[0] << std::endl;
 //			std::cout << "Data y value:\t" << y_ << std::endl;
 //		}
 
-		residual[0] += y_;
+		auto thing = (charge[0] * f);
+		residual[0] = y_ - thing;
 		return true;
 	}
 
@@ -108,7 +114,7 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 			//  which is worth considering
 			// TODO(josh): Make a function that does this.
 			std::vector<double> params;
-			params.push_back(pesFound.size());
+			params.push_back((double)pesFound.size());
 			params.push_back(baseline);
 			for (auto pe2: pesFound) {
 				params.push_back(pe2.amplitude);
@@ -181,13 +187,15 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 					ponderation_sum += binVal;
 				}
 
-				guessPE.time = (PEFinderTimeOffset * 0.15) + time_sum / ponderation_sum;
+				guessPE.time = (PEFinderTimeOffset * 0.25) + time_sum / ponderation_sum;
 			}
 
 			pesFound.push_back(guessPE);
 			channelWaveform = event.chData[i];
 
 		}
+
+		channelWaveform = event.chData[i];
 
 		std::vector<double> params;
 		params.push_back(baseline);
@@ -198,7 +206,7 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 
 		std::vector<float> xValues;
 		for (unsigned int j = 0; j <= channelWaveform.waveform.size(); j++) {
-			xValues.push_back((i - 0.5) * pdfSamplingRate);
+			xValues.push_back((j - 0.5) * pdfSamplingRate);
 		}
 
 
@@ -206,21 +214,19 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 		// Build the problem.
 		Problem problem;
 
-		double initialTime;
-		double initialAmp;
+		std::vector<double> initialTimes;
+		std::vector<double> initialAmplitudes;
+		for (auto & k : pesFound){
+			initialAmplitudes.push_back(k.amplitude);
+			initialTimes.push_back(k.time);
+		}
 
-		double time;
-		double amplitude;
+		std::vector<double> times = initialTimes;
+		std::vector<double> amplitudes = initialAmplitudes;
 
 
 		ceres::Grid1D grid = ceres::Grid1D<double>(idealWaveforms[ch].data(), 0, idealWaveforms[ch].size());
 		auto compute_distortion = ceres::CubicInterpolator<ceres::Grid1D<double> >(grid);
-		double f;
-		// Running this will give non-zero evaluation values from o=11 -> o=102809 inclusive
-//		for(int o = 0; o <= 110000; o++){
-//			compute_distortion.Evaluate(o, &f);
-//			std::cout << o << "\t" << f << std::endl;
-//		}
 
 		// Set up the only cost function (also known as residual). This uses
 		// auto-differentiation to obtain the derivative (Jacobian).
@@ -230,23 +236,32 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 					                                                                       channelWaveform.waveform[j],
 					                                                                       compute_distortion));
 
-			for (auto & k : pesFound) {
-				initialTime = k.time;
-				initialAmp = k.amplitude/10;
 
-				time = initialTime;
-				amplitude = initialAmp;
+			double sumThing = 0;
+			for (int k = 0; k < pesFound.size(); k++) {
 
-				problem.AddResidualBlock(cost_function, nullptr, &time, &amplitude);
-				problem.SetParameterLowerBound(&time, 0, 0);
-				problem.SetParameterLowerBound(&amplitude, 0, 0);
+				double f2;
+				auto evalVal = -((double)pdfT0Sample + (0.5 + (xValues[j] - times[k]) / (samplingRate2)));
+				compute_distortion.Evaluate(evalVal, &f2);
+				auto thing = (amplitudes[k] * f2);
+				sumThing += thing;
+				problem.AddResidualBlock(cost_function, nullptr, &times[k], &amplitudes[k]);
+//				problem.SetParameterLowerBound(&times[k], 0,  times[k]*0.97);
+//				problem.SetParameterLowerBound(&amplitudes[k], 0, amplitudes[k]*0.97);
+//				problem.SetParameterUpperBound(&times[k], 0,  times[k]*1.03);
+//				problem.SetParameterUpperBound(&amplitudes[k], 0, amplitudes[k]*1.03);
 			}
+			std::cout << "Actual waveform height:\t" << channelWaveform.waveform[j] << "\t\tFunctor calc waveform height:\t" << sumThing << std::endl;
+			std::cout << "hello" << std::endl;
 		}
 
 
 		// Run the solver!
 		Solver::Options options;
+//		options.function_tolerance = 1e-15;
+//		options.gradient_tolerance = 1e-15;
 //		options.linear_solver_type = ceres::DENSE_QR;
+//		options.linear_solver_type = ceres::DENSE_SCHUR;
 //		options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
 //		options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
 		options.minimizer_progress_to_stdout = true;
@@ -256,11 +271,28 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 		std::cout << summary.FullReport() << "\n";
 
 
-		// TODO(josh): At the moment we're only able to get the params for the last PE fit, I think creating a vector of
-		//  amplitudes and times (initial guesses) to go into AddResidualBlock (reference to one element at a time), will
-		//  then allow us to get all the fit values down here by accessing the individual elements.
-		std::cout << "Amplitude:\t" << initialAmp << " -> " << amplitude << std::endl;
-		std::cout << "Time:\t" << initialTime << " -> " << time << std::endl;
+
+		std::vector<double> params2;
+		params2.push_back(pesFound.size());
+		params2.push_back(baseline);
+		for (int k = 0; k < pesFound.size(); k++) {
+			params2.push_back(amplitudes[k]);
+			params2.push_back(times[k]);
+		}
+		std::ofstream myfile4;
+		myfile4.open("fullFit.csv");
+		for (unsigned int k = 1; k <= channelWaveform.waveform.size(); ++k) {
+			auto thing = npe_pdf_func((k - 0.5 + 1) * pdfSamplingRate, params2, idealWaveforms[ch]);
+			myfile4 << thing << "\n";
+		}
+		myfile4.close();
+
+		for (int k = 0; k < pesFound.size(); k++) {
+			std::cout << "Amplitude:\t" << initialAmplitudes[k] << " -> " << amplitudes[k] << std::endl;
+			std::cout << "Time:\t\t" << initialTimes[k] << " -> " << times[k] << std::endl;
+			std::cout << std::endl;
+		}
+
 
 		std::cout << "hey ho" << std::endl;
 	}

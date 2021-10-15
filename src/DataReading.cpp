@@ -102,6 +102,7 @@ WCData ReadWCDataFile(const std::string &fileName) {
  * @param ch The channel to fill in.
  * @param interpFactor Number of points in interpolated waveform divided by number of points in original waveform.
  */
+// TODO(josh): Fix performance of this as it seems to be slower than the WC data opening!
 std::vector<double> readIdealWFs(unsigned int ch, int interpFactor, const std::string& idealWFDir, unsigned int expectedSize){
 	std::string idealWFPath = idealWFDir + "ch" + std::to_string(ch) + ".txt";
 	std::ifstream idealWFFile(idealWFPath, std::ifstream::in);
