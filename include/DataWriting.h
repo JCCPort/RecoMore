@@ -16,7 +16,7 @@ public:
 		std::lock_guard<std::mutex> lock(_writerMutex);
 		writeCache_ += dataToWrite;
 		cachedStates_++;
-		if(cachedStates_ == 1e6){
+		if(cachedStates_ == 1){
 			myFile << writeCache_;
 			writeCache_.clear();
 			cachedStates_ = 0;

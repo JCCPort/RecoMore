@@ -190,10 +190,13 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 
 				guessPE.time = (PEFinderTimeOffset * 0.25) + time_sum / ponderation_sum;
 			}
-
+			numPEsFound += 1;
 			pesFound.push_back(guessPE);
 			channelWaveform = event.chData[i];
 
+			if(numPEsFound > 100){
+				break;
+			}
 		}
 
 		channelWaveform = event.chData[i];
@@ -274,7 +277,7 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 		Solver::Summary summary;
 		Solve(options, &problem, &summary);
 
-		std::cout << summary.FullReport() << "\n";
+//		std::cout << summary.FullReport() << "\n";
 
 
 
@@ -293,11 +296,11 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 		}
 		myfile4.close();
 
-		for (int k = 0; k < pesFound.size(); k++) {
-			std::cout << "Amplitude:\t" << initialAmplitudes[k] << " -> " << amplitudes[k] << std::endl;
-			std::cout << "Time:\t\t" << initialTimes[k] << " -> " << times[k] << std::endl;
-			std::cout << std::endl;
-		}
+//		for (int k = 0; k < pesFound.size(); k++) {
+//			std::cout << "Amplitude:\t" << initialAmplitudes[k] << " -> " << amplitudes[k] << std::endl;
+//			std::cout << "Time:\t\t" << initialTimes[k] << " -> " << times[k] << std::endl;
+//			std::cout << std::endl;
+//		}
 
 		std::vector<PEData> FitPEs;
 
@@ -312,7 +315,7 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 		evFitDat.sipm.push_back(chFit);
 
 
-		std::cout << "hey ho" << std::endl;
+//		std::cout << "hey ho" << std::endl;
 		// TODO(josh): Check if chisq is better with the fit, if not, keep initial params.
 		//  BUT THIS IS VERY HACKY AND WE SHOULD FIGURE OUT WHY IT ISN'T WORKING
 

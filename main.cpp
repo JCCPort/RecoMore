@@ -6,6 +6,7 @@
 #include "include/DataStructures.h"
 #include "include/PEFit.h"
 #include "Globals.h"
+#include "include/DataWriting.h"
 
 template<typename T>
 std::vector<T> slice(std::vector<T> const &v, unsigned int m, unsigned int n) {
@@ -16,9 +17,23 @@ std::vector<T> slice(std::vector<T> const &v, unsigned int m, unsigned int n) {
 	return vec;
 }
 
+
+void displayProgress(std::atomic<unsigned long> &count, std::mutex &m, unsigned int dataLength){
+	while(count != dataLength){
+		std::this_thread::sleep_for (std::chrono::seconds(1));
+		m.lock();
+		std::cout << "Processed: " << count << "/" << dataLength << std::endl;
+		m.unlock();
+
+	}
+
+}
+
 bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long> &count, std::mutex &m,
                  const std::shared_ptr<std::vector<EventFitData>> &PEList,
                  const std::vector<std::vector<double>> &idealWaveforms) {
+
+//	std::thread progressThread = std::thread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(m), events.size());
 
 	for (auto &event: events) {
 		m.lock();
@@ -32,11 +47,14 @@ bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long
 
 
 int main() {
-	WCData data = ReadWCDataFile("/home/josh/CLionProjects/RecoMore/R45.dat");
-	unsigned int numThreads = 1;
+	WCData data = ReadWCDataFile("/home/josh/CLionProjects/RecoMore/R32.dat");
+	unsigned int numThreads = 7;
 
 	static std::atomic<unsigned long> count{0};
 	std::mutex m;
+
+	auto file = std::make_shared<SyncFile>("R32PES.dat");
+	Writer writer(file);
 
 	auto PEList = std::make_shared<std::vector<EventFitData>>();
 
@@ -72,6 +90,10 @@ int main() {
 	// Carrying out the multi-threaded simulations.
 	unsigned int eventPos = 0;
 	std::cout << data.getEvents().size() << std::endl;
+	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(m), data.getEvents().size());
+
+	// TODO(josh): Scramble the order of events to improve uniformity of how much work each core has?
+	//  Alternatively, move to using a thread pool.
 	for (unsigned int i = 0; i < numThreads; i++) {
 		std::vector passData = slice(data.getEvents(), eventPos, eventPos + threadRepeatCount[i] - 1);
 		std::thread t(fitBatchPEs, passData, std::reference_wrapper(count), std::reference_wrapper(m),
@@ -83,6 +105,11 @@ int main() {
 	// Waiting for all threads to complete before continuing code execution.
 	for (auto &th: threads) {
 		th.join();
+	}
+	progressThread.join();
+
+	for(auto& event: *PEList){
+		writer.writeEventInfo(event);
 	}
 
 	return 1;
