@@ -33,7 +33,7 @@ std::string Writer::writeWaveformInfo(const ChannelFitData& wfDat) {
 	for (auto &pe: wfDat.pes) {
 		writeString += writeFitPE(pe);
 	}
-	writeString += "ENDPES";
+	writeString += "ENDPES\n";
 	return writeString;
 }
 

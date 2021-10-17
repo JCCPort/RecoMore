@@ -53,7 +53,7 @@ private:
 // y_obs,i -  (baseline + sum_i=0^NPE y_func,i)
 
 
-double npe_pdf_func(double X, const std::vector<double> &p, std::vector<double> idealWaveform) {
+double npe_pdf_func(double X, const std::vector<double> &p, std::vector<double>* idealWaveform) {
 	// This way of passing x as a list then choosing the 0th index is from ROOT's syntax for fitting where you can fit
 	//  with an arbitrary number of dimensions (N input values -> single output, an N dimensional function)
 //	const double X = x[0];
@@ -79,7 +79,7 @@ double npe_pdf_func(double X, const std::vector<double> &p, std::vector<double> 
 		const int PE_PDF_BIN =
 				pdfT0Sample + std::floor(0.5 + (X - PE_TIME) / (0.01 * pdfSamplingRate)); // v4 use PE_PDF[PE_PDF_CH]
 		if ((PE_PDF_BIN >= 0) && (PE_PDF_BIN < pdfNSamples)) {
-			double thing = idealWaveform[PE_PDF_BIN];
+			double thing = idealWaveform->at(PE_PDF_BIN);
 			value += PE_CHARGE * thing;
 		}
 	}
@@ -108,7 +108,14 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 		unsigned int numPEsFound = 0;
 
 		// This is getting estimate PEs that will then be passed as initial guesses to the minimiser.
+
+		unsigned int p = 0;
+		// FROM HERE
 		while (true) {
+			p++;
+			if(p > 100){
+				break;
+			}
 
 
 			// Making the vector of parameters for the objective function, not present in ROOT version as it uses a static object for the params,
@@ -123,11 +130,13 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 			}
 			// Amplitude adjustment: if the latest PE found is before other one(s),
 			//  its tail is going to add some amplitude to the following one.
+			std::vector<double> var2 = idealWaveforms[ch];
+			std::vector<double>* var = &var2;
 			for (auto & j : pesFound) {
 				unsigned int peTimeBinPos = std::floor(
 						j.time / pdfSamplingRate); // This should use a variable
 				// corresponding to the input sampling rate, however for not they're the same
-				double fitVal = npe_pdf_func(j.time, params, idealWaveforms[ch]);
+				double fitVal = npe_pdf_func(j.time, params, var);
 				double extraAmplitude =
 						fitVal - channelWaveform.waveform[peTimeBinPos];
 				double newAmplitude = j.amplitude + extraAmplitude;
@@ -146,11 +155,13 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 			// Compute residual
 //			std::ofstream myfile2;
 //			myfile2.open("fit.csv");
+				// FROM HERE
 			for (unsigned int k = 1; k <= channelWaveform.waveform.size(); ++k) {
-				double val = npe_pdf_func((k - 0.5 + 1) * pdfSamplingRate, params, idealWaveforms[ch]);
+				double val = npe_pdf_func((k - 0.5 + 1) * pdfSamplingRate, params, var);
 //				myfile2 << val << "\n";
 				channelWaveform.waveform[k] = channelWaveform.waveform[k] - val;
 			}
+				// TO HERE ... is where the main slowness in the code comes from
 //			myfile2.close();
 
 
@@ -167,7 +178,7 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 			auto minPosIt = std::min_element(channelWaveform.waveform.begin(), channelWaveform.waveform.end());
 			unsigned int minTimePos = std::distance(channelWaveform.waveform.begin(), minPosIt);
 
-			if (-channelWaveform.waveform[minTimePos] < 0.015) {
+			if (-channelWaveform.waveform[minTimePos] < 0.011) {
 				break;
 			}
 
@@ -276,7 +287,7 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 //		options.gradient_tolerance = 1e-12;
 //		options.parameter_tolerance = 1e-12;
 //		options.linear_solver_type = ceres::DENSE_QR;
-		options.linear_solver_type = ceres::DENSE_SCHUR;
+//		options.linear_solver_type = ceres::DENSE_SCHUR;
 //		options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
 //		options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
 		options.minimizer_progress_to_stdout = false;
@@ -339,7 +350,7 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 		// The fundamental question is: why does the fit seem to give worse parameters than the initial guesses for some fits?!?!?
 	}
 //	FitList->push_back(evFitDat);
-	Writer writer(std::move(file));
+	Writer writer(file);
 	writer.writeEventInfo(evFitDat);
 
 }
