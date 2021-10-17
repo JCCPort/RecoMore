@@ -8,6 +8,8 @@
 #include "Globals.h"
 #include "include/DataWriting.h"
 
+#include "include/ThreadPool.h"
+
 template<typename T>
 std::vector<T> slice(std::vector<T> const &v, unsigned int m, unsigned int n) {
 	auto first = v.cbegin() + m;
@@ -30,8 +32,7 @@ void displayProgress(std::atomic<unsigned long> &count, std::mutex &m, unsigned 
 }
 
 bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long> &count, std::mutex &m,
-                 const std::shared_ptr<std::vector<EventFitData>> &PEList,
-                 const std::vector<std::vector<double>> &idealWaveforms) {
+                 const std::vector<std::vector<double>> &idealWaveforms, const std::shared_ptr<SyncFile>& file) {
 
 //	std::thread progressThread = std::thread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(m), events.size());
 
@@ -39,7 +40,7 @@ bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long
 		m.lock();
 		++count;
 		m.unlock();
-		fitPE(event, PEList, idealWaveforms);
+		fitPE(event, idealWaveforms, file);
 	}
 
 	return true;
@@ -47,16 +48,14 @@ bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long
 
 
 int main() {
-	WCData data = ReadWCDataFile("/home/josh/CLionProjects/RecoMore/R32.dat");
-	unsigned int numThreads = 7;
+	WCData data = ReadWCDataFile("/home/josh/CLionProjects/RecoMore/R39.dat");
+	unsigned int numThreads = 12;
 
 	static std::atomic<unsigned long> count{0};
 	std::mutex m;
 
-	auto file = std::make_shared<SyncFile>("R32PES.dat");
+	auto file = std::make_shared<SyncFile>("R39PES.dat");
 	Writer writer(file);
-
-	auto PEList = std::make_shared<std::vector<EventFitData>>();
 
 	std::vector<std::vector<double>> idealWaveforms{64};
 	for (int ch = 0; ch < 64; ch++) {
@@ -69,7 +68,7 @@ int main() {
 
 	// If only one thread is being used there's no need to use std::thread, just call batchRun conventionally.
 	if (numThreads == 1) {
-		fitBatchPEs(data.getEvents(), count, m, PEList, idealWaveforms);
+		fitBatchPEs(data.getEvents(), count, m, std::reference_wrapper(idealWaveforms),  file);
 		return 1;
 	}
 
@@ -94,10 +93,10 @@ int main() {
 
 	// TODO(josh): Scramble the order of events to improve uniformity of how much work each core has?
 	//  Alternatively, move to using a thread pool.
+	// Yeah I can see clearly that one thread is slower
 	for (unsigned int i = 0; i < numThreads; i++) {
 		std::vector passData = slice(data.getEvents(), eventPos, eventPos + threadRepeatCount[i] - 1);
-		std::thread t(fitBatchPEs, passData, std::reference_wrapper(count), std::reference_wrapper(m),
-		              std::reference_wrapper(PEList), idealWaveforms);
+		std::thread t(fitBatchPEs, passData, std::reference_wrapper(count), std::reference_wrapper(m), idealWaveforms, file);
 		threads.push_back(std::move(t));
 		eventPos += threadRepeatCount[i];
 	}
@@ -108,9 +107,22 @@ int main() {
 	}
 	progressThread.join();
 
-	for(auto& event: *PEList){
-		writer.writeEventInfo(event);
-	}
+	file->closeFile();
 
-	return 1;
+
+//	ThreadPool pool(20);
+//	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(m), data.getEvents().size());
+//	pool.enqueue(fitBatchPEs, data.getEvents(), std::reference_wrapper(count), std::reference_wrapper(m),
+//		              std::reference_wrapper(PEList), idealWaveforms);
+//	progressThread.join();
+//
+//		for(auto& event: *PEList){
+//		writer.writeEventInfo(event);
+//	}
+
+// TODO(josh): For some reason the threadpool version doesn't seem to benefit from extra cores. Ahh, check the example on the github repo
+
+
+	return 0;
+	// TODO(josh): As the initial guesses are so good, maybe have an option to just use those if someone wants it to take minutes but cares less for accuracy?
 }

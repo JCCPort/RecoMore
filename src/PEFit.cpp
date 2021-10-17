@@ -11,17 +11,17 @@
 #include <utility>
 #include <memory>
 
-double samplingRate2 = 0.01 * pdfSamplingRate;
+const double samplingRate2 = 0.01 * pdfSamplingRate;
 
 struct npe_pdf_functor {
-	npe_pdf_functor(double x, double y, const ceres::CubicInterpolator<ceres::Grid1D<double, true>>& compute_distortion) : x_(x), y_(y), compute_distortion_(compute_distortion) {};
+	npe_pdf_functor(double x, double y, ceres::CubicInterpolator<ceres::Grid1D<double, true>>* compute_distortion) : x_(x), y_(y), compute_distortion_(compute_distortion) {};
 
 	template<typename T>
 	bool operator()(const T *const time, const T *const charge, const T *const baseline, T *residual) const {
 			// TODO(josh): Modify so that starting value of residual[0] = baseline
 			T f;
-			auto evalVal = ((double)pdfT0Sample + ((x_ - time[0]) / (samplingRate2)));
-			compute_distortion_.Evaluate(evalVal, &f);
+			auto evalVal = ((double)pdfT0Sample + ((x_ - time[0]) / (0.01 * pdfSamplingRate)));
+			compute_distortion_->Evaluate(evalVal, &f);
 //			if(evalVal <= (double)0){
 //				T k;
 //				compute_distortion_.Evaluate(-((double)pdfT0Sample + (0.5 + (x_ - time[0]) / (samplingRate2)) - (double)100000), &f);
@@ -47,7 +47,7 @@ struct npe_pdf_functor {
 private:
 	const double x_;
 	const double y_;
-	const ceres::CubicInterpolator<ceres::Grid1D<double> >&  compute_distortion_;
+	ceres::CubicInterpolator<ceres::Grid1D<double> >*  compute_distortion_;
 };
 
 // y_obs,i -  (baseline + sum_i=0^NPE y_func,i)
@@ -88,12 +88,12 @@ double npe_pdf_func(double X, const std::vector<double> &p, std::vector<double> 
 }
 
 
-void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitData>> &FitList,
-           const std::vector<std::vector<double>> &idealWaveforms) {
+void
+fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWaveforms, std::shared_ptr<SyncFile> file) {
 	EventFitData evFitDat;
 	evFitDat.eventID = event.eventID;
-	for (unsigned int i = 0; i < event.chData.size(); ++i) {
-		auto channelWaveform = event.chData[i]; // This will be the variable that is modified to be the residual distribution after each iteration
+	for (const auto & i : event.chData) {
+		auto channelWaveform = i; // This will be the variable that is modified to be the residual distribution after each iteration
 
 		ChannelFitData chFit;
 		unsigned int ch = channelWaveform.channel;
@@ -123,43 +123,43 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 			}
 			// Amplitude adjustment: if the latest PE found is before other one(s),
 			//  its tail is going to add some amplitude to the following one.
-			for (unsigned int j = 0; j < pesFound.size(); ++j) {
+			for (auto & j : pesFound) {
 				unsigned int peTimeBinPos = std::floor(
-						pesFound[j].time / pdfSamplingRate); // This should use a variable
+						j.time / pdfSamplingRate); // This should use a variable
 				// corresponding to the input sampling rate, however for not they're the same
-				double fitVal = npe_pdf_func(pesFound[j].time, params, idealWaveforms[ch]);
+				double fitVal = npe_pdf_func(j.time, params, idealWaveforms[ch]);
 				double extraAmplitude =
 						fitVal - channelWaveform.waveform[peTimeBinPos];
-				double newAmplitude = pesFound[j].amplitude + extraAmplitude;
-				pesFound[j].amplitude = newAmplitude;
+				double newAmplitude = j.amplitude + extraAmplitude;
+				j.amplitude = newAmplitude;
 
 			}
 
-			std::ofstream myfile;
-			myfile.open("rawWaveform.csv");
-			for (float k: channelWaveform.waveform) {
-				myfile << k << "\n";
-			}
-			myfile.close();
+//			std::ofstream myfile;
+//			myfile.open("rawWaveform.csv");
+//			for (float k: channelWaveform.waveform) {
+//				myfile << k << "\n";
+//			}
+//			myfile.close();
 
 
 			// Compute residual
-			std::ofstream myfile2;
-			myfile2.open("fit.csv");
+//			std::ofstream myfile2;
+//			myfile2.open("fit.csv");
 			for (unsigned int k = 1; k <= channelWaveform.waveform.size(); ++k) {
 				double val = npe_pdf_func((k - 0.5 + 1) * pdfSamplingRate, params, idealWaveforms[ch]);
-				myfile2 << val << "\n";
+//				myfile2 << val << "\n";
 				channelWaveform.waveform[k] = channelWaveform.waveform[k] - val;
 			}
-			myfile2.close();
+//			myfile2.close();
 
 
-			std::ofstream myfile3;
-			myfile3.open("residual.csv");
-			for (float k: channelWaveform.waveform) {
-				myfile3 << k << "\n";
-			}
-			myfile3.close();
+//			std::ofstream myfile3;
+//			myfile3.open("residual.csv");
+//			for (float k: channelWaveform.waveform) {
+//				myfile3 << k << "\n";
+//			}
+//			myfile3.close();
 
 
 
@@ -192,14 +192,14 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 			}
 			numPEsFound += 1;
 			pesFound.push_back(guessPE);
-			channelWaveform = event.chData[i];
+			channelWaveform = i;
 
 			if(numPEsFound > 100){
 				break;
 			}
 		}
 
-		channelWaveform = event.chData[i];
+		channelWaveform = i;
 
 		std::vector<double> params;
 		params.push_back(baseline);
@@ -230,28 +230,34 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 
 
 		ceres::Grid1D grid = ceres::Grid1D<double>(idealWaveforms[ch].data(), 0, idealWaveforms[ch].size());
-		auto compute_distortion = ceres::CubicInterpolator<ceres::Grid1D<double> >(grid);
+		auto compute_distortion = new ceres::CubicInterpolator<ceres::Grid1D<double> >(grid);
 
 		// Set up the only cost function (also known as residual). This uses
 		// auto-differentiation to obtain the derivative (Jacobian).
+
 		for (unsigned int j = 0; j < channelWaveform.waveform.size(); ++j) {
-			CostFunction *cost_function =
-					new AutoDiffCostFunction<npe_pdf_functor, 1, 1, 1, 1>(new npe_pdf_functor(xValues[j],
-					                                                                       channelWaveform.waveform[j],
-					                                                                       compute_distortion));
+//			auto temp = new npe_pdf_functor(xValues[j],
+//			                                channelWaveform.waveform[j],
+//			                                compute_distortion);
+
+//			std::shared_ptr<ceres::CostFunction>(new AutoDiffCostFunction<npe_pdf_functor, 1, 1, 1, 1>(temp));
+//			CostFunction *cost_function =
+//					new AutoDiffCostFunction<npe_pdf_functor, 1, 1, 1, 1>(temp);
 
 
-			double sumThing = 0;
+//			double sumThing = 0;
 			for (int k = 0; k < pesFound.size(); k++) {
 
-				double f2;
-				auto evalVal = ((double)pdfT0Sample + ((xValues[j] - times[k]) / (samplingRate2)));
-				compute_distortion.Evaluate(evalVal, &f2);
-				auto thing = (amplitudes[k] * f2);
-				sumThing += thing;
+//				double f2;
+//				auto evalVal = ((double)pdfT0Sample + ((xValues[j] - times[k]) / (samplingRate2)));
+//				compute_distortion->Evaluate(evalVal, &f2);
+//				auto thing = (amplitudes[k] * f2);
+//				sumThing += thing;
 
 				double baseline2 = 0;
-				problem.AddResidualBlock(cost_function, nullptr, &times[k], &amplitudes[k], &baseline2);
+				problem.AddResidualBlock(new AutoDiffCostFunction<npe_pdf_functor, 1, 1, 1, 1>(new npe_pdf_functor(xValues[j],
+				                                                                                                   channelWaveform.waveform[j],
+				                                                                                                   compute_distortion)), nullptr, &times[k], &amplitudes[k], &baseline2);
 				problem.SetParameterLowerBound(&times[k], 0,  times[k]*0.96);
 				problem.SetParameterLowerBound(&amplitudes[k], 0, amplitudes[k]*0.96);
 				problem.SetParameterUpperBound(&times[k], 0,  times[k]*1.04);
@@ -269,32 +275,34 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 //		options.function_tolerance = 1e-12;
 //		options.gradient_tolerance = 1e-12;
 //		options.parameter_tolerance = 1e-12;
-		options.linear_solver_type = ceres::DENSE_QR;
-//		options.linear_solver_type = ceres::DENSE_SCHUR;
+//		options.linear_solver_type = ceres::DENSE_QR;
+		options.linear_solver_type = ceres::DENSE_SCHUR;
 //		options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
 //		options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
 		options.minimizer_progress_to_stdout = false;
 		Solver::Summary summary;
 		Solve(options, &problem, &summary);
 
+		delete compute_distortion;
+
 //		std::cout << summary.FullReport() << "\n";
 
 
 
-		std::vector<double> params2;
-		params2.push_back(pesFound.size());
-		params2.push_back(baseline);
-		for (int k = 0; k < pesFound.size(); k++) {
-			params2.push_back(amplitudes[k]);
-			params2.push_back(times[k]);
-		}
-		std::ofstream myfile4;
-		myfile4.open("fullFit.csv");
-		for (unsigned int k = 0; k < channelWaveform.waveform.size(); k++) {
-			auto thing = npe_pdf_func(k * pdfSamplingRate, params2, idealWaveforms[ch]);
-			myfile4 << thing << "\n";
-		}
-		myfile4.close();
+//		std::vector<double> params2;
+//		params2.push_back(pesFound.size());
+//		params2.push_back(baseline);
+//		for (int k = 0; k < pesFound.size(); k++) {
+//			params2.push_back(amplitudes[k]);
+//			params2.push_back(times[k]);
+//		}
+//		std::ofstream myfile4;
+//		myfile4.open("fullFit.csv");
+//		for (unsigned int k = 0; k < channelWaveform.waveform.size(); k++) {
+//			auto thing = npe_pdf_func(k * pdfSamplingRate, params2, idealWaveforms[ch]);
+//			myfile4 << thing << "\n";
+//		}
+//		myfile4.close();
 
 //		for (int k = 0; k < pesFound.size(); k++) {
 //			std::cout << "Amplitude:\t" << initialAmplitudes[k] << " -> " << amplitudes[k] << std::endl;
@@ -330,6 +338,8 @@ void fitPE(const EventData &event, const std::shared_ptr<std::vector<EventFitDat
 
 		// The fundamental question is: why does the fit seem to give worse parameters than the initial guesses for some fits?!?!?
 	}
-	FitList->push_back(evFitDat);
+//	FitList->push_back(evFitDat);
+	Writer writer(std::move(file));
+	writer.writeEventInfo(evFitDat);
 
 }
