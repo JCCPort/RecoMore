@@ -103,7 +103,8 @@ WCData ReadWCDataFile(const std::string &fileName) {
  * @param interpFactor Number of points in interpolated waveform divided by number of points in original waveform.
  */
 // TODO(josh): Fix performance of this as it seems to be slower than the WC data opening!
-std::vector<double> readIdealWFs(unsigned int ch, int interpFactor, const std::string& idealWFDir, unsigned int expectedSize){
+std::vector<double>
+readIdealWFs(unsigned int ch, int interpFactor, const std::string &idealWFDir, unsigned int expectedSize) {
 	std::string idealWFPath = idealWFDir + "ch" + std::to_string(ch) + ".txt";
 	std::ifstream idealWFFile(idealWFPath, std::ifstream::in);
 
@@ -132,7 +133,7 @@ std::vector<double> readIdealWFs(unsigned int ch, int interpFactor, const std::s
 		prevAmp = idealWFAmp;
 	}
 
-	if (waveform.size() != expectedSize){
+	if (waveform.size() != expectedSize) {
 		throw std::runtime_error("Unexpected number of samples in " + idealWFPath);
 	}
 

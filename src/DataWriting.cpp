@@ -19,7 +19,7 @@ std::string Writer::writeFitPE(PEData PEVar) {
 	return writeString;
 }
 
-std::string Writer::writeWaveformInfo(const ChannelFitData& wfDat) {
+std::string Writer::writeWaveformInfo(const ChannelFitData &wfDat) {
 	std::string writeString;
 	writeString += "Ch=";
 	writeString += std::to_string(wfDat.ch);
@@ -38,12 +38,12 @@ std::string Writer::writeWaveformInfo(const ChannelFitData& wfDat) {
 }
 
 
-void Writer::writeEventInfo(const EventFitData& evData){
-    std::string writeString;
-    writeString += "EVENT=";
-    writeString += std::to_string(evData.eventID);
-    writeString += '\n';
-	for(auto& chDat: evData.sipm){
+void Writer::writeEventInfo(const EventFitData &evData) {
+	std::string writeString;
+	writeString += "EVENT=";
+	writeString += std::to_string(evData.eventID);
+	writeString += '\n';
+	for (auto &chDat: evData.sipm) {
 		writeString += writeWaveformInfo(chDat);
 	}
 	_sf->write(writeString);

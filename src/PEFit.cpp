@@ -14,31 +14,15 @@
 const double samplingRate2 = 0.01 * pdfSamplingRate;
 
 struct npe_pdf_functor {
-	npe_pdf_functor(double x, double y, ceres::CubicInterpolator<ceres::Grid1D<double, true>>* compute_distortion) : x_(x), y_(y), compute_distortion_(compute_distortion) {};
+	npe_pdf_functor(double x, double y, ceres::CubicInterpolator<ceres::Grid1D<double, true>> *compute_distortion) : x_(
+			x), y_(y), compute_distortion_(compute_distortion) {};
 
 	template<typename T>
 	bool operator()(const T *const time, const T *const charge, const T *const baseline, T *residual) const {
-			// TODO(josh): Modify so that starting value of residual[0] = baseline
-			T f;
-			auto evalVal = ((double)pdfT0Sample + ((x_ - time[0]) / (0.01 * pdfSamplingRate)));
-			compute_distortion_->Evaluate(evalVal, &f);
-//			if(evalVal <= (double)0){
-//				T k;
-//				compute_distortion_.Evaluate(-((double)pdfT0Sample + (0.5 + (x_ - time[0]) / (samplingRate2)) - (double)100000), &f);
-//				residual[0] = k;
-//				// TODO(josh): This isn't correct it's just I need to set residual to some value before
-//				//  exiting the function, I believe it should be set to baseline - y_  or something like that...
-//				return true;
-//			}
-//			if((x_ >= ))
-//			std::cout << "x val:\t" << x_ << std::endl;
-//			std::cout << "PE test time:\t" << time[0] << std::endl;
-//			std::cout << "x Point for interpolation:\t" << evalVal << std::endl;
-//			residual[0] = -(charge[0] * f);
-//			std::cout << "Interpolated y value:\t" << residual[0] << std::endl;
-//			std::cout << "Data y value:\t" << y_ << std::endl;
-//		}
-
+		// TODO(josh): Modify so that starting value of residual[0] = baseline
+		T f;
+		auto evalVal = ((double) pdfT0Sample + ((x_ - time[0]) / (0.01 * pdfSamplingRate)));
+		compute_distortion_->Evaluate(evalVal, &f);
 		auto thing = (charge[0] * f) - baseline[0];
 		residual[0] = y_ - thing;
 		return true;
@@ -47,13 +31,11 @@ struct npe_pdf_functor {
 private:
 	const double x_;
 	const double y_;
-	ceres::CubicInterpolator<ceres::Grid1D<double> >*  compute_distortion_;
+	ceres::CubicInterpolator<ceres::Grid1D<double> > *compute_distortion_;
 };
 
-// y_obs,i -  (baseline + sum_i=0^NPE y_func,i)
 
-
-double npe_pdf_func(double X, const std::vector<double> &p, std::vector<double>* idealWaveform) {
+double npe_pdf_func(double X, const std::vector<double> &p, std::vector<double> *idealWaveform) {
 	// This way of passing x as a list then choosing the 0th index is from ROOT's syntax for fitting where you can fit
 	//  with an arbitrary number of dimensions (N input values -> single output, an N dimensional function)
 //	const double X = x[0];
@@ -76,6 +58,7 @@ double npe_pdf_func(double X, const std::vector<double> &p, std::vector<double>*
 	for (int PE = 0; PE < NPE; ++PE) {
 		const double PE_CHARGE = p[2 + PE * 2];
 		const double PE_TIME = p[3 + PE * 2];
+		// TODO(josh): Start using interpolation for this too instead of using floor
 		const int PE_PDF_BIN =
 				pdfT0Sample + std::floor(0.5 + (X - PE_TIME) / (0.01 * pdfSamplingRate)); // v4 use PE_PDF[PE_PDF_CH]
 		if ((PE_PDF_BIN >= 0) && (PE_PDF_BIN < pdfNSamples)) {
@@ -92,12 +75,16 @@ void
 fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWaveforms, std::shared_ptr<SyncFile> file) {
 	EventFitData evFitDat;
 	evFitDat.eventID = event.eventID;
-	for (const auto & i : event.chData) {
+	for (const auto &i: event.chData) {
 		auto channelWaveform = i; // This will be the variable that is modified to be the residual distribution after each iteration
 
 		ChannelFitData chFit;
 		unsigned int ch = channelWaveform.channel;
 		chFit.ch = ch;
+
+		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
+		std::vector<double> tmp = idealWaveforms[ch];
+		std::vector<double> *chIdealWaveform = &tmp;
 
 		// Baseline calculation
 		double baseline = 0;
@@ -108,21 +95,13 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 		unsigned int numPEsFound = 0;
 
 		// This is getting estimate PEs that will then be passed as initial guesses to the minimiser.
-
-		unsigned int p = 0;
-		// FROM HERE
 		while (true) {
-			p++;
-			if(p > 100){
-				break;
-			}
-
 
 			// Making the vector of parameters for the objective function, not present in ROOT version as it uses a static object for the params,
 			//  which is worth considering
 			// TODO(josh): Make a function that does this.
 			std::vector<double> params;
-			params.push_back((double)pesFound.size());
+			params.push_back((double) pesFound.size());
 			params.push_back(baseline);
 			for (auto pe2: pesFound) {
 				params.push_back(pe2.amplitude);
@@ -130,13 +109,10 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 			}
 			// Amplitude adjustment: if the latest PE found is before other one(s),
 			//  its tail is going to add some amplitude to the following one.
-			std::vector<double> var2 = idealWaveforms[ch];
-			std::vector<double>* var = &var2;
-			for (auto & j : pesFound) {
-				unsigned int peTimeBinPos = std::floor(
-						j.time / pdfSamplingRate); // This should use a variable
-				// corresponding to the input sampling rate, however for not they're the same
-				double fitVal = npe_pdf_func(j.time, params, var);
+			for (auto &j: pesFound) {
+				unsigned int peTimeBinPos = std::floor(j.time / pdfSamplingRate); // This should use a variable
+				// corresponding to the input sampling rate, however for now they're the same
+				double fitVal = npe_pdf_func(j.time, params, chIdealWaveform);
 				double extraAmplitude =
 						fitVal - channelWaveform.waveform[peTimeBinPos];
 				double newAmplitude = j.amplitude + extraAmplitude;
@@ -155,13 +131,11 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 			// Compute residual
 //			std::ofstream myfile2;
 //			myfile2.open("fit.csv");
-				// FROM HERE
 			for (unsigned int k = 1; k <= channelWaveform.waveform.size(); ++k) {
-				double val = npe_pdf_func((k - 0.5 + 1) * pdfSamplingRate, params, var);
+				double val = npe_pdf_func((k - 0.5 + 1) * pdfSamplingRate, params, chIdealWaveform);
 //				myfile2 << val << "\n";
 				channelWaveform.waveform[k] = channelWaveform.waveform[k] - val;
 			}
-				// TO HERE ... is where the main slowness in the code comes from
 //			myfile2.close();
 
 
@@ -190,22 +164,22 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 				// improve initial time for a new PE based on average time
 				// over 3 consecutive sample ponderated by the amplitude
 				// of each sample... help a lot to resolve PEs very closed!
-				float time_sum = 0;
-				float ponderation_sum = 0;
+				float timeSum = 0;
+				float ponderationSum = 0;
 				for (unsigned int b = minTimePos - 1; b <= minTimePos + 1; ++b) {
 					float binCenter = (minTimePos - 0.5) * pdfSamplingRate;
 					float binVal = channelWaveform.waveform[minTimePos];
-					time_sum += binCenter * binVal;
-					ponderation_sum += binVal;
+					timeSum += binCenter * binVal;
+					ponderationSum += binVal;
 				}
 
-				guessPE.time = (PEFinderTimeOffset * 0.25) + time_sum / ponderation_sum;
+				guessPE.time = (PEFinderTimeOffset * 0.25) + timeSum / ponderationSum;
 			}
 			numPEsFound += 1;
 			pesFound.push_back(guessPE);
 			channelWaveform = i;
 
-			if(numPEsFound > 100){
+			if (numPEsFound > 100) {
 				break;
 			}
 		}
@@ -231,7 +205,7 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 
 		std::vector<double> initialTimes;
 		std::vector<double> initialAmplitudes;
-		for (auto & k : pesFound){
+		for (auto &k: pesFound) {
 			initialAmplitudes.push_back(k.amplitude);
 			initialTimes.push_back(k.time);
 		}
@@ -240,44 +214,28 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 		std::vector<double> amplitudes = initialAmplitudes;
 
 
-		ceres::Grid1D grid = ceres::Grid1D<double>(idealWaveforms[ch].data(), 0, idealWaveforms[ch].size());
-		auto compute_distortion = new ceres::CubicInterpolator<ceres::Grid1D<double> >(grid);
+		ceres::Grid1D grid = ceres::Grid1D<double>(chIdealWaveform->data(), 0, chIdealWaveform->size());
+		auto idealPDFInterpolator = new ceres::CubicInterpolator<ceres::Grid1D<double> >(grid);
 
 		// Set up the only cost function (also known as residual). This uses
 		// auto-differentiation to obtain the derivative (Jacobian).
 
 		for (unsigned int j = 0; j < channelWaveform.waveform.size(); ++j) {
-//			auto temp = new npe_pdf_functor(xValues[j],
-//			                                channelWaveform.waveform[j],
-//			                                compute_distortion);
-
-//			std::shared_ptr<ceres::CostFunction>(new AutoDiffCostFunction<npe_pdf_functor, 1, 1, 1, 1>(temp));
-//			CostFunction *cost_function =
-//					new AutoDiffCostFunction<npe_pdf_functor, 1, 1, 1, 1>(temp);
-
-
-//			double sumThing = 0;
 			for (int k = 0; k < pesFound.size(); k++) {
 
-//				double f2;
-//				auto evalVal = ((double)pdfT0Sample + ((xValues[j] - times[k]) / (samplingRate2)));
-//				compute_distortion->Evaluate(evalVal, &f2);
-//				auto thing = (amplitudes[k] * f2);
-//				sumThing += thing;
-
 				double baseline2 = 0;
-				problem.AddResidualBlock(new AutoDiffCostFunction<npe_pdf_functor, 1, 1, 1, 1>(new npe_pdf_functor(xValues[j],
-				                                                                                                   channelWaveform.waveform[j],
-				                                                                                                   compute_distortion)), nullptr, &times[k], &amplitudes[k], &baseline2);
-				problem.SetParameterLowerBound(&times[k], 0,  times[k]*0.96);
-				problem.SetParameterLowerBound(&amplitudes[k], 0, amplitudes[k]*0.96);
-				problem.SetParameterUpperBound(&times[k], 0,  times[k]*1.04);
-				problem.SetParameterUpperBound(&amplitudes[k], 0, amplitudes[k]*1.04);
+				problem.AddResidualBlock(
+						new AutoDiffCostFunction<npe_pdf_functor, 1, 1, 1, 1>(new npe_pdf_functor(xValues[j],
+						                                                                          channelWaveform.waveform[j],
+						                                                                          idealPDFInterpolator)),
+						nullptr, &times[k], &amplitudes[k], &baseline2);
+				problem.SetParameterLowerBound(&times[k], 0, times[k] * 0.96);
+				problem.SetParameterLowerBound(&amplitudes[k], 0, amplitudes[k] * 0.96);
+				problem.SetParameterUpperBound(&times[k], 0, times[k] * 1.04);
+				problem.SetParameterUpperBound(&amplitudes[k], 0, amplitudes[k] * 1.04);
 			}
 			// TODO(josh): The minimum amplitude for the actual data is always 63-64 entries ahead of the minimum amplitude for the ideal waveform.
 			//  This is likely relevant to the length of the waveform I'm using being 960 entries, but the ideal waveform being made for 1024 entries
-//			std::cout << j << "\t" << "Actual waveform height:\t" << channelWaveform.waveform[j] << "\t\tFunctor calc waveform height:\t" << sumThing << std::endl;
-//			std::cout << "hello" << std::endl;
 		}
 
 
@@ -294,7 +252,7 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 		Solver::Summary summary;
 		Solve(options, &problem, &summary);
 
-		delete compute_distortion;
+		delete idealPDFInterpolator;
 
 //		std::cout << summary.FullReport() << "\n";
 
@@ -350,7 +308,7 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 		// The fundamental question is: why does the fit seem to give worse parameters than the initial guesses for some fits?!?!?
 	}
 //	FitList->push_back(evFitDat);
-	Writer writer(file);
+	Writer writer(std::move(file));
 	writer.writeEventInfo(evFitDat);
 
 }

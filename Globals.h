@@ -7,7 +7,7 @@
 extern unsigned int winS;
 
 //  Number of channels in readout.
-extern unsigned int numC ;
+extern unsigned int numC;
 
 // Channels to skip.
 extern std::vector<unsigned int> skipChannels;

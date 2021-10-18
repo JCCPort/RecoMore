@@ -16,7 +16,7 @@ public:
 		std::lock_guard<std::mutex> lock(_writerMutex);
 		writeCache_ += dataToWrite;
 		cachedStates_++;
-		if(cachedStates_ == 1e2){
+		if (cachedStates_ == 1e2) {
 			myFile << writeCache_;
 			writeCache_.clear();
 			cachedStates_ = 0;
@@ -46,8 +46,10 @@ public:
 	void write(std::string &dataToWrite) { _sf->write(dataToWrite); }
 
 	static std::string writeWaveformInfo(const ChannelFitData &wfDat);
+
 	static std::string writeFitPE(PEData PEVar);
-	void writeEventInfo(const EventFitData& evData);
+
+	void writeEventInfo(const EventFitData &evData);
 
 private:
 	std::shared_ptr<SyncFile> _sf;

@@ -20,9 +20,9 @@ std::vector<T> slice(std::vector<T> const &v, unsigned int m, unsigned int n) {
 }
 
 
-void displayProgress(std::atomic<unsigned long> &count, std::mutex &m, unsigned int dataLength){
-	while(count != dataLength){
-		std::this_thread::sleep_for (std::chrono::seconds(1));
+void displayProgress(std::atomic<unsigned long> &count, std::mutex &m, unsigned int dataLength) {
+	while (count != dataLength) {
+		std::this_thread::sleep_for(std::chrono::seconds(1));
 		m.lock();
 		std::cout << "Processed: " << count << "/" << dataLength << std::endl;
 		m.unlock();
@@ -32,9 +32,7 @@ void displayProgress(std::atomic<unsigned long> &count, std::mutex &m, unsigned 
 }
 
 bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long> &count, std::mutex &m,
-                 const std::vector<std::vector<double>> &idealWaveforms, const std::shared_ptr<SyncFile>& file) {
-
-//	std::thread progressThread = std::thread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(m), events.size());
+                 const std::vector<std::vector<double>> &idealWaveforms, const std::shared_ptr<SyncFile> &file) {
 
 	for (auto &event: events) {
 		m.lock();
@@ -48,18 +46,19 @@ bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long
 
 
 int main() {
-	WCData data = ReadWCDataFile("/home/josh/CLionProjects/RecoMore/R25.dat");
-	unsigned int numThreads = 4;
+	WCData data = ReadWCDataFile("/home/josh/CLionProjects/RecoMore/R43.dat");
+	unsigned int numThreads = 6;
 
 	static std::atomic<unsigned long> count{0};
 	std::mutex m;
 
-	auto file = std::make_shared<SyncFile>("R25PES_lowerThresh.dat");
+	auto file = std::make_shared<SyncFile>("R43PES_lowerThresh.dat");
 	Writer writer(file);
 
 	std::vector<std::vector<double>> idealWaveforms{64};
 	for (int ch = 0; ch < 64; ch++) {
-		if((ch == 32) || (ch == 36) || (ch == 40) || (ch == 44) || (ch == 48) || (ch == 52) || (ch == 56) || (ch == 60)){
+		if ((ch == 32) || (ch == 36) || (ch == 40) || (ch == 44) || (ch == 48) || (ch == 52) || (ch == 56) ||
+		    (ch == 60)) {
 			continue;
 		}
 		idealWaveforms.at(ch) = readIdealWFs(ch, 10, "/home/josh/CLionProjects/RecoMore/pdf/", pdfNSamples);
@@ -68,7 +67,7 @@ int main() {
 
 	// If only one thread is being used there's no need to use std::thread, just call batchRun conventionally.
 	if (numThreads == 1) {
-		fitBatchPEs(data.getEvents(), count, m, std::reference_wrapper(idealWaveforms),  file);
+		fitBatchPEs(data.getEvents(), count, m, std::reference_wrapper(idealWaveforms), file);
 		return 1;
 	}
 
@@ -89,14 +88,16 @@ int main() {
 	// Carrying out the multi-threaded simulations.
 	unsigned int eventPos = 0;
 	std::cout << data.getEvents().size() << std::endl;
-	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(m), data.getEvents().size());
+	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(m),
+	                           data.getEvents().size());
 
 	// TODO(josh): Scramble the order of events to improve uniformity of how much work each core has?
 	//  Alternatively, move to using a thread pool.
 	// Yeah I can see clearly that one thread is slower
 	for (unsigned int i = 0; i < numThreads; i++) {
 		std::vector passData = slice(data.getEvents(), eventPos, eventPos + threadRepeatCount[i] - 1);
-		std::thread t(fitBatchPEs, passData, std::reference_wrapper(count), std::reference_wrapper(m), idealWaveforms, file);
+		std::thread t(fitBatchPEs, passData, std::reference_wrapper(count), std::reference_wrapper(m), idealWaveforms,
+		              file);
 		threads.push_back(std::move(t));
 		eventPos += threadRepeatCount[i];
 	}

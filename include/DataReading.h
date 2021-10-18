@@ -3,8 +3,8 @@
 
 #include "DataStructures.h"
 
-WCData ReadWCDataFile(const std::string&);
+WCData ReadWCDataFile(const std::string &);
 
-std::vector<double> readIdealWFs(unsigned int, int, const std::string&, unsigned int);
+std::vector<double> readIdealWFs(unsigned int, int, const std::string &, unsigned int);
 
 #endif //RECOMORE_DATAREADING_H
