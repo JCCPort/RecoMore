@@ -16,8 +16,8 @@ namespace client {
 	namespace phoenix = boost::phoenix;
 
 	template<typename Iterator>
-	bool parse_numbers(Iterator first, Iterator last, std::vector<float> &v) {
-		using qi::float_;
+	bool parse_numbers(Iterator first, Iterator last, std::vector<double> &v) {
+		using qi::double_;
 		using qi::phrase_parse;
 		using qi::_1;
 		using phoenix::push_back;
@@ -26,8 +26,8 @@ namespace client {
 
 				//  Begin grammar
 				              (
-				                      float_[push_back(phoenix::ref(v), _1)]
-						                      >> *(' ' >> float_[push_back(phoenix::ref(v), _1)])
+				                      double_[push_back(phoenix::ref(v), _1)]
+						                      >> *(' ' >> double_[push_back(phoenix::ref(v), _1)])
 		                      ),
 				//  End grammar
 
@@ -79,7 +79,7 @@ WCData ReadWCDataFile(const std::string &fileName) {
 			wf.channel = stoi(channelMatch[1].str());
 			getline(&line, &len, fp);
 
-			std::vector<float> temp;
+			std::vector<double> temp;
 			temp.reserve(1024);
 
 			std::string lineStr = std::string(line);

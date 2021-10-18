@@ -6,7 +6,7 @@
 
 struct WaveformData {
 	unsigned short channel;
-	std::vector<float> waveform{};
+	std::vector<double> waveform{};
 };
 
 typedef struct {
@@ -38,8 +38,8 @@ typedef struct {
 
 typedef struct {
 	unsigned short ch;
-	float chi2ndf;
-	float baseline;
+	double chi2ndf;
+	double baseline;
 	std::vector<PEData> pes;
 } ChannelFitData;
 
