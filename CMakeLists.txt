@@ -52,6 +52,6 @@ set(EIGEN_INCLUDE_DIR_HINTS /usr/include/eigen3)
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-add_executable(RecoMore main.cpp src/DataWriting.cpp src/DataReading.cpp src/DataStructures.cpp Globals.h Globals.cpp src/PEFit.cpp utils.cpp utils.h include/ThreadPool.h)
+add_executable(RecoMore main.cpp src/DataWriting.cpp src/DataReading.cpp src/DataStructures.cpp Globals.h Globals.cpp src/PEFit.cpp include/ThreadPool.h)
 target_link_libraries(RecoMore Ceres::ceres)
 target_compile_options(RecoMore PRIVATE -v)

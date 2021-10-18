@@ -10,7 +10,7 @@
 
 class SyncFile {
 public:
-	explicit SyncFile(const std::string &path) : _path(path) { myFile.open(path, std::ios_base::out); }
+	explicit SyncFile(const std::string &path) { myFile.open(path, std::ios_base::out); }
 
 	void write(const std::string &dataToWrite) {
 		std::lock_guard<std::mutex> lock(_writerMutex);
@@ -35,15 +35,12 @@ private:
 	unsigned int cachedStates_ = 0;
 	std::string writeCache_;
 	std::ofstream myFile;
-	std::string _path;
 	std::mutex _writerMutex;
 };
 
 class Writer {
 public:
 	explicit Writer(std::shared_ptr<SyncFile> sf) : _sf(std::move(sf)) {}
-
-	void write(std::string &dataToWrite) { _sf->write(dataToWrite); }
 
 	static std::string writeWaveformInfo(const ChannelFitData &wfDat);
 
