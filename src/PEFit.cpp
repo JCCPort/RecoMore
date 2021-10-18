@@ -193,9 +193,9 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 			params.push_back(pe2.time);
 		}
 
-		std::vector<float> xValues;
+		std::vector<double> xValues;
 		for (unsigned int j = 0; j <= 1024; j++) {
-			xValues.push_back(j * pdfSamplingRate);
+			xValues.push_back((double)j * pdfSamplingRate);
 		}
 
 
