@@ -80,7 +80,7 @@ WCData ReadWCDataFile(const std::string &fileName) {
 			getline(&line, &len, fp);
 
 			std::vector<float> temp;
-			temp.reserve(10000);
+			temp.reserve(1024);
 
 			std::string lineStr = std::string(line);
 			client::parse_numbers(lineStr.begin(), lineStr.end(), temp);
