@@ -1,17 +1,11 @@
 #include "../include/PEFit.h"
 #include "../Globals.h"
 #include <cmath>
-#include <fstream>
 #include "ceres/ceres.h"
 #include "ceres/cubic_interpolation.h"
-#include "ceres/loss_function.h"
-#include "glog/logging.h"
-#include <eigen3/Eigen/Core>
 #include <memory>
 #include <utility>
-#include <memory>
 
-const double samplingRate2 = 0.01 * pdfSamplingRate;
 
 struct npe_pdf_functor {
 	npe_pdf_functor(double x, double y, ceres::CubicInterpolator<ceres::Grid1D<double, true>> *compute_distortion) : x_(
@@ -60,7 +54,7 @@ double npe_pdf_func(double X, const std::vector<double> &p, std::vector<double> 
 		const double PE_TIME = p[3 + PE * 2];
 		// TODO(josh): Start using interpolation for this too instead of using floor
 		const int PE_PDF_BIN =
-				std::round(pdfT0Sample) + std::floor(0.5 + (X - PE_TIME) / (0.01 * pdfSamplingRate)); // v4 use PE_PDF[PE_PDF_CH]
+				pdfT0Sample + (int) std::floor(0.5 + (X - PE_TIME) / (0.01 * pdfSamplingRate)); // v4 use PE_PDF[PE_PDF_CH]
 		if ((PE_PDF_BIN >= 0) && (PE_PDF_BIN < pdfNSamples)) {
 			double thing = idealWaveform->at(PE_PDF_BIN);
 			value += PE_CHARGE * thing;
