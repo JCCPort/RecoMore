@@ -7,6 +7,7 @@ project(RecoMore)
 # Clang passes flags through to the linker (likely ld) by
  set(CMAKE_EXE_LINKER_FLAGS "-Xlinker -v")
 
+# Will compile and run for C++ 17 too
 set(CMAKE_CXX_STANDARD 20)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -18,7 +19,7 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
 endif ()
 
 EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
-if (NOT "${ARCHITECTURE}" STREQUAL "arm64") # TODO(josh): Also don't want to add this flag if we're in debug mode
+if (NOT "${ARCHITECTURE}" STREQUAL "arm64" AND CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 endif ()
