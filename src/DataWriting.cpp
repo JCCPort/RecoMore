@@ -2,6 +2,11 @@
 
 // TODO(josh): the call to _sf->write must be done at the end of the event (more precisely the end of each unit of data
 //  processed by a single call to the fitting function).
+/**
+ *
+ * @param PEVar
+ * @return
+ */
 std::string Writer::writeFitPE(PEData PEVar) {
 	std::string writeString;
 	writeString += std::to_string(PEVar.amplitude);
@@ -19,6 +24,11 @@ std::string Writer::writeFitPE(PEData PEVar) {
 	return writeString;
 }
 
+/**
+ *
+ * @param wfDat
+ * @return
+ */
 std::string Writer::writeWaveformInfo(const ChannelFitData &wfDat) {
 	std::string writeString;
 	writeString += "Ch=";
@@ -37,7 +47,10 @@ std::string Writer::writeWaveformInfo(const ChannelFitData &wfDat) {
 	return writeString;
 }
 
-
+/**
+ *
+ * @param evData
+ */
 void Writer::writeEventInfo(const EventFitData &evData) {
 	std::string writeString;
 	writeString += "EVENT=";

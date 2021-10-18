@@ -178,8 +178,6 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 			}
 		}
 
-		residualWaveform = waveformData;
-
 		std::vector<double> xValues;
 		for (unsigned int j = 0; j <= 1024; j++) {
 			xValues.push_back((double) j * pdfSamplingRate);
@@ -207,13 +205,13 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 		// Set up the only cost function (also known as residual). This uses
 		// auto-differentiation to obtain the derivative (Jacobian).
 
-		for (unsigned int j = 0; j < residualWaveform.waveform.size(); ++j) {
+		for (unsigned int j = 0; j < waveformData.waveform.size(); ++j) {
 			for (int k = 0; k < pesFound.size(); k++) {
 
 				double baseline2 = 0;
 				problem.AddResidualBlock(
 						new AutoDiffCostFunction<npe_pdf_functor, 1, 1, 1, 1>(new npe_pdf_functor(xValues[j],
-						                                                                          residualWaveform.waveform[j],
+						                                                                          waveformData.waveform[j],
 						                                                                          idealPDFInterpolator)),
 						nullptr, &times[k], &amplitudes[k], &baseline2);
 				problem.SetParameterLowerBound(&times[k], 0, times[k] * 0.96);

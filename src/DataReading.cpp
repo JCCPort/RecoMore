@@ -39,6 +39,11 @@ namespace client {
 	}
 }
 
+/**
+ *
+ * @param fileName
+ * @return
+ */
 WCData ReadWCDataFile(const std::string &fileName) {
 	// Defining regular expression searches to be used for getting event and channel numbers.
 	std::regex eventNumberRegex("=== EVENT (\\d*) ===\\r");

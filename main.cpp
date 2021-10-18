@@ -10,6 +10,14 @@
 
 #include "include/ThreadPool.h"
 
+/**
+ *
+ * @tparam T
+ * @param v
+ * @param m
+ * @param n
+ * @return
+ */
 template<typename T>
 std::vector<T> slice(std::vector<T> const &v, unsigned int m, unsigned int n) {
 	auto first = v.cbegin() + m;
@@ -19,7 +27,12 @@ std::vector<T> slice(std::vector<T> const &v, unsigned int m, unsigned int n) {
 	return vec;
 }
 
-
+/**
+ *
+ * @param count
+ * @param m
+ * @param dataLength
+ */
 void displayProgress(std::atomic<unsigned long> &count, std::mutex &m, unsigned int dataLength) {
 	while (count != dataLength) {
 		std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -31,16 +44,23 @@ void displayProgress(std::atomic<unsigned long> &count, std::mutex &m, unsigned 
 
 }
 
+/**
+ *
+ * @param events
+ * @param count
+ * @param m
+ * @param idealWaveforms
+ * @param file
+ * @return
+ */
 bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long> &count, std::mutex &m,
                  const std::vector<std::vector<double>> &idealWaveforms, const std::shared_ptr<SyncFile> &file) {
-
 	for (auto &event: events) {
 		m.lock();
 		++count;
 		m.unlock();
 		fitPE(event, idealWaveforms, file);
 	}
-
 	return true;
 }
 
@@ -71,7 +91,7 @@ int main() {
 		return 1;
 	}
 
-	// Determining how many rays each thread should simulate.
+	// Determining how many events each thread should run over.
 	unsigned int threadRepeatCount[numThreads];
 	unsigned int threadsWithExtra = data.getEvents().size() % numThreads;
 	unsigned int minRepeatsPerThread = data.getEvents().size() / numThreads;
@@ -85,7 +105,7 @@ int main() {
 	}
 
 	std::vector<std::thread> threads;
-	// Carrying out the multi-threaded simulations.
+	// Carrying out the multi-threaded reconstruction.
 	unsigned int eventPos = 0;
 	std::cout << data.getEvents().size() << std::endl;
 	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(m),
@@ -125,5 +145,4 @@ int main() {
 
 
 	return 0;
-	// TODO(josh): As the initial guesses are so good, maybe have an option to just use those if someone wants it to take minutes but cares less for accuracy?
 }
