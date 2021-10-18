@@ -48,8 +48,10 @@ WCData ReadWCDataFile(const std::string &fileName) {
 	WaveformData wf;
 
 	FILE *fp = fopen(fileName.c_str(), "r");
-	if (fp == nullptr)
-		exit(EXIT_FAILURE);
+	if (fp == nullptr){
+		throw std::runtime_error("WaveCatcher data file: " + fileName + " not found.");
+	}
+
 
 	char *line = nullptr;
 	size_t len = 0;
@@ -109,7 +111,7 @@ readIdealWFs(unsigned int ch, int interpFactor, const std::string &idealWFDir, u
 	std::ifstream idealWFFile(idealWFPath, std::ifstream::in);
 
 	if (!idealWFFile.is_open()) {
-		throw std::runtime_error(idealWFPath + " not found.");
+		throw std::runtime_error("Ideal PE PDF: " + idealWFPath + " not found.");
 	}
 
 	double idealWFTime;

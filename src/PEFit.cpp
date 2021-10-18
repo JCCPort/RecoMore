@@ -107,6 +107,7 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 				params.push_back(pe2.amplitude);
 				params.push_back(pe2.time);
 			}
+
 			// Amplitude adjustment: if the latest PE found is before other one(s),
 			//  its tail is going to add some amplitude to the following one.
 			for (auto &j: pesFound) {
@@ -307,7 +308,6 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 
 		// The fundamental question is: why does the fit seem to give worse parameters than the initial guesses for some fits?!?!?
 	}
-//	FitList->push_back(evFitDat);
 	Writer writer(std::move(file));
 	writer.writeEventInfo(evFitDat);
 
