@@ -105,7 +105,7 @@ int main() {
 	}
 
 	std::vector<std::thread> threads;
-	// Carrying out the multi-threaded reconstruction.
+	// Carrying out the multithreaded reconstruction.
 	unsigned int eventPos = 0;
 	std::cout << data.getEvents().size() << std::endl;
 	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(m),

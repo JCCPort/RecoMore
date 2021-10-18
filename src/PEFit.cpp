@@ -8,15 +8,15 @@
 
 
 struct npe_pdf_functor {
-	npe_pdf_functor(double x, double y, ceres::CubicInterpolator<ceres::Grid1D<double, true>> *compute_distortion) : x_(
-			x), y_(y), compute_distortion_(compute_distortion) {};
+	npe_pdf_functor(double x, double y, ceres::CubicInterpolator<ceres::Grid1D<double, true>> *PDFInterpolator) : x_(
+			x), y_(y), PDFInterpolator_(PDFInterpolator) {};
 
 	template<typename T>
 	bool operator()(const T *const time, const T *const charge, const T *const baseline, T *residual) const {
 		// TODO(josh): Modify so that starting value of residual[0] = baseline
 		T f;
 		auto evalVal = ((double) pdfT0Sample + ((x_ - time[0]) / (0.01 * pdfSamplingRate)));
-		compute_distortion_->Evaluate(evalVal, &f);
+		PDFInterpolator_->Evaluate(evalVal, &f);
 		auto thing = (charge[0] * f) - baseline[0];
 		residual[0] = y_ - thing;
 		return true;
@@ -25,7 +25,7 @@ struct npe_pdf_functor {
 private:
 	const double x_;
 	const double y_;
-	ceres::CubicInterpolator<ceres::Grid1D<double> > *compute_distortion_;
+	ceres::CubicInterpolator<ceres::Grid1D<double> > *PDFInterpolator_;
 };
 
 
@@ -54,7 +54,7 @@ double npe_pdf_func(double X, const std::vector<double> &p, std::vector<double> 
 		const double PE_TIME = p[3 + PE * 2];
 		// TODO(josh): Start using interpolation for this too instead of using floor
 		const int PE_PDF_BIN =
-				pdfT0Sample + (int) std::floor(0.5 + (X - PE_TIME) / (0.01 * pdfSamplingRate)); // v4 use PE_PDF[PE_PDF_CH]
+				pdfT0Sample + (int) std::floor(0.5 + (X - PE_TIME) / (0.01 * pdfSamplingRate));
 		if ((PE_PDF_BIN >= 0) && (PE_PDF_BIN < pdfNSamples)) {
 			double thing = idealWaveform->at(PE_PDF_BIN);
 			value += PE_CHARGE * thing;
