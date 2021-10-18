@@ -66,13 +66,13 @@ bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long
 
 
 int main() {
-	WCData data = ReadWCDataFile("/home/josh/CLionProjects/RecoMore/R43.dat");
-	unsigned int numThreads = 6;
+	WCData data = ReadWCDataFile("/home/josh/CLionProjects/RecoMore/R32.dat");
+	unsigned int numThreads = 1;
 
 	static std::atomic<unsigned long> count{0};
 	std::mutex m;
 
-	auto file = std::make_shared<SyncFile>("R43PES_lowerThresh.dat");
+	auto file = std::make_shared<SyncFile>("R32PES_lowerThresh.dat");
 	Writer writer(file);
 
 	std::vector<std::vector<double>> idealWaveforms{64};
