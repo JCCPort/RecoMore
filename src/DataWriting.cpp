@@ -11,15 +11,15 @@ std::string Writer::writeFitPE(PEData PEVar) {
 	std::string writeString;
 	writeString += std::to_string(PEVar.amplitude);
 	writeString += ',';
-	writeString += std::to_string(PEVar.amplitudeError);
-	writeString += ',';
+//	writeString += std::to_string(PEVar.amplitudeError);
+//	writeString += ',';
 	writeString += std::to_string(PEVar.time * 100);
-	writeString += ',';
-	writeString += std::to_string(PEVar.timeError);
-	writeString += ',';
-	writeString += std::to_string(PEVar.foundAmplitude);
-	writeString += ',';
-	writeString += std::to_string(PEVar.foundTime);
+//	writeString += ',';
+//	writeString += std:q:to_string(PEVar.timeError);
+//	writeString += ',';
+//	writeString += std::to_string(PEVar.foundAmplitude);
+//	writeString += ',';
+//	writeString += std::to_string(PEVar.foundTime);
 	writeString += '\n';
 	return writeString;
 }

@@ -8,19 +8,20 @@
 
 
 struct npe_pdf_functor {
-	npe_pdf_functor(double x, double y, ceres::CubicInterpolator<ceres::Grid1D<double, true>> *PDFInterpolator, int numPES) : x_(
+	npe_pdf_functor(double x, double y, ceres::CubicInterpolator<ceres::Grid1D<double, true>> *PDFInterpolator,
+	                int numPES) : x_(
 			x), y_(y), PDFInterpolator_(PDFInterpolator), numPES_(numPES) {};
 
 	template<typename T>
-	bool operator()(T const* const* params, T *residual) const {
+	bool operator()(T const *const *params, T *residual) const {
 		// TODO(josh): Modify so that starting value of residual[0] = baseline
 		T f;
 		T X_(x_);
 		residual[0] = params[0][0];
-		for(int i = 0; i < numPES_; i++){
-			auto evalVal = ((double) pdfT0Sample + ((X_ - params[(2*i)+2][0]) / (0.01 * pdfSamplingRate)));
+		for (int i = 0; i < numPES_; i++) {
+			auto evalVal = ((double) pdfT0Sample + ((X_ - params[(2 * i) + 2][0]) / (0.01 * pdfSamplingRate)));
 			PDFInterpolator_->Evaluate(evalVal, &f);
-			auto thing = (params[(2*i)+1][0] * f);
+			auto thing = (params[(2 * i) + 1][0] * f);
 			residual[0] -= thing;
 		}
 		residual[0] += y_;
@@ -72,7 +73,7 @@ double npe_pdf_func(double X, const std::vector<double> &p, std::vector<double> 
 
 
 void
-fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWaveforms, std::shared_ptr<SyncFile> file) {
+fitPE(const EventData &event, std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file) {
 	EventFitData evFitDat;
 	evFitDat.eventID = event.eventID;
 	for (const auto waveformData: event.chData) {
@@ -83,7 +84,7 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 		chFit.ch = ch;
 
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
-		std::vector<double> tmp = idealWaveforms[ch];
+		std::vector<double> tmp = (*idealWaveforms)[ch];
 		std::vector<double> *chIdealWaveform = &tmp;
 
 		// Baseline calculation
@@ -121,31 +122,31 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 
 			}
 
-			std::ofstream myfile;
-			myfile.open("rawWaveform.csv");
-			for (float k: waveformData.waveform) {
-				myfile << k << "\n";
-			}
-			myfile.close();
+//			std::ofstream myfile;
+//			myfile.open("rawWaveform.csv");
+//			for (float k: waveformData.waveform) {
+//				myfile << k << "\n";
+//			}
+//			myfile.close();
 
 
 			// Compute residual
-			std::ofstream myfile2;
-			myfile2.open("fit.csv");
+//			std::ofstream myfile2;
+//			myfile2.open("fit.csv");
 			for (unsigned int k = 0; k < residualWaveform.waveform.size(); ++k) {
 				double val = npe_pdf_func((k + 0.5) * pdfSamplingRate, params, chIdealWaveform);
-				myfile2 << val << "\n";
+//				myfile2 << val << "\n";
 				residualWaveform.waveform[k] = residualWaveform.waveform[k] - val;
 			}
-			myfile2.close();
+//			myfile2.close();
 
 
-			std::ofstream myfile3;
-			myfile3.open("residual.csv");
-			for (float k: residualWaveform.waveform) {
-				myfile3 << k << "\n";
-			}
-			myfile3.close();
+//			std::ofstream myfile3;
+//			myfile3.open("residual.csv");
+//			for (float k: residualWaveform.waveform) {
+//				myfile3 << k << "\n";
+//			}
+//			myfile3.close();
 
 
 
@@ -153,7 +154,7 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 			auto minPosIt = std::min_element(residualWaveform.waveform.begin(), residualWaveform.waveform.end());
 			unsigned int minTimePos = std::distance(residualWaveform.waveform.begin(), minPosIt);
 
-			if (-residualWaveform.waveform[minTimePos] < 0.013) {
+			if (-residualWaveform.waveform[minTimePos] < 0.011) {
 				break;
 			}
 
@@ -212,7 +213,7 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 		// auto-differentiation to obtain the derivative (Jacobian).
 
 		double baseline2 = 0;
-		std::vector<double*> params;
+		std::vector<double *> params;
 		params.push_back(&baseline2);
 		for (int i = 0; i < pesFound.size(); i++) {
 			params.push_back(&amplitudes[i]);
@@ -220,16 +221,13 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 		}
 
 		for (unsigned int j = 0; j < waveformData.waveform.size(); ++j) {
-//			auto costFunction = new AutoDiffCostFunction<npe_pdf_functor, 1, 1, 1, 1>(new npe_pdf_functor(xValues[j],
-//			                                                                                              waveformData.waveform[j],
-//			                                                                                              idealPDFInterpolator));
 			auto costFunction = new DynamicAutoDiffCostFunction<npe_pdf_functor, 4>(new npe_pdf_functor(xValues[j],
-			                                                                                              waveformData.waveform[j],
-			                                                                                              idealPDFInterpolator,
+			                                                                                            waveformData.waveform[j],
+			                                                                                            idealPDFInterpolator,
 			                                                                                            pesFound.size()));
 
 			costFunction->AddParameterBlock(1);
-			for (auto pe: pesFound){
+			for (auto pe: pesFound) {
 				costFunction->AddParameterBlock(1);
 				costFunction->AddParameterBlock(1);
 			}
@@ -237,24 +235,9 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 
 			problem.AddResidualBlock(costFunction, nullptr, params);
 
-//			for (int k = 0; k < pesFound.size(); k++) {
-//				auto costFunction = new AutoDiffCostFunction<npe_pdf_functor, 1, 1, 1, 1>(new npe_pdf_functor(xValues[j],
-//				                                                                                              waveformData.waveform[j],
-//				                                                                                              idealPDFInterpolator));
-//				problem.AddResidualBlock(costFunction, nullptr, &times[k], &amplitudes[k], &baseline2);
-//			}
 			// TODO(josh): The minimum amplitude for the actual data is always 63-64 entries ahead of the minimum amplitude for the ideal waveform.
 			//  This is likely relevant to the length of the waveform I'm using being 960 entries, but the ideal waveform being made for 1024 entries
 		}
-
-		for (int k = 0; k < pesFound.size(); k++) {
-//			problem.SetParameterLowerBound(&times[k], 0, initialTimes[k] * 0.95);
-//			problem.SetParameterLowerBound(&amplitudes[k], 0, initialAmplitudes[k] * 1.8);
-//			problem.SetParameterUpperBound(&times[k], 0, initialTimes[k] * 1.05);
-//			problem.SetParameterUpperBound(&amplitudes[k], 0, initialAmplitudes[k] * 0.3);
-		}
-//		problem.SetParameterLowerBound(params[0], 0, -0.001);
-//		problem.SetParameterLowerBound(params[0], 0, 0.001);
 
 		// Run the solver!
 		Solver::Options options;
@@ -265,31 +248,30 @@ fitPE(const EventData &event, const std::vector<std::vector<double>> &idealWavef
 //		options.linear_solver_type = ceres::DENSE_SCHUR;
 //		options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
 //		options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
-		options.minimizer_progress_to_stdout = true;
+		options.minimizer_progress_to_stdout = false;
 		Solver::Summary summary;
 		Solve(options, &problem, &summary);
 
 		delete idealPDFInterpolator;
 
-		std::cout << summary.FullReport() << "\n";
+//		std::cout << summary.FullReport() << "\n";
 
 
+//		std::vector<double> params2;
+//		params2.push_back(pesFound.size());
+//		params2.push_back(baseline);
+//		for (int k = 0; k < pesFound.size(); k++) {
+//			params2.push_back(amplitudes[k]);
+//			params2.push_back(times[k]);
+//		}
 
-		std::vector<double> params2;
-		params2.push_back(pesFound.size());
-		params2.push_back(baseline);
-		for (int k = 0; k < pesFound.size(); k++) {
-			params2.push_back(amplitudes[k]);
-			params2.push_back(times[k]);
-		}
-
-		std::ofstream myfile4;
-		myfile4.open("fullFit.csv");
-		for (unsigned int k = 0; k < waveformData.waveform.size(); k++) {
-			auto thing = npe_pdf_func(k * pdfSamplingRate, params2, chIdealWaveform);
-			myfile4 << thing << "\n";
-		}
-		myfile4.close();
+//		std::ofstream myfile4;
+//		myfile4.open("fullFit.csv");
+//		for (unsigned int k = 0; k < waveformData.waveform.size(); k++) {
+//			auto thing = npe_pdf_func(k * pdfSamplingRate, params2, chIdealWaveform);
+//			myfile4 << thing << "\n";
+//		}
+//		myfile4.close();
 
 //		for (int k = 0; k < pesFound.size(); k++) {
 //			std::cout << "Amplitude:\t" << initialAmplitudes[k] << " -> " << amplitudes[k] << std::endl;
