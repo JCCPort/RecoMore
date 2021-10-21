@@ -73,7 +73,7 @@ double npe_pdf_func(double X, const std::vector<double> &p, std::vector<double> 
 
 
 void
-fitPE(const EventData &event, std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file) {
+fitPE(const EventData &event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file) {
 	EventFitData evFitDat;
 	evFitDat.eventID = event.eventID;
 	for (const auto waveformData: event.chData) {

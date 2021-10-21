@@ -54,7 +54,7 @@ void displayProgress(std::atomic<unsigned long> &count, std::mutex &m, unsigned 
  * @return
  */
 bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long> &count, std::mutex &m,
-                 std::vector<std::vector<double>> *idealWaveforms, const std::shared_ptr<SyncFile> &file) {
+                 const std::vector<std::vector<double>> * idealWaveforms, const std::shared_ptr<SyncFile> &file) {
 	for (auto &event: events) {
 		m.lock();
 		++count;
@@ -66,14 +66,15 @@ bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long
 
 
 int main() {
-	WCData data = ReadWCDataFile("/home/josh/CLionProjects/RecoMore/R32.dat");
-	unsigned int numThreads = 6;
-	unsigned int batchSize = 1;
-	// TODO(josh): Investigate why this code ran so quickly last night 23:45ish 18/10/2021
+	// TODO(josh): I strongly suspect we're being slowed down due to competing access for ideal waveform data.
+	//  somewhere there's an inefficiency as CPU usage isn't being maxed out
+	WCData data = ReadWCDataFile("/home/josh/CLionProjects/RecoMore/R49.dat");
+	unsigned int numThreads = 16;
+	unsigned int batchSize = 20;
 	static std::atomic<unsigned long> count{0};
 	std::mutex m;
 
-	auto file = std::make_shared<SyncFile>("R32PES.dat");
+	auto file = std::make_shared<SyncFile>("R49PES.dat");
 	Writer writer(file);
 
 	std::vector<std::vector<double>> idealWaveforms{64};
