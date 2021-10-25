@@ -73,10 +73,10 @@ double npe_pdf_func(double X, const std::vector<double> &p, std::vector<double> 
 
 
 void
-fitPE(const EventData &event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file) {
+fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file) {
 	EventFitData evFitDat;
-	evFitDat.eventID = event.eventID;
-	for (const auto waveformData: event.chData) {
+	evFitDat.eventID = event->eventID;
+	for (const auto waveformData: event->chData) {
 		auto residualWaveform = waveformData; // This will be the variable that is modified to be the residual distribution after each iteration
 
 		ChannelFitData chFit;

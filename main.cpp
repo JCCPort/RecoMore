@@ -9,6 +9,14 @@
 #include "include/DataWriting.h"
 #include <boost/algorithm/string.hpp>
 
+#include <boost/asio/io_service.hpp>
+#include <boost/bind.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/post.hpp>
+
+
+
 #include "include/ThreadPool.h"
 
 /**
@@ -56,11 +64,11 @@ void displayProgress(std::atomic<unsigned long> &count, std::mutex &m, unsigned 
  */
 bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long> &count, std::mutex &m,
                  const std::vector<std::vector<double>> * idealWaveforms, const std::shared_ptr<SyncFile> &file) {
-	for (auto &event: events) {
+	for (const auto& event: events) {
 		m.lock();
 		++count;
 		m.unlock();
-		fitPE(event, idealWaveforms, file);
+		fitPE(&event, idealWaveforms, file);
 	}
 	return true;
 }
@@ -78,14 +86,15 @@ int main(int argc, char** argv) {
 
 	WCData data = ReadWCDataFile(inputFile);
 
-	unsigned int numThreads = 8;
-	unsigned int batchSize = 20;
+	unsigned int numThreads = 10;
+	unsigned int batchNumber = 500;
 	static std::atomic<unsigned long> count{0};
 	std::mutex m;
 
 	auto file = std::make_shared<SyncFile>(outputFile);
 	Writer writer(file);
 
+	// TODO(josh): Use info read in from wavecatcher data file to determine what channels ideal PDFs to load.
 	std::vector<std::vector<double>> idealWaveforms{64};
 	for (int ch = 0; ch < 64; ch++) {
 		if ((ch == 32) || (ch == 36) || (ch == 40) || (ch == 44) || (ch == 48) || (ch == 52) || (ch == 56) ||
@@ -96,21 +105,39 @@ int main(int argc, char** argv) {
 	}
 
 
+	if (numThreads == 1) {
+		fitBatchPEs(data.getEvents(), count, m, &idealWaveforms, file);
+		return 1;
+	}
+
+	// Determining how many events each thread should run over.
+	unsigned int threadRepeatCount[batchNumber];
+	unsigned int threadsWithExtra = data.getEvents().size() % batchNumber;
+	unsigned int minRepeatsPerThread = data.getEvents().size() / batchNumber;
+
+	for (unsigned int i = 0; i < batchNumber; i++) {
+		if (i < threadsWithExtra) {
+			threadRepeatCount[i] = minRepeatsPerThread + 1;
+		} else {
+			threadRepeatCount[i] = minRepeatsPerThread;
+		}
+	}
+
 	ThreadPool pool(numThreads);
 
 	unsigned int eventPos = 0;
-	std::cout << data.getEvents().size() << std::endl;
 	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(m),
 	                           data.getEvents().size());
 
-	for(int i = 0; (int)(i < data.getEvents().size()/batchSize); i++) {
-		std::vector passData = slice(data.getEvents(), eventPos, eventPos + batchSize - 1);
+	for(int i = 0; i < batchNumber; i++){
+		std::vector passData = slice(data.getEvents(), eventPos, eventPos + threadRepeatCount[i] - 1);
 		pool.push_task(fitBatchPEs, passData, std::reference_wrapper(count), std::reference_wrapper(m), &idealWaveforms,
 		               file);
-		eventPos += batchSize;
+		eventPos += threadRepeatCount[i];
 	}
 
 	progressThread.join();
+
 	file->closeFile();
 
 	return 0;
