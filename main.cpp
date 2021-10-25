@@ -7,6 +7,7 @@
 #include "include/PEFit.h"
 #include "Globals.h"
 #include "include/DataWriting.h"
+#include <boost/algorithm/string.hpp>
 
 #include "include/ThreadPool.h"
 
@@ -65,16 +66,24 @@ bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long
 }
 
 
-int main() {
+int main(int argc, char** argv) {
 	// TODO(josh): I strongly suspect we're being slowed down due to competing access for ideal waveform data.
 	//  somewhere there's an inefficiency as CPU usage isn't being maxed out
-	WCData data = ReadWCDataFile("/home/josh/CLionProjects/RecoMore/R49.dat");
-	unsigned int numThreads = 16;
+
+	std::string inputFile = std::string(argv[1]);
+	std::vector<std::string> splitString;
+	boost::split(splitString, inputFile, boost::is_any_of("."));
+	std::string pdfDir = std::string(argv[2]);
+	std::string outputFile = splitString[0] + "PES.dat";
+
+	WCData data = ReadWCDataFile(inputFile);
+
+	unsigned int numThreads = 8;
 	unsigned int batchSize = 20;
 	static std::atomic<unsigned long> count{0};
 	std::mutex m;
 
-	auto file = std::make_shared<SyncFile>("R49PES.dat");
+	auto file = std::make_shared<SyncFile>(outputFile);
 	Writer writer(file);
 
 	std::vector<std::vector<double>> idealWaveforms{64};
@@ -83,11 +92,11 @@ int main() {
 		    (ch == 60)) {
 			continue;
 		}
-		idealWaveforms.at(ch) = readIdealWFs(ch, 10, "/home/josh/CLionProjects/RecoMore/pdf/", pdfNSamples);
+		idealWaveforms.at(ch) = readIdealWFs(ch, 10, pdfDir, pdfNSamples);
 	}
 
 
-	thread_pool pool(numThreads);
+	ThreadPool pool(numThreads);
 
 	unsigned int eventPos = 0;
 	std::cout << data.getEvents().size() << std::endl;

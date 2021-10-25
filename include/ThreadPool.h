@@ -33,7 +33,7 @@
 /**
  * @brief A C++17 thread pool class. The user submits tasks to be executed into a queue. Whenever a thread becomes available, it pops a task from the queue and executes it. Each task is automatically assigned a future, which can be used to wait for the task to finish executing and/or obtain its eventual return value.
  */
-class thread_pool
+class ThreadPool
 {
 	typedef std::uint_fast32_t ui32;
 	typedef std::uint_fast64_t ui64;
@@ -48,7 +48,7 @@ public:
 	 *
 	 * @param _thread_count The number of threads to use. The default value is the total number of hardware threads available, as reported by the implementation. With a hyperthreaded CPU, this will be twice the number of CPU cores. If the argument is zero, the default value will be used instead.
 	 */
-	thread_pool(const ui32 &_thread_count = std::thread::hardware_concurrency())
+	ThreadPool(const ui32 &_thread_count = std::thread::hardware_concurrency())
 			: thread_count(_thread_count ? _thread_count : std::thread::hardware_concurrency()), threads(new std::thread[_thread_count ? _thread_count : std::thread::hardware_concurrency()])
 	{
 		create_threads();
@@ -57,7 +57,7 @@ public:
 	/**
 	 * @brief Destruct the thread pool. Waits for all tasks to complete, then destroys all threads. Note that if the variable paused is set to true, then any tasks still in the queue will never be executed.
 	 */
-	~thread_pool()
+	~ThreadPool()
 	{
 		wait_for_tasks();
 		running = false;
@@ -330,7 +330,7 @@ private:
 	{
 		for (ui32 i = 0; i < thread_count; i++)
 		{
-			threads[i] = std::thread(&thread_pool::worker, this);
+			threads[i] = std::thread(&ThreadPool::worker, this);
 		}
 	}
 
