@@ -36,7 +36,7 @@ private:
 };
 
 
-double npe_pdf_func(double X, const std::vector<double> &p, std::vector<double> *idealWaveform) {
+float npe_pdf_func(float X, const std::vector<float> &p, std::vector<double> *idealWaveform) {
 	// This way of passing x as a list then choosing the 0th index is from ROOT's syntax for fitting where you can fit
 	//  with an arbitrary number of dimensions (N input values -> single output, an N dimensional function)
 //	const double X = x[0];
@@ -51,19 +51,19 @@ double npe_pdf_func(double X, const std::vector<double> &p, std::vector<double> 
 	// p[3+N*2] : time of PE #N
 
 	const int NPE = (int) (p[0]);
-	const double BASELINE = p[1];
+	const float BASELINE = p[1];
 
-	double value = BASELINE;
+	float value = BASELINE;
 
 	// This is adding up the contribution of each fit PE to a specific bin
 	for (int PE = 0; PE < NPE; ++PE) {
-		const double PE_CHARGE = p[2 + PE * 2];
-		const double PE_TIME = p[3 + PE * 2];
+		const float PE_CHARGE = p[2 + PE * 2];
+		const float PE_TIME = p[3 + PE * 2];
 		// TODO(josh): Start using interpolation for this too instead of using floor
 		const int PE_PDF_BIN =
 				pdfT0Sample + (int) std::floor(0.5 + (X - PE_TIME) / (0.01 * pdfSamplingRate));
 		if ((PE_PDF_BIN >= 0) && (PE_PDF_BIN < pdfNSamples)) {
-			double thing = idealWaveform->at(PE_PDF_BIN);
+			float thing = idealWaveform->at(PE_PDF_BIN);
 			value += PE_CHARGE * thing;
 		}
 	}
@@ -72,11 +72,15 @@ double npe_pdf_func(double X, const std::vector<double> &p, std::vector<double> 
 }
 
 
+float ampDiff = 0;
+float timeDiff = 0;
+int N = 0;
+
 void
 fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file) {
 	EventFitData evFitDat;
 	evFitDat.eventID = event->eventID;
-	for (const auto waveformData: event->chData) {
+	for (const auto& waveformData: event->chData) {
 		auto residualWaveform = waveformData; // This will be the variable that is modified to be the residual distribution after each iteration
 
 		ChannelFitData chFit;
@@ -102,8 +106,8 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			// Making the vector of parameters for the objective function, not present in ROOT version as it uses a static object for the params,
 			//  which is worth considering
 			// TODO(josh): Make a function that does this.
-			std::vector<double> params;
-			params.push_back((double) pesFound.size());
+			std::vector<float> params;
+			params.push_back((float) pesFound.size());
 			params.push_back(baseline);
 			for (auto pe: pesFound) {
 				params.push_back(pe.amplitude);
@@ -115,9 +119,9 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			for (auto &pe: pesFound) {
 				unsigned int peTimeBinPos = std::floor(pe.time / pdfSamplingRate); // This should use a variable
 				// corresponding to the input sampling rate, however for now they're the same
-				double fitVal = npe_pdf_func(pe.time, params, chIdealWaveform);
-				double extraAmplitude = fitVal - residualWaveform.waveform[peTimeBinPos];
-				double newAmplitude = pe.amplitude + extraAmplitude;
+				float fitVal = npe_pdf_func(pe.time, params, chIdealWaveform);
+				float extraAmplitude = fitVal - residualWaveform.waveform[peTimeBinPos];
+				float newAmplitude = pe.amplitude + extraAmplitude;
 				pe.amplitude = newAmplitude;
 
 			}
@@ -134,7 +138,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 //			std::ofstream myfile2;
 //			myfile2.open("fit.csv");
 			for (unsigned int k = 0; k < residualWaveform.waveform.size(); ++k) {
-				double val = npe_pdf_func((k + 0.5) * pdfSamplingRate, params, chIdealWaveform);
+				float val = npe_pdf_func(float(k + 0.5) * pdfSamplingRate, params, chIdealWaveform);
 //				myfile2 << val << "\n";
 				residualWaveform.waveform[k] = residualWaveform.waveform[k] - val;
 			}
@@ -159,7 +163,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			}
 
 			guessPE.amplitude = -residualWaveform.waveform[minTimePos];
-			guessPE.time = minTimePos * pdfSamplingRate;
+			guessPE.time = float(minTimePos) * pdfSamplingRate;
 
 			if ((minTimePos > 1) && (minTimePos < 1024)) {
 				// improve initial time for a new PE based on average time
@@ -173,9 +177,9 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 					timeSum += binCenter * binVal;
 					ponderationSum += binVal;
 				}
-
-				guessPE.time = (PEFinderTimeOffset * 0.10) + timeSum / ponderationSum;
+				guessPE.time = float(PEFinderTimeOffset * 0.10) + timeSum / ponderationSum;
 			}
+
 			numPEsFound += 1;
 			pesFound.push_back(guessPE);
 			residualWaveform = waveformData;
@@ -204,6 +208,11 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 
 		std::vector<double> times = initialTimes;
 		std::vector<double> amplitudes = initialAmplitudes;
+
+		for(int i = 0; i < times.size(); i++) {
+			times[i] += timeDiff;
+			amplitudes[i] += ampDiff;
+		}
 
 
 		ceres::Grid1D grid = ceres::Grid1D<double>(chIdealWaveform->data(), 0, (int) chIdealWaveform->size());
@@ -283,12 +292,16 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 
 		for (int k = 0; k < pesFound.size(); k++) {
 			PEData pe;
-			pe.amplitude = amplitudes[k];
-			pe.time = times[k];
+			pe.amplitude = float(amplitudes[k]);
+			pe.time = float(times[k]);
 			FitPEs.emplace_back(pe);
+			N++;
+			ampDiff = ampDiff + ((pe.amplitude - initialAmplitudes[k]) - ampDiff) / N;
+			timeDiff = timeDiff + ((pe.time - initialTimes[k]) - timeDiff) / N;
 		}
 
 		chFit.pes = FitPEs;
+		chFit.baseline = float(baseline2);
 		evFitDat.sipm.push_back(chFit);
 
 

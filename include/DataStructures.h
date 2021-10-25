@@ -6,7 +6,7 @@
 
 struct WaveformData {
 	unsigned short channel;
-	std::vector<double> waveform{};
+	std::vector<float> waveform{};
 };
 
 typedef struct {
@@ -26,20 +26,20 @@ private:
 
 
 typedef struct {
-	double amplitude;
-	double amplitudeError;
-	double time;
-	double timeError;
+	float amplitude;
+	float amplitudeError;
+	float time;
+	float timeError;
 
 	// For debugging purpose, initial estimates of parameters.
-	double foundAmplitude;
-	double foundTime;
+	float foundAmplitude;
+	float foundTime;
 } PEData;
 
 typedef struct {
 	unsigned short ch;
-	double chi2ndf;
-	double baseline;
+	float chi2ndf;
+	float baseline;
 	std::vector<PEData> pes;
 } ChannelFitData;
 
