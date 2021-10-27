@@ -82,12 +82,16 @@ int main(int argc, char** argv) {
 	std::vector<std::string> splitString;
 	boost::split(splitString, inputFile, boost::is_any_of("."));
 	std::string pdfDir = std::string(argv[2]);
-	std::string outputFile = splitString[0] + "PES.dat";
 
+	std::vector<std::string> splitString2;
+	boost::split(splitString2, splitString[2], boost::is_any_of("/"));
+	std::string outputFile = splitString2[1] + "PES.dat";
+
+	// TODO(josh): Way to exclude specific channels from being read
 	WCData data = ReadWCDataFile(inputFile);
 
-	unsigned int numThreads = 10;
-	unsigned int batchNumber = 500;
+	unsigned int numThreads = 16;
+	unsigned int batchNumber = 200;
 	static std::atomic<unsigned long> count{0};
 	std::mutex m;
 
