@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 project(RecoMore)
 
+
+# Not working for GCC on arm64 mac
+
 # Not your situation, but in case you have a different linker
  set(CMAKE_EXE_LINKER_FLAGS "-Wl,--verbose")
 

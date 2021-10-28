@@ -117,53 +117,67 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			}
 
 			// Amplitude adjustment: if the latest PE found is before other one(s),
-			//  its tail is going to add some amplitude to the following one.
-			for (auto &pe: pesFound) {
-				volatile unsigned int peTimeBinPos = std::floor(pe.time / pdfSamplingRate); // This should use a variable
+			//  its tail is going to add some amplitude to the following one. Compares
+			//  real and fit amplitude at the time bin corresponding to the PE time.
+			for (int i = 0; i < pesFound.size(); i++) {
+			    // TODO(josh): Improve the adjustment by averaging the shift based off of a few bins around the PE time
+			    PEData pe = pesFound[i];
+//			    if(pe.amplitude < 0){
+//			        throw std::runtime_error("PE amplitude should not be negative");
+//			    }
+                unsigned int peTimeBinPos = std::floor(pe.time / pdfSamplingRate); // This should use a variable
 				// corresponding to the input sampling rate, however for now they're the same
-				volatile float fitVal = npe_pdf_func(pe.time, params, chIdealWaveform);
-				volatile float extraAmplitude = fitVal - residualWaveform.waveform[peTimeBinPos];
-				volatile float newAmplitude = pe.amplitude + extraAmplitude;
+				float fitVal = npe_pdf_func(pe.time, params, chIdealWaveform);
+				float extraAmplitude = fitVal - residualWaveform.waveform[peTimeBinPos];
+				float newAmplitude = pe.amplitude + extraAmplitude;
 				valueChecker(std::list{fitVal, extraAmplitude, newAmplitude});
-				pe.amplitude = newAmplitude;
-
+//				if(newAmplitude < 0){
+//				    throw std::runtime_error("PE amplitude should not be negative");
+//				}
+				if(newAmplitude > 0){ // TODO(josh): We need to consider the situations that this would ever be true
+				    pesFound[i].amplitude = newAmplitude;
+				}
 			}
 
 
 
-			std::ofstream myFile;
-			myFile.open("rawWaveform.csv", std::ofstream::trunc);
-			for (float k: waveformData.waveform) {
-				myFile << k << "\n";
-			}
-			myFile.close();
+//			std::ofstream myFile;
+//			myFile.open("rawWaveform.csv", std::ofstream::trunc);
+//			for (float k: waveformData.waveform) {
+//				myFile << k << "\n";
+//			}
+//			myFile.close();
 
 
 			// Compute residual
 			// TODO(josh): I suspect the residual is running into issues for short waveforms.
-			std::ofstream myFile2;
-			myFile2.open("fit.csv", std::ofstream::trunc);
+//			std::ofstream myFile2;
+//			myFile2.open("fit.csv", std::ofstream::trunc);
 			for (unsigned int k = 0; k < residualWaveform.waveform.size(); ++k) {
+			    // TODO(josh): Should it be k or k + 0.5?
 				float val = npe_pdf_func(float(k) * pdfSamplingRate, params, chIdealWaveform);
-				myFile2 << val << "\n";
+//				if((val < (-1*float(numPEsFound))) || (val > (1*float(numPEsFound)))){
+//				    throw std::runtime_error("Invalid range for val");
+//				}
+//				myFile2 << val << "\n";
 				valueChecker(std::list{val, residualWaveform.waveform[k]});
 				residualWaveform.waveform[k] = residualWaveform.waveform[k] - val;
 			}
-			myFile2.close();
+//			myFile2.close();
 
 
-			std::ofstream myFile3;
-			myFile3.open("residual.csv", std::ofstream::trunc);
-			for (float k: residualWaveform.waveform) {
-				myFile3 << k << "\n";
-			}
-			myFile3.close();
+//			std::ofstream myFile3;
+//			myFile3.open("residual.csv", std::ofstream::trunc);
+//			for (float k: residualWaveform.waveform) {
+//				myFile3 << k << "\n";
+//			}
+//			myFile3.close();
 
 
 
 			// Get initial guesses for the next PE
 			auto minPosIt = std::min_element(residualWaveform.waveform.begin(), residualWaveform.waveform.end());
-			volatile unsigned int minTimePos = std::distance(residualWaveform.waveform.begin(), minPosIt);
+			unsigned int minTimePos = std::distance(residualWaveform.waveform.begin(), minPosIt);
 
 			if (-residualWaveform.waveform[minTimePos] < 0.011) {
 				break;
@@ -171,13 +185,16 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 
 			guessPE.amplitude = -residualWaveform.waveform[minTimePos];
 
-			if(guessPE.amplitude > 1000){
-				throw std::runtime_error("guessPE.amplitude is above 1000, likely error");
-			}
-
-			if(guessPE.time < 0){
-				throw std::runtime_error("guessPE.time is negative");
-			}
+//			if(guessPE.amplitude < 0){
+//			    throw std::runtime_error("PE amplitude should not be negative");
+//			}
+//			if(guessPE.amplitude > 1000){
+//				throw std::runtime_error("guessPE.amplitude is above 1000, likely error");
+//			}
+//
+//			if(guessPE.time < 0){
+//				throw std::runtime_error("guessPE.time is negative");
+//			}
 
 			guessPE.time = float(minTimePos) * pdfSamplingRate;
 
@@ -285,6 +302,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		Solve(options, &problem, &summary);
 
 		delete idealPDFInterpolator;
+//		delete chIdealWaveform;
 
 //		std::cout << summary.FullReport() << "\n";
 
