@@ -94,8 +94,8 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		std::vector<double> *chIdealWaveform = &tmp;
 
 		// Baseline calculation
-		double baseline = 0;
-		chFit.baseline = baseline; // Will want to replace this with the fit baseline
+		float initBaseline = averageVector(waveformData.waveform, 0, 50, 0.002);
+		chFit.baseline = initBaseline; // Will want to replace this with the fit baseline
 
 		// Start loop that will break when no more PEs are present
 		std::vector<PEData> pesFound;
@@ -105,12 +105,11 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		PEData guessPE;
 		while (true) {
 
-			// Making the vector of parameters for the objective function, not present in ROOT version as it uses a static object for the params,
-			//  which is worth considering
-			// TODO(josh): Make a function that does this.
+			std::sort(pesFound.begin(), pesFound.end(), comparePETime()); // Need to sort for amplitude adjustment.
+
 			std::vector<float> params;
 			params.push_back((float) pesFound.size());
-			params.push_back(baseline);
+			params.push_back(initBaseline);
 			for (auto pe: pesFound) {
 				params.push_back(pe.amplitude);
 				params.push_back(pe.time);
@@ -119,60 +118,33 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			// Amplitude adjustment: if the latest PE found is before other one(s),
 			//  its tail is going to add some amplitude to the following one. Compares
 			//  real and fit amplitude at the time bin corresponding to the PE time.
-			for (int i = 0; i < pesFound.size(); i++) {
+			for (auto & pe : pesFound) {
 			    // TODO(josh): Improve the adjustment by averaging the shift based off of a few bins around the PE time
-			    PEData pe = pesFound[i];
-//			    if(pe.amplitude < 0){
-//			        throw std::runtime_error("PE amplitude should not be negative");
-//			    }
                 unsigned int peTimeBinPos = std::floor(pe.time / pdfSamplingRate); // This should use a variable
 				// corresponding to the input sampling rate, however for now they're the same
 				float fitVal = npe_pdf_func(pe.time, params, chIdealWaveform);
 				float extraAmplitude = fitVal - residualWaveform.waveform[peTimeBinPos];
 				float newAmplitude = pe.amplitude + extraAmplitude;
-				//valueChecker(std::list{fitVal, extraAmplitude, newAmplitude});
-//				if(newAmplitude < 0){
-//				    throw std::runtime_error("PE amplitude should not be negative");
-//				}
 				if(newAmplitude > 0){ // TODO(josh): We need to consider the situations that this would ever be true
-				    pesFound[i].amplitude = newAmplitude;
+				    pe.amplitude = newAmplitude;
 				}
 			}
 
-
-
-//			std::ofstream myFile;
-//			myFile.open("rawWaveform.csv", std::ofstream::trunc);
-//			for (float k: waveformData.waveform) {
-//				myFile << k << "\n";
-//			}
-//			myFile.close();
-
+			writeVector("rawWaveform.csv", waveformData.waveform);
 
 			// Compute residual
 			// TODO(josh): I suspect the residual is running into issues for short waveforms.
-//			std::ofstream myFile2;
-//			myFile2.open("fit.csv", std::ofstream::trunc);
+			std::vector<float> fitVecForPlot;
 			for (unsigned int k = 0; k < residualWaveform.waveform.size(); ++k) {
 			    // TODO(josh): Should it be k or k + 0.5?
 				float val = npe_pdf_func(float(k) * pdfSamplingRate, params, chIdealWaveform);
-//				if((val < (-1*float(numPEsFound))) || (val > (1*float(numPEsFound)))){
-//				    throw std::runtime_error("Invalid range for val");
-//				}
-//				myFile2 << val << "\n";
-				//valueChecker(std::list{val, residualWaveform.waveform[k]});
 				residualWaveform.waveform[k] = residualWaveform.waveform[k] - val;
+				fitVecForPlot.emplace_back(val);
 			}
-//			myFile2.close();
 
+			writeVector("fit.csv", fitVecForPlot);
 
-//			std::ofstream myFile3;
-//			myFile3.open("residual.csv", std::ofstream::trunc);
-//			for (float k: residualWaveform.waveform) {
-//				myFile3 << k << "\n";
-//			}
-//			myFile3.close();
-
+			writeVector("residual.csv", residualWaveform.waveform);
 
 
 			// Get initial guesses for the next PE
@@ -185,23 +157,12 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 
 			guessPE.amplitude = -residualWaveform.waveform[minTimePos];
 
-//			if(guessPE.amplitude < 0){
-//			    throw std::runtime_error("PE amplitude should not be negative");
-//			}
-//			if(guessPE.amplitude > 1000){
-//				throw std::runtime_error("guessPE.amplitude is above 1000, likely error");
-//			}
-//
-//			if(guessPE.time < 0){
-//				throw std::runtime_error("guessPE.time is negative");
-//			}
-
 			guessPE.time = float(minTimePos) * pdfSamplingRate;
 
 			if ((minTimePos > 1) && (minTimePos < residualWaveform.waveform.size())) {
 				// improve initial time for a new PE based on average time
 				// over 3 consecutive sample ponderated by the amplitude
-				// of each sample... help a lot to resolve PEs very closed!
+				// of each sample... help a lot to resolve PEs very close!
 				double timeSum = 0;
 				double ponderationSum = 0;
 				for (unsigned int b = minTimePos - 1; b <= minTimePos + 1; ++b) {
@@ -216,9 +177,6 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			numPEsFound += 1;
 			pesFound.push_back(guessPE);
 			residualWaveform = waveformData;
-
-			std::sort(pesFound.begin(), pesFound.end(), compareTime());
-			//valueChecker(std::list{guessPE.time, guessPE.amplitude});
 
 			if (numPEsFound > 100) {
 				break;
@@ -245,22 +203,22 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		std::vector<double> times = initialTimes;
 		std::vector<double> amplitudes = initialAmplitudes;
 
+		// Applying running correction to parameter estimates.
 		for(int i = 0; i < times.size(); i++) {
 			times[i] += timeDiff;
 			amplitudes[i] += ampDiff;
-			//valueChecker(std::list{timeDiff, ampDiff});
 		}
 
-
+		// Creating interpolator to allow for the ideal waveform to be used as a continuous (and differentiable) function.
 		ceres::Grid1D grid = ceres::Grid1D<double>(chIdealWaveform->data(), 0, (int) chIdealWaveform->size());
 		auto idealPDFInterpolator = new ceres::CubicInterpolator<ceres::Grid1D<double> >(grid);
 
 		// Set up the only cost function (also known as residual). This uses
 		// auto-differentiation to obtain the derivative (Jacobian).
 
-		double baseline2 = 0;
+		double baseline = 0;
 		std::vector<double *> params;
-		params.push_back(&baseline2);
+		params.push_back(&baseline);
 		for (int i = 0; i < pesFound.size(); i++) {
 			params.push_back(&amplitudes[i]);
 			params.push_back(&times[i]);
@@ -271,59 +229,40 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			                                                                                            waveformData.waveform[j],
 			                                                                                            idealPDFInterpolator,
 			                                                                                            pesFound.size()));
-
 			costFunction->AddParameterBlock(1);
 			for (auto pe: pesFound) {
 				costFunction->AddParameterBlock(1);
 				costFunction->AddParameterBlock(1);
 			}
 			costFunction->SetNumResiduals(1);
-
 			problem.AddResidualBlock(costFunction, nullptr, params);
-
-			// TODO(josh): The minimum amplitude for the actual data is always 63-64 entries ahead of the minimum amplitude for the ideal waveform.
-			//  This is likely relevant to the length of the waveform I'm using being 960 entries, but the ideal waveform being made for 1024 entries
 		}
 
 		// Run the solver!
 		Solver::Options options;
-//		options.function_tolerance = 1e-12;
-//		options.gradient_tolerance = 1e-12;
-//		options.parameter_tolerance = 1e-12;
-//		options.linear_solver_type = ceres::DENSE_QR;
-//		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
-//		options.linear_solver_type = ceres::SPARSE_SCHUR;
-//		options.linear_solver_type = ceres::ITERATIVE_SCHUR;
-//		options.linear_solver_type = ceres::CGNR;
-//		options.linear_solver_type = ceres::DENSE_SCHUR;
-//		options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
-//		options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
-//		options.trust_region_strategy_type = ceres::DOGLEG;
 		options.minimizer_progress_to_stdout = false;
 		Solver::Summary summary;
 		Solve(options, &problem, &summary);
 
 		delete idealPDFInterpolator;
-//		delete chIdealWaveform;
 
 //		std::cout << summary.FullReport() << "\n";
 
+		std::vector<double> finalParams;
+		finalParams.push_back(pesFound.size());
+		finalParams.push_back(initBaseline);
+		for (int k = 0; k < pesFound.size(); k++) {
+			finalParams.push_back(amplitudes[k]);
+			finalParams.push_back(times[k]);
+		}
 
-//		std::vector<double> params2;
-//		params2.push_back(pesFound.size());
-//		params2.push_back(baseline);
-//		for (int k = 0; k < pesFound.size(); k++) {
-//			params2.push_back(amplitudes[k]);
-//			params2.push_back(times[k]);
-//		}
+		std::vector<float> fullFitVecForPlot;
+		for (unsigned int k = 0; k < waveformData.waveform.size(); k++) {
+			float thing = npe_pdf_func(k * pdfSamplingRate, finalParams, chIdealWaveform);
+			fullFitVecForPlot.emplace_back(thing);
+		}
 
-//		std::ofstream myfile4;
-//		myfile4.open("fullFit.csv");
-//		for (unsigned int k = 0; k < waveformData.waveform.size(); k++) {
-//			auto thing = npe_pdf_func(k * pdfSamplingRate, params2, chIdealWaveform);
-//			myfile4 << thing << "\n";
-//		}
-//		myfile4.close();
+		writeVector("fullFit.csv", fullFitVecForPlot);
 
 //		for (int k = 0; k < pesFound.size(); k++) {
 //			std::cout << "Amplitude:\t" << initialAmplitudes[k] << " -> " << amplitudes[k] << std::endl;
@@ -337,35 +276,20 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			PEData pe;
 			pe.amplitude = float(amplitudes[k]);
 			pe.time = float(times[k]);
-			//valueChecker(std::list{float(amplitudes[k]), float(times[k])});
 			FitPEs.emplace_back(pe);
 			N++;
 			ampDiff = ampDiff + ((pe.amplitude - initialAmplitudes[k]) - ampDiff) / N;
 			timeDiff = timeDiff + ((pe.time - initialTimes[k]) - timeDiff) / N;
-			baselineDiff = baselineDiff + ((baseline2 - 0) - baselineDiff) / N;
+			baselineDiff = baselineDiff + ((baseline - initBaseline) - baselineDiff) / N;
 		}
 
 		chFit.pes = FitPEs;
-		chFit.baseline = float(baseline2);
+		chFit.baseline = float(baseline);
 		evFitDat.sipm.push_back(chFit);
 
 
-//		std::cout << "hey ho" << std::endl;
-		// TODO(josh): Check if chisq is better with the fit, if not, keep initial params.
-		//  BUT THIS IS VERY HACKY AND WE SHOULD FIGURE OUT WHY IT ISN'T WORKING
-
 		// TODO(josh): No magic numbers for different lengths of data
-
-		// TODO(josh): It's worsening the fit when there are two PEs very close to each other
-
-		// TODO(josh): We must consider after pulses giving a weird shape?
-
-		// Note: Bounds slow the fit, buuut when running in release mode it still is very fast
-		// Note: DENSE_QR is faster than LEVENBERG_MARQUARDT
-
-		// The fundamental question is: why does the fit seem to give worse parameters than the initial guesses for some fits?!?!?
 	}
 	Writer writer(std::move(file));
 	writer.writeEventInfo(evFitDat);
-
 }
