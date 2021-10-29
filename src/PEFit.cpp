@@ -15,7 +15,6 @@ struct npe_pdf_functor {
 
 	template<typename T>
 	bool operator()(T const *const *params, T *residual) const {
-		// TODO(josh): Modify so that starting value of residual[0] = baseline
 		T f;
 		T X_(x_);
 		residual[0] = params[0][0];
@@ -40,7 +39,6 @@ private:
 float npe_pdf_func(float X, const std::vector<float> &p, std::vector<double> *idealWaveform) {
 	// This way of passing x as a list then choosing the 0th index is from ROOT's syntax for fitting where you can fit
 	//  with an arbitrary number of dimensions (N input values -> single output, an N dimensional function)
-//	const double X = x[0];
 
 	// parameter of the function:
 	// p[0] : number N of PE (fixed)
@@ -68,7 +66,6 @@ float npe_pdf_func(float X, const std::vector<float> &p, std::vector<double> *id
 			value += PE_CHARGE * thing;
 		}
 	}
-
 	return value;
 }
 
@@ -248,7 +245,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 
 //		std::cout << summary.FullReport() << "\n";
 
-		std::vector<double> finalParams;
+		std::vector<float> finalParams;
 		finalParams.push_back(pesFound.size());
 		finalParams.push_back(initBaseline);
 		for (int k = 0; k < pesFound.size(); k++) {
@@ -258,7 +255,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 
 		std::vector<float> fullFitVecForPlot;
 		for (unsigned int k = 0; k < waveformData.waveform.size(); k++) {
-			float thing = npe_pdf_func(k * pdfSamplingRate, finalParams, chIdealWaveform);
+			auto thing = npe_pdf_func(k * pdfSamplingRate, finalParams, chIdealWaveform);
 			fullFitVecForPlot.emplace_back(thing);
 		}
 
