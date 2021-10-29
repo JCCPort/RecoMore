@@ -3,6 +3,7 @@
 #include <list>
 #include <cmath>
 #include <exception>
+#include "include/DataStructures.h"
 
 template<typename T>
 void valueChecker(const std::list<T> list){
@@ -17,5 +18,13 @@ void valueChecker(const std::list<T> list){
 //		}
 //	}
 }
+
+struct compareTime
+{
+	inline bool operator() (const PEData& PE1, const PEData& PE2)
+	{
+		return (PE1.time < PE2.time);
+	}
+};
 
 #endif //RECOMORE_UTILS_H

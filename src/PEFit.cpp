@@ -130,7 +130,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 				float fitVal = npe_pdf_func(pe.time, params, chIdealWaveform);
 				float extraAmplitude = fitVal - residualWaveform.waveform[peTimeBinPos];
 				float newAmplitude = pe.amplitude + extraAmplitude;
-				valueChecker(std::list{fitVal, extraAmplitude, newAmplitude});
+				//valueChecker(std::list{fitVal, extraAmplitude, newAmplitude});
 //				if(newAmplitude < 0){
 //				    throw std::runtime_error("PE amplitude should not be negative");
 //				}
@@ -160,7 +160,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 //				    throw std::runtime_error("Invalid range for val");
 //				}
 //				myFile2 << val << "\n";
-				valueChecker(std::list{val, residualWaveform.waveform[k]});
+				//valueChecker(std::list{val, residualWaveform.waveform[k]});
 				residualWaveform.waveform[k] = residualWaveform.waveform[k] - val;
 			}
 //			myFile2.close();
@@ -179,7 +179,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			auto minPosIt = std::min_element(residualWaveform.waveform.begin(), residualWaveform.waveform.end());
 			unsigned int minTimePos = std::distance(residualWaveform.waveform.begin(), minPosIt);
 
-			if (-residualWaveform.waveform[minTimePos] < 0.011) {
+			if (-residualWaveform.waveform[minTimePos] < 0.0075) {
 				break;
 			}
 
@@ -216,7 +216,9 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			numPEsFound += 1;
 			pesFound.push_back(guessPE);
 			residualWaveform = waveformData;
-			valueChecker(std::list{guessPE.time, guessPE.amplitude});
+
+			std::sort(pesFound.begin(), pesFound.end(), compareTime());
+			//valueChecker(std::list{guessPE.time, guessPE.amplitude});
 
 			if (numPEsFound > 100) {
 				break;
@@ -246,7 +248,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		for(int i = 0; i < times.size(); i++) {
 			times[i] += timeDiff;
 			amplitudes[i] += ampDiff;
-			valueChecker(std::list{timeDiff, ampDiff});
+			//valueChecker(std::list{timeDiff, ampDiff});
 		}
 
 
@@ -335,7 +337,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			PEData pe;
 			pe.amplitude = float(amplitudes[k]);
 			pe.time = float(times[k]);
-			valueChecker(std::list{float(amplitudes[k]), float(times[k])});
+			//valueChecker(std::list{float(amplitudes[k]), float(times[k])});
 			FitPEs.emplace_back(pe);
 			N++;
 			ampDiff = ampDiff + ((pe.amplitude - initialAmplitudes[k]) - ampDiff) / N;

@@ -90,8 +90,8 @@ int main(int argc, char** argv) {
 	// TODO(josh): Way to exclude specific channels from being read
 	WCData data = ReadWCDataFile(inputFile);
 
-	unsigned int numThreads = 12;
-	unsigned int batchNumber = 500;
+	unsigned int numThreads = 7;
+	unsigned int batchNumber = 200;
 	static std::atomic<unsigned long> count{0};
 	std::mutex m;
 
@@ -108,37 +108,37 @@ int main(int argc, char** argv) {
 		idealWaveforms.at(ch) = readIdealWFs(ch, 10, pdfDir, pdfNSamples);
 	}
 
-
-	if (numThreads == 1) {
-		fitBatchPEs(data.getEvents(), count, m, &idealWaveforms, file);
-		return 1;
-	}
-
-	// Determining how many events each thread should run over.
-	unsigned int threadRepeatCount[batchNumber];
-	unsigned int threadsWithExtra = data.getEvents().size() % batchNumber;
-	unsigned int minRepeatsPerThread = data.getEvents().size() / batchNumber;
-
-	for (unsigned int i = 0; i < batchNumber; i++) {
-		if (i < threadsWithExtra) {
-			threadRepeatCount[i] = minRepeatsPerThread + 1;
-		} else {
-			threadRepeatCount[i] = minRepeatsPerThread;
-		}
-	}
-
-	ThreadPool pool(numThreads);
-
-	unsigned int eventPos = 0;
 	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(m),
 	                           data.getEvents().size());
 
-	for(int i = 0; i < batchNumber; i++){
-		std::vector passData = slice(data.getEvents(), eventPos, eventPos + threadRepeatCount[i] - 1);
-		pool.push_task(fitBatchPEs, passData, std::reference_wrapper(count), std::reference_wrapper(m), &idealWaveforms,
-		               file);
-		eventPos += threadRepeatCount[i];
+	if (numThreads == 1) {
+		fitBatchPEs(data.getEvents(), count, m, &idealWaveforms, file);
+	} else {
+		// Determining how many events each thread should run over.
+		unsigned int threadRepeatCount[batchNumber];
+		unsigned int threadsWithExtra = data.getEvents().size() % batchNumber;
+		unsigned int minRepeatsPerThread = data.getEvents().size() / batchNumber;
+
+		for (unsigned int i = 0; i < batchNumber; i++) {
+			if (i < threadsWithExtra) {
+				threadRepeatCount[i] = minRepeatsPerThread + 1;
+			} else {
+				threadRepeatCount[i] = minRepeatsPerThread;
+			}
+		}
+
+		ThreadPool pool(numThreads);
+
+		unsigned int eventPos = 0;
+		for(int i = 0; i < batchNumber; i++){
+			std::vector passData = slice(data.getEvents(), eventPos, eventPos + threadRepeatCount[i] - 1);
+			pool.push_task(fitBatchPEs, passData, std::reference_wrapper(count), std::reference_wrapper(m), &idealWaveforms,
+			               file);
+			eventPos += threadRepeatCount[i];
+		}
 	}
+
+
 
 	progressThread.join();
 
