@@ -26,3 +26,8 @@ ceres::DOGLEG = 17.158, 17.061, 18.107 s
 
 
 I'm pretty sure LM is the default (I didn't change the trust region type for the linear solver type testing)
+
+
+
+
+Profile-guided optimisation (PGO) is giving reasonable speed improvements, 109s vs 119s for one run.
