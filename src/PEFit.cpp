@@ -7,12 +7,12 @@
 #include <memory>
 #include <utility>
 
-const double samplingRate2 = 0.01 * pdfSamplingRate;
+const double samplingRate2Inv = 1/(0.01 * pdfSamplingRate);
 const double pdfT0SampleConv = (double) pdfT0Sample;
 
 struct npe_pdf_functor {
 	npe_pdf_functor(double x, double y, ceres::CubicInterpolator<ceres::Grid1D<double, true>> *PDFInterpolator,
-	                int numPES) : x_(
+	                unsigned int numPES) : x_(
 			x), y_(y), PDFInterpolator_(PDFInterpolator), numPES_(numPES) {};
 
 	template<typename T>
@@ -20,9 +20,10 @@ struct npe_pdf_functor {
 		T f;
 		T X_(x_);
 		residual[0] = params[0][0];
-		for (int i = 0; i < numPES_; i++) {
-			PDFInterpolator_->Evaluate(pdfT0SampleConv + ((X_ - params[(2 * i) + 2][0]) / samplingRate2), &f);
-			residual[0] += (params[(2 * i) + 1][0] * f);
+		for (unsigned int i = 0; i < numPES_; i++) {
+			unsigned int i2 = 2 * i;
+			PDFInterpolator_->Evaluate(pdfT0SampleConv + ((X_ - params[i2 + 2][0]) * samplingRate2Inv), &f);
+			residual[0] += (params[i2 + 1][0] * f);
 		}
 		residual[0] -= y_;
 		return true;
@@ -32,7 +33,7 @@ private:
 	const double x_;
 	const double y_;
 	ceres::CubicInterpolator<ceres::Grid1D<double> > *PDFInterpolator_;
-	int numPES_;
+	const unsigned int numPES_;
 };
 
 
@@ -98,7 +99,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		std::vector<double> *chIdealWaveform = &tmp;
 
 		// Baseline calculation
-		float initBaseline = averageVector(waveformData.waveform, 0, 50, 0.002);
+		float initBaseline = averageVector(waveformData.waveform, 0, 150, 0.0015);
 		chFit.baseline = initBaseline; // Will want to replace this with the fit baseline
 
 		// Start loop that will break when no more PEs are present
@@ -175,7 +176,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 					timeSum += binCenter * binVal;
 					ponderationSum += binVal;
 				}
-				guessPE.time = float(PEFinderTimeOffset * 0.10) + timeSum / ponderationSum;
+				guessPE.time = float(PEFinderTimeOffset * 0.1) + timeSum / ponderationSum;
 			}
 
 			numPEsFound += 1;

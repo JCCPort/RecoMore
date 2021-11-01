@@ -152,5 +152,10 @@ int main(int argc, char** argv) {
 	file->closeFile();
 	std::cout << "Mean reduced chisq:\t" << meanReducedChisq << std::endl;
 
+	std::ifstream file2(outputFile);
+	if(file2.peek() == std::ifstream::traits_type::eof()){
+		std::cout << "Output file is empty" << std::endl;
+	}
+
 	return 0;
 }
