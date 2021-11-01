@@ -79,11 +79,16 @@ void
 fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file) {
 	EventFitData evFitDat;
 	evFitDat.eventID = event->eventID;
+	evFitDat.date = event->date;
+	evFitDat.TDCCorrTime = event->TDCCorrTime;
 	for (const auto& waveformData: event->chData) {
 		auto residualWaveform = waveformData; // This will be the variable that is modified to be the residual distribution after each iteration
 
 		ChannelFitData chFit;
 		unsigned int ch = waveformData.channel;
+		if(ch == 15){
+			return;
+		}
 		chFit.ch = ch;
 
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
@@ -127,28 +132,28 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 				}
 			}
 
-			writeVector("rawWaveform.csv", waveformData.waveform);
+//			writeVector("rawWaveform.csv", waveformData.waveform);
 
 			// Compute residual
 			// TODO(josh): I suspect the residual is running into issues for short waveforms.
-			std::vector<float> fitVecForPlot;
+//			std::vector<float> fitVecForPlot;
 			for (unsigned int k = 0; k < residualWaveform.waveform.size(); ++k) {
 			    // TODO(josh): Should it be k or k + 0.5?
 				float val = npe_pdf_func(float(k) * pdfSamplingRate, params, chIdealWaveform);
 				residualWaveform.waveform[k] = residualWaveform.waveform[k] - val;
-				fitVecForPlot.emplace_back(val);
+//				fitVecForPlot.emplace_back(val);
 			}
 
-			writeVector("fit.csv", fitVecForPlot);
+//			writeVector("fit.csv", fitVecForPlot);
 
-			writeVector("residual.csv", residualWaveform.waveform);
+//			writeVector("residual.csv", residualWaveform.waveform);
 
 
 			// Get initial guesses for the next PE
 			auto minPosIt = std::min_element(residualWaveform.waveform.begin(), residualWaveform.waveform.end());
 			unsigned int minTimePos = std::distance(residualWaveform.waveform.begin(), minPosIt);
 
-			if (-residualWaveform.waveform[minTimePos] < 0.0075) {
+			if (-residualWaveform.waveform[minTimePos] < 0.009) {
 				break;
 			}
 
@@ -181,7 +186,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		}
 
 		std::vector<double> xValues;
-		for (unsigned int j = 0; j <= 1024; j++) {
+		for (unsigned int j = 0; j < waveformData.waveform.size(); j++) {
 			xValues.push_back((double) j * pdfSamplingRate);
 		}
 
@@ -241,10 +246,6 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		Solver::Summary summary;
 		Solve(options, &problem, &summary);
 
-		delete idealPDFInterpolator;
-
-//		std::cout << summary.FullReport() << "\n";
-
 		std::vector<float> finalParams;
 		finalParams.push_back(pesFound.size());
 		finalParams.push_back(initBaseline);
@@ -253,13 +254,29 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			finalParams.push_back(times[k]);
 		}
 
-		std::vector<float> fullFitVecForPlot;
-		for (unsigned int k = 0; k < waveformData.waveform.size(); k++) {
-			auto thing = npe_pdf_func(k * pdfSamplingRate, finalParams, chIdealWaveform);
-			fullFitVecForPlot.emplace_back(thing);
+		double chiSq = 0;
+		for(int j = 0; j < waveformData.waveform.size(); j++){
+			double observed = waveformData.waveform[j];
+			double expected = npe_pdf_func(float(j) * pdfSamplingRate, finalParams, chIdealWaveform);
+			chiSq += std::pow(observed - expected, 2)/(pdfResidualRMS/1000); //TODO(josh): Need to calculate the residual RMS on a per waveform basis?
+			nanInfChecker(std::list{observed, expected, chiSq});
 		}
+		double redChiSq = chiSq / (finalParams.size() - 1);
 
-		writeVector("fullFit.csv", fullFitVecForPlot);
+
+		delete idealPDFInterpolator;
+
+//		std::cout << summary.FullReport() << "\n";
+
+
+//
+//		std::vector<float> fullFitVecForPlot;
+//		for (unsigned int k = 0; k < waveformData.waveform.size(); k++) {
+//			auto thing = npe_pdf_func(k * pdfSamplingRate, finalParams, chIdealWaveform);
+//			fullFitVecForPlot.emplace_back(thing);
+//		}
+//
+//		writeVector("fullFit.csv", fullFitVecForPlot);
 
 //		for (int k = 0; k < pesFound.size(); k++) {
 //			std::cout << "Amplitude:\t" << initialAmplitudes[k] << " -> " << amplitudes[k] << std::endl;

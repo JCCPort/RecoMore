@@ -48,12 +48,18 @@ WCData ReadWCDataFile(const std::string &fileName) {
 	// Defining regular expression searches to be used for getting event and channel numbers.
 	std::regex eventNumberRegex("=== EVENT (\\d*) ===\\r");
 	std::regex channelNumberRegex(R"(=== CH: (\d*) EVENTID: (\d*) FCR: (\d*) ===\r)");
+	std::regex timeRegex("(=== UnixTime = (\\d*\\.\\d*)"
+						 " date = (\\d*\\.\\d*\\.\\d*)"
+						 " time = (\\d*h\\.\\d*m\\.\\d*s\\.\\d*ms) == "
+						 "TDC = (\\d*) == "
+						 "TDC corrected time = (\\d*h\\d*m\\d*s,\\d*\\.\\d*\\.\\d*ns) == "
+						 "Nb of channels = (\\d*) ===\r\n)");
 
 	WCData readData;
 	WaveformData wf;
 
 	FILE *fp = fopen(fileName.c_str(), "r");
-	if (fp == nullptr){
+	if (fp == nullptr) {
 		throw std::runtime_error("WaveCatcher data file: " + fileName + " not found.");
 	}
 
@@ -74,7 +80,14 @@ WCData ReadWCDataFile(const std::string &fileName) {
 	while (std::regex_search(&line[0], eventMatch, eventNumberRegex)) {
 		EventData event;
 		event.eventID = stoi(eventMatch[1].str());
+
 		getline(&line, &len, fp);
+
+		std::cmatch timeMatch;
+		bool timeInfo = std::regex_search(&line[0], timeMatch, timeRegex);
+		event.TDCCorrTime = timeMatch[6].str();
+		event.date = timeMatch[3].str();
+
 		getline(&line, &len, fp);
 
 		std::cmatch channelMatch;

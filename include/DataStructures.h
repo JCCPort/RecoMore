@@ -3,6 +3,7 @@
 
 #include <utility>
 #include <vector>
+#include <string>
 
 struct WaveformData {
 	unsigned short channel;
@@ -11,6 +12,8 @@ struct WaveformData {
 
 typedef struct {
 	unsigned int eventID;
+	std::string TDCCorrTime;
+	std::string date;
 	std::vector<WaveformData> chData;
 } EventData;
 
@@ -46,6 +49,8 @@ typedef struct {
 
 typedef struct {
 	unsigned int eventID;
+	std::string TDCCorrTime;
+	std::string date;
 	std::vector<ChannelFitData> sipm;
 } EventFitData;
 

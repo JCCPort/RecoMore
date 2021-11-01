@@ -5,26 +5,39 @@ project(RecoMore)
 # Not working for GCC on arm64 mac
 
 # Not your situation, but in case you have a different linker
- set(CMAKE_EXE_LINKER_FLAGS "-Wl,--verbose")
+set(CMAKE_EXE_LINKER_FLAGS "-Wl,--verbose")
 
 # Clang passes flags through to the linker (likely ld) by
- set(CMAKE_EXE_LINKER_FLAGS "-Xlinker -v")
+set(CMAKE_EXE_LINKER_FLAGS "-Xlinker -v")
 
 # Will compile and run for C++ 17 too
 set(CMAKE_CXX_STANDARD 20)
 
+set(MAKE_PROFILE FALSE)
+set(USE_PROFILE FALSE)
+
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CMAKE_C_FLAGS "-O1 -pthread")
-    set(CMAKE_CXX_FLAGS "-O1 -pthread")
+    set(CMAKE_C_FLAGS "-O0 -pthread")
+    set(CMAKE_CXX_FLAGS "-O0 -pthread")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_C_FLAGS "-O3 -pthread")
     set(CMAKE_CXX_FLAGS "-O3 -pthread")
-elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+elseif (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     set(CMAKE_C_FLAGS "-O2 -pthread -fprofile-arcs")
     set(CMAKE_CXX_FLAGS "-O2 -pthread -fprofile-arcs")
 endif ()
 
-EXECUTE_PROCESS( COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE )
+if (MAKE_PROFILE)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-generate -fprofile-dir=.")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-generate -fprofile-dir=.")
+endif ()
+
+if (USE_PROFILE)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-use -fprofile-dir=.")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-use -fprofile-dir=.")
+endif ()
+
+EXECUTE_PROCESS(COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE)
 if (NOT "${ARCHITECTURE}" STREQUAL "arm64" AND CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
@@ -40,13 +53,13 @@ SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/usr/include/boost")
 
 find_package(Boost COMPONENTS thread REQUIRED)
 
-if(NOT TARGET Boost::filesystem)
+if (NOT TARGET Boost::filesystem)
     add_library(Boost::filesystem IMPORTED INTERFACE)
     set_property(TARGET Boost::filesystem PROPERTY
             INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR})
     set_property(TARGET Boost::filesystem PROPERTY
             INTERFACE_LINK_LIBRARIES ${Boost_LIBRARIES})
-endif()
+endif ()
 
 include_directories(${Boost_INCLUDE_DIRS})
 
