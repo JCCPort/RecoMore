@@ -8,6 +8,7 @@
 #include <utility>
 
 const double samplingRate2 = 0.01 * pdfSamplingRate;
+const double pdfT0SampleConv = (double) pdfT0Sample;
 
 struct npe_pdf_functor {
 	npe_pdf_functor(double x, double y, ceres::CubicInterpolator<ceres::Grid1D<double, true>> *PDFInterpolator,
@@ -20,7 +21,7 @@ struct npe_pdf_functor {
 		T X_(x_);
 		residual[0] = params[0][0];
 		for (int i = 0; i < numPES_; i++) {
-			PDFInterpolator_->Evaluate(((double) pdfT0Sample + ((X_ - params[(2 * i) + 2][0]) / (samplingRate2))), &f);
+			PDFInterpolator_->Evaluate(pdfT0SampleConv + ((X_ - params[(2 * i) + 2][0]) / samplingRate2), &f);
 			residual[0] += (params[(2 * i) + 1][0] * f);
 		}
 		residual[0] -= y_;
