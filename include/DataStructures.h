@@ -54,4 +54,17 @@ typedef struct {
 	std::vector<ChannelFitData> sipm;
 } EventFitData;
 
+
+class FitParams{
+public:
+	FitParams(unsigned int, double, std::vector<double>, std::vector<double>);
+	FitParams(double, const std::vector<PEData>&);
+
+	std::vector<double *> makeFitterParams();
+	std::vector<float> makeGuesserParams();
+
+	unsigned int numPEs_;
+	std::vector<double> params;
+};
+
 #endif //RECOMORE_DATASTRUCTURES_H

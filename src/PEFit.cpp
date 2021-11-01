@@ -136,6 +136,14 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 				}
 			}
 
+			params = std::vector<float>{};
+			params.push_back((float) pesFound.size());
+			params.push_back(initBaseline);
+			for (auto pe: pesFound) {
+				params.push_back(pe.amplitude);
+				params.push_back(pe.time);
+			}
+
 //			writeVector("rawWaveform.csv", waveformData.waveform);
 
 			// Compute residual
