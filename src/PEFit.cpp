@@ -22,7 +22,7 @@ struct npe_pdf_functor {
 		residual[0] = params[0][0];
 		for (unsigned int i = 0; i < numPES_; i++) {
 			unsigned int i2 = 2 * i;
-			PDFInterpolator_->Evaluate(pdfT0SampleConv + (X_ - params[i2 + 2][0]), &f);
+			PDFInterpolator_->Evaluate((X_ - params[i2 + 2][0]), &f);
 			residual[0] += (params[i2 + 1][0] * f);
 		}
 		residual[0] -= y_;
@@ -112,6 +112,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 
 			std::sort(pesFound.begin(), pesFound.end(), comparePETime()); // Need to sort for amplitude adjustment.
 
+			// TODO(josh): Create a struct that corresponds to the params (number PEs, baseline, PE info...)
 			std::vector<float> params;
 			params.push_back((float) pesFound.size());
 			params.push_back(initBaseline);
@@ -230,7 +231,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		// Creating the x values that the solver will use
 		std::vector<double> xValues;
 		for (unsigned int j = 0; j < waveformData.waveform.size(); j++) {
-			xValues.push_back((double) j * 100);  // Multiplying index to match position on ideal PDF
+			xValues.push_back(((double) j * 100) + pdfT0SampleConv);  // Multiplying index to match position on ideal PDF
 		}
 
 		// Set up the only cost function (also known as residual). This uses
@@ -264,8 +265,8 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		finalParams.push_back(pesFound.size());
 		finalParams.push_back(initBaseline);
 		for (int k = 0; k < pesFound.size(); k++) {
-			finalParams.push_back(amplitudes[k]);
-			finalParams.push_back(times[k]);
+			finalParams.push_back((float) amplitudes[k]);
+			finalParams.push_back((float) times[k]);
 		}
 
 		double chiSq = 0;
