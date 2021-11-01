@@ -61,7 +61,7 @@ float npe_pdf_func(float X, const std::vector<float> &p, std::vector<double> *id
 		const float PE_TIME = p[3 + PE * 2];
 		// TODO(josh): Start using interpolation for this too instead of using floor
 		const int PE_PDF_BIN =
-				pdfT0Sample + (int) std::floor(0.5 + (X - PE_TIME) / (0.01 * pdfSamplingRate));
+				pdfT0Sample + (int) std::floor(0.5 + (X - PE_TIME) * samplingRate2Inv);
 		if ((PE_PDF_BIN >= 0) && (PE_PDF_BIN < pdfNSamples)) {
 			float thing = idealWaveform->at(PE_PDF_BIN);
 			value += PE_CHARGE * thing;
