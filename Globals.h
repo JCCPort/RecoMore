@@ -39,5 +39,8 @@ extern const int pdfT0Sample;
 extern const float PEFinderTimeOffset;
 extern const float pdfResidualRMS;
 
+extern double meanReducedChisq;
+
+
 
 #endif //RECOMORE_GLOBALS_H

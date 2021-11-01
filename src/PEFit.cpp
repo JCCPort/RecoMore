@@ -73,7 +73,9 @@ float npe_pdf_func(float X, const std::vector<float> &p, std::vector<double> *id
 float ampDiff = 0;
 float timeDiff = 0;
 float baselineDiff = 0;
+
 int N = 0;
+int N2 = 0;
 
 void
 fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file) {
@@ -218,7 +220,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		// Set up the only cost function (also known as residual). This uses
 		// auto-differentiation to obtain the derivative (Jacobian).
 
-		double baseline = 0;
+		double baseline = initBaseline;
 		std::vector<double *> params;
 		params.push_back(&baseline);
 		for (int i = 0; i < pesFound.size(); i++) {
@@ -262,7 +264,8 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			nanInfChecker(std::list{observed, expected, chiSq});
 		}
 		double redChiSq = chiSq / (finalParams.size() - 1);
-
+		N2++;
+		meanReducedChisq = meanReducedChisq + (redChiSq - meanReducedChisq)/N2;
 
 		delete idealPDFInterpolator;
 

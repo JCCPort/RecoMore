@@ -14,3 +14,4 @@ const double pdfSamplingRate = 0.003125;
 const int pdfT0Sample = 3201;
 const float PEFinderTimeOffset = 0.015935;
 const float pdfResidualRMS = 0.827;
+double meanReducedChisq = 0;
