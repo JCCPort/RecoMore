@@ -22,7 +22,7 @@ struct npe_pdf_functor {
 		residual[0] = params[0][0];
 		for (unsigned int i = 0; i < numPES_; i++) {
 			unsigned int i2 = 2 * i;
-			PDFInterpolator_->Evaluate(pdfT0SampleConv + ((X_ - params[i2 + 2][0]) * samplingRate2Inv), &f);
+			PDFInterpolator_->Evaluate(pdfT0SampleConv + (X_ - params[i2 + 2][0]), &f);
 			residual[0] += (params[i2 + 1][0] * f);
 		}
 		residual[0] -= y_;
@@ -188,14 +188,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			}
 		}
 
-		std::vector<double> xValues;
-		for (unsigned int j = 0; j < waveformData.waveform.size(); j++) {
-			xValues.push_back((double) j * pdfSamplingRate);
-		}
-
-
 		using namespace ceres;
-		// Build the problem.
 		Problem problem;
 
 		std::vector<double> initialTimes;
@@ -214,13 +207,18 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			amplitudes[i] += ampDiff;
 		}
 
+		// Converting the time into an ideal waveform PDF index to simplify npe_pdf_functor method call
+		for(double & time : times) {
+			time = time * samplingRate2Inv;
+		}
+
 		// Creating interpolator to allow for the ideal waveform to be used as a continuous (and differentiable) function.
 		ceres::Grid1D grid = ceres::Grid1D<double>(chIdealWaveform->data(), 0, (int) chIdealWaveform->size());
 		auto idealPDFInterpolator = new ceres::CubicInterpolator<ceres::Grid1D<double> >(grid);
 
-		// Set up the only cost function (also known as residual). This uses
-		// auto-differentiation to obtain the derivative (Jacobian).
 
+		// Creating vector of references to parameter values that the fitter will use and modify. Note this means that
+		// the references are the initial values before the fit and the final values after the fit.
 		double baseline = initBaseline;
 		std::vector<double *> params;
 		params.push_back(&baseline);
@@ -229,6 +227,14 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			params.push_back(&times[i]);
 		}
 
+		// Creating the x values that the solver will use
+		std::vector<double> xValues;
+		for (unsigned int j = 0; j < waveformData.waveform.size(); j++) {
+			xValues.push_back((double) j * 100);  // Multiplying index to match position on ideal PDF
+		}
+
+		// Set up the only cost function (also known as residual). This uses
+		// auto-differentiation to obtain the derivative (Jacobian).
 		for (unsigned int j = 0; j < waveformData.waveform.size(); ++j) {
 			auto costFunction = new DynamicAutoDiffCostFunction<npe_pdf_functor, 4>(new npe_pdf_functor(xValues[j],
 			                                                                                            waveformData.waveform[j],
@@ -249,6 +255,11 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		Solver::Summary summary;
 		Solve(options, &problem, &summary);
 
+		// Going back from ideal waveform PDF index to time
+		for(double & time : times) {
+			time = time / samplingRate2Inv;
+		}
+
 		std::vector<float> finalParams;
 		finalParams.push_back(pesFound.size());
 		finalParams.push_back(initBaseline);
@@ -262,7 +273,6 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			double observed = waveformData.waveform[j];
 			double expected = npe_pdf_func(float(j) * pdfSamplingRate, finalParams, chIdealWaveform);
 			chiSq += std::pow(observed - expected, 2)/(pdfResidualRMS/1000); //TODO(josh): Need to calculate the residual RMS on a per waveform basis?
-			nanInfChecker(std::list{observed, expected, chiSq});
 		}
 		double redChiSq = chiSq / (finalParams.size() - 1);
 		N2++;

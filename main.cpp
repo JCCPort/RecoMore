@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
 	WCData data = ReadWCDataFile(inputFile);
 
 	unsigned int numThreads = 6;
-	unsigned int batchNumber = 100;
+	unsigned int batchNumber = 180;
 	static std::atomic<unsigned long> count{0};
 	std::mutex m;
 
