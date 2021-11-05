@@ -31,3 +31,6 @@ I'm pretty sure LM is the default (I didn't change the trust region type for the
 
 
 Profile-guided optimisation (PGO) is giving reasonable speed improvements, 109s vs 119s for one run.
+
+
+options.minimizer_type = ceres::LINE_SEARCH improves speed hugely (3.5x) but reduced chisq doubles.
