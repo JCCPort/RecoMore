@@ -98,8 +98,8 @@ int main(int argc, char** argv) {
 	WCData data = ReadWCDataFile(inputFile);
 	// TODO(josh): Add error checking to if the data file is corrupted/invalid
 
-	unsigned int numThreads = 4;
-	unsigned int batchNumber = 400;
+	unsigned int numThreads = 1;
+	unsigned int batchNumber = 200;
 	static std::atomic<unsigned long> count{0};
 	std::mutex m;
 

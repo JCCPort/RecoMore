@@ -147,21 +147,21 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 				}
 			}
 
-//			writeVector("rawWaveform.csv", waveformData.waveform);
+			writeVector("rawWaveform.csv", waveformData.waveform);
 
 			// Compute residual
 			// TODO(josh): I suspect the residual is running into issues for short waveforms.
-//			std::vector<float> fitVecForPlot;
+			std::vector<float> fitVecForPlot;
 			for (unsigned int k = 0; k < residualWaveform.waveform.size(); ++k) {
 				// TODO(josh): Should it be k or k + 0.5?
 				float fitVal = npe_pdf_func(float(k) * pdfSamplingRate, params, chIdealWaveform);
 				residualWaveform.waveform[k] = residualWaveform.waveform[k] - fitVal;
-//				fitVecForPlot.emplace_back(fitVal);
+				fitVecForPlot.emplace_back(fitVal);
 			}
 
-//			writeVector("fit.csv", fitVecForPlot);
+			writeVector("fit.csv", fitVecForPlot);
 
-//			writeVector("residual.csv", residualWaveform.waveform);
+			writeVector("residual.csv", residualWaveform.waveform);
 
 
 			// Get initial guesses for the next PE
@@ -195,6 +195,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 				}
 				guessPE.time = float(PEFinderTimeOffset * 0.1) + timeSum / ponderationSum;
 			}
+			// Changing the multiple of PEFinerTimeOffset affects speed and chisq significantly
 
 			numPEsFound += 1;
 			pesFound.push_back(guessPE);
@@ -269,7 +270,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 
 		// Run the solver!
 		Solver::Options options;
-		options.minimizer_type = ceres::LINE_SEARCH; // THIS GIVES WORSE CHISQ BUT MUCH MUCH FASTER, CHISQ STILL GOOD THOUGH
+//		options.minimizer_type = ceres::LINE_SEARCH; // THIS GIVES WORSE CHISQ BUT MUCH MUCH FASTER, CHISQ STILL GOOD THOUGH
 		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
         options.parameter_tolerance = 1e-4; // default is 1e-8, check if this is tolerance for any or all params
 		options.minimizer_progress_to_stdout = false;
@@ -307,13 +308,13 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 
 
 //
-//		std::vector<float> fullFitVecForPlot;
-//		for (unsigned int k = 0; k < waveformData.waveform.size(); k++) {
-//			auto thing = npe_pdf_func(k * pdfSamplingRate, finalParams, chIdealWaveform);
-//			fullFitVecForPlot.emplace_back(thing);
-//		}
-//
-//		writeVector("fullFit.csv", fullFitVecForPlot);
+		std::vector<float> fullFitVecForPlot;
+		for (unsigned int k = 0; k < waveformData.waveform.size(); k++) {
+			auto thing = npe_pdf_func(k * pdfSamplingRate, finalParams, chIdealWaveform);
+			fullFitVecForPlot.emplace_back(thing);
+		}
+
+		writeVector("fullFit.csv", fullFitVecForPlot);
 
 //		for (int k = 0; k < pesFound.size(); k++) {
 //			std::cout << "Amplitude:\t" << initialAmplitudes[k] << " -> " << amplitudes[k] << std::endl;
