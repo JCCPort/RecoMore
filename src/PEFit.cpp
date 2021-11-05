@@ -26,6 +26,7 @@ struct npe_pdf_functor {
 			residual[0] += (params[i2 + 1][0] * f);
 		}
 		residual[0] -= y_;
+//		residual[0] = residual[0] * residual[0];
 		return true;
 	}
 
@@ -60,11 +61,9 @@ float npe_pdf_func(float X, const std::vector<float> &p, std::vector<double> *id
 		const float PE_CHARGE = p[2 + PE * 2];
 		const float PE_TIME = p[3 + PE * 2];
 		// TODO(josh): Start using interpolation for this too instead of using floor
-		const int PE_PDF_BIN =
-				pdfT0Sample + (int) std::floor(0.5 + (X - PE_TIME) * samplingRate2Inv);
+		const int PE_PDF_BIN = pdfT0Sample + (int) std::floor(0.5 + (X - PE_TIME) * samplingRate2Inv);
 		if ((PE_PDF_BIN >= 0) && (PE_PDF_BIN < pdfNSamples)) {
-			float thing = idealWaveform->at(PE_PDF_BIN);
-			value += PE_CHARGE * thing;
+			value += PE_CHARGE * idealWaveform->at(PE_PDF_BIN);
 		}
 	}
 	return value;
@@ -84,14 +83,23 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 	evFitDat.eventID = event->eventID;
 	evFitDat.date = event->date;
 	evFitDat.TDCCorrTime = event->TDCCorrTime;
+
+//	if(evFitDat.eventID != 2897){
+//		return;
+//	}
+//	std::cout << evFitDat.eventID << std::endl;
+
 	for (const auto &waveformData: event->chData) {
 		auto residualWaveform = waveformData; // This will be the variable that is modified to be the residual distribution after each iteration
 
 		ChannelFitData chFit;
 		unsigned int ch = waveformData.channel;
 		if (ch == 15) {
-			return;
+			continue;
 		}
+//		if(ch != 0){
+//			return;
+//		}
 		chFit.ch = ch;
 
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
@@ -124,15 +132,23 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			// Amplitude adjustment: if the latest PE found is before other one(s),
 			//  its tail is going to add some amplitude to the following one. Compares
 			//  real and fit amplitude at the time bin corresponding to the PE time.
-			for (auto &pe: pesFound) {
+//			auto tempRes = waveformData.waveform;
+			for (int i = 0; i < pesFound.size(); i++) {
 				// TODO(josh): Improve the adjustment by averaging the shift based off of a few bins around the PE time
-				unsigned int peTimeBinPos = std::floor(pe.time / pdfSamplingRate); // This should use a variable
+				unsigned int peTimeBinPos = std::floor(pesFound[i].time / pdfSamplingRate); // This should use a variable
 				// corresponding to the input sampling rate, however for now they're the same
-				float fitVal = npe_pdf_func(pe.time, params, chIdealWaveform);
-				float extraAmplitude = fitVal - residualWaveform.waveform[peTimeBinPos];
-				float newAmplitude = pe.amplitude + extraAmplitude;
-				if (newAmplitude > 0) { // TODO(josh): We need to consider the situations that this would ever be true
-					pe.amplitude = newAmplitude;
+				float fitVal = npe_pdf_func(pesFound[i].time, params, chIdealWaveform);
+				float extraAmplitude = fitVal - waveformData.waveform[peTimeBinPos];
+				float newAmplitude = pesFound[i].amplitude + extraAmplitude;
+				if (newAmplitude > 0.0075) { // TODO(josh): We need to consider the situations that this would ever be true
+					pesFound[i].amplitude = newAmplitude;
+					params = std::vector<float>{};
+					params.push_back((float) pesFound.size());
+					params.push_back(initBaseline);
+					for (auto pe: pesFound) {
+						params.push_back(pe.amplitude);
+						params.push_back(pe.time);
+					}
 				}
 			}
 
@@ -151,9 +167,9 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 //			std::vector<float> fitVecForPlot;
 			for (unsigned int k = 0; k < residualWaveform.waveform.size(); ++k) {
 				// TODO(josh): Should it be k or k + 0.5?
-				float val = npe_pdf_func(float(k) * pdfSamplingRate, params, chIdealWaveform);
-				residualWaveform.waveform[k] = residualWaveform.waveform[k] - val;
-//				fitVecForPlot.emplace_back(val);
+				float fitVal = npe_pdf_func(float(k) * pdfSamplingRate, params, chIdealWaveform);
+				residualWaveform.waveform[k] = residualWaveform.waveform[k] - fitVal;
+//				fitVecForPlot.emplace_back(fitVal);
 			}
 
 //			writeVector("fit.csv", fitVecForPlot);
@@ -165,15 +181,25 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			auto minPosIt = std::min_element(residualWaveform.waveform.begin(), residualWaveform.waveform.end());
 			unsigned int minTimePos = std::distance(residualWaveform.waveform.begin(), minPosIt);
 
-			if (-residualWaveform.waveform[minTimePos] < 0.009) {
+			if (-residualWaveform.waveform[minTimePos] < 0.0075) {
 				break;
 			}
 
 			guessPE.amplitude = -residualWaveform.waveform[minTimePos];
 
+//			if(guessPE.amplitude < 0){
+//				throw std::runtime_error("Amplitude shouldn't be negative");
+//			}
+
 			guessPE.time = float(minTimePos) * pdfSamplingRate;
 
-			if ((minTimePos > 1) && (minTimePos < residualWaveform.waveform.size())) {
+
+			// This is effectively checking in what direction the residual is skewed.
+			// (t1*a1)/(a1*a2*a3) + (t2*a2)/(a1*a2*a3) + (t3*a3)/(a1*a2*a3)
+			// If the estimated PE time is larger than truth the residual will be negative on the left,
+			// and positive on the right (of the PE time), this means a1/(a1*a2*a3) will be less than one,
+			// and a3/(a1+a2+a3) will be greater than one, shifting the time to the right...
+			if ((minTimePos > 1) && (minTimePos < residualWaveform.waveform.size() - 1)) {
 				// improve initial time for a new PE based on average time
 				// over 3 consecutive sample ponderated by the amplitude
 				// of each sample... help a lot to resolve PEs very close!
@@ -182,10 +208,17 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 				for (unsigned int b = minTimePos - 1; b <= minTimePos + 1; ++b) {
 					double binCenter = (minTimePos - 0.5) * (pdfSamplingRate);
 					double binVal = residualWaveform.waveform[minTimePos];
+//					if(binCenter < 0){
+//						throw std::runtime_error("Sample time should never be negative.");
+//					}
 					timeSum += binCenter * binVal;
 					ponderationSum += binVal;
 				}
 				guessPE.time = float(PEFinderTimeOffset * 0.1) + timeSum / ponderationSum;
+//				if(guessPE.time < 0){
+//					std::cout << timeSum << "\t" << ponderationSum << "\t" << timeSum/ponderationSum << std::endl;
+//					throw std::runtime_error("Sample time should never be negative.");
+//				}
 			}
 
 			numPEsFound += 1;
@@ -262,6 +295,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		// Run the solver!
 		Solver::Options options;
 		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
+		options.parameter_tolerance = 1e-4; // default is 1e-8, check if this is tolerance for any or all params
 		options.minimizer_progress_to_stdout = false;
 		Solver::Summary summary;
 		Solve(options, &problem, &summary);
@@ -316,7 +350,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			PEData pe;
 			pe.amplitude = float(amplitudes[k]);
 			pe.time = float(times[k]);
-			FitPEs.emplace_back(pe);
+			FitPEs.push_back(pe);
 			N++;
 			ampDiff = ampDiff + ((pe.amplitude - initialAmplitudes[k]) - ampDiff) / N;
 			timeDiff = timeDiff + ((pe.time - initialTimes[k]) - timeDiff) / N;
