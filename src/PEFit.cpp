@@ -16,11 +16,11 @@ struct npe_pdf_functor {
 			x), y_(y), PDFInterpolator_(PDFInterpolator), numPES_(numPES) {};
 
 	template<typename T>
-	bool operator()(T const *const *params, T *residual) const {
+	bool operator()(T const *const *params, T *__restrict__ residual) const {
 		T f;
 		T X_(x_);
 		residual[0] = params[0][0];
-		for (unsigned int i = 0; i < numPES_; i++) {
+		for (unsigned int i = 0; i < numPES_; ++i) {
 			unsigned int i2 = 2 * i;
 			PDFInterpolator_->Evaluate((X_ - params[i2 + 2][0]), &f);
 			residual[0] += (params[i2 + 1][0] * f);
@@ -104,7 +104,8 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
 		std::vector<double> tmp = (*idealWaveforms)[ch];
-		std::vector<double> *chIdealWaveform = &tmp;
+		std::vector<double> * chIdealWaveform = &tmp;
+
 
 		// Baseline calculation
 		float initBaseline = averageVector(waveformData.waveform, 0, 150, 0.0015);
@@ -141,23 +142,9 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 				float extraAmplitude = fitVal - waveformData.waveform[peTimeBinPos];
 				float newAmplitude = pesFound[i].amplitude + extraAmplitude;
 				if (newAmplitude > 0.0075) { // TODO(josh): We need to consider the situations that this would ever be true
+				    params[2 + (2*i)] = newAmplitude;
 					pesFound[i].amplitude = newAmplitude;
-					params = std::vector<float>{};
-					params.push_back((float) pesFound.size());
-					params.push_back(initBaseline);
-					for (auto pe: pesFound) {
-						params.push_back(pe.amplitude);
-						params.push_back(pe.time);
-					}
 				}
-			}
-
-			params = std::vector<float>{};
-			params.push_back((float) pesFound.size());
-			params.push_back(initBaseline);
-			for (auto pe: pesFound) {
-				params.push_back(pe.amplitude);
-				params.push_back(pe.time);
 			}
 
 //			writeVector("rawWaveform.csv", waveformData.waveform);
@@ -186,11 +173,6 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			}
 
 			guessPE.amplitude = -residualWaveform.waveform[minTimePos];
-
-//			if(guessPE.amplitude < 0){
-//				throw std::runtime_error("Amplitude shouldn't be negative");
-//			}
-
 			guessPE.time = float(minTimePos) * pdfSamplingRate;
 
 
@@ -208,17 +190,10 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 				for (unsigned int b = minTimePos - 1; b <= minTimePos + 1; ++b) {
 					double binCenter = (minTimePos - 0.5) * (pdfSamplingRate);
 					double binVal = residualWaveform.waveform[minTimePos];
-//					if(binCenter < 0){
-//						throw std::runtime_error("Sample time should never be negative.");
-//					}
 					timeSum += binCenter * binVal;
 					ponderationSum += binVal;
 				}
 				guessPE.time = float(PEFinderTimeOffset * 0.1) + timeSum / ponderationSum;
-//				if(guessPE.time < 0){
-//					std::cout << timeSum << "\t" << ponderationSum << "\t" << timeSum/ponderationSum << std::endl;
-//					throw std::runtime_error("Sample time should never be negative.");
-//				}
 			}
 
 			numPEsFound += 1;
@@ -294,11 +269,15 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 
 		// Run the solver!
 		Solver::Options options;
+		options.minimizer_type = ceres::LINE_SEARCH; // THIS GIVES WORSE CHISQ BUT MUCH MUCH FASTER, CHISQ STILL GOOD THOUGH
 		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
-		options.parameter_tolerance = 1e-4; // default is 1e-8, check if this is tolerance for any or all params
+        options.parameter_tolerance = 1e-4; // default is 1e-8, check if this is tolerance for any or all params
 		options.minimizer_progress_to_stdout = false;
 		Solver::Summary summary;
 		Solve(options, &problem, &summary);
+
+//        std::cout << summary.FullReport() << "\n";
+
 
 		// Going back from ideal waveform PDF index to time
 		for (double &time: times) {
@@ -325,8 +304,6 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		meanReducedChisq = meanReducedChisq + (redChiSq - meanReducedChisq) / N2;
 
 		delete idealPDFInterpolator;
-
-//		std::cout << summary.FullReport() << "\n";
 
 
 //
