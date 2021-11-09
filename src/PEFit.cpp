@@ -187,12 +187,12 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 				// of each sample... help a lot to resolve PEs very close!
 				double timeSum = 0;
 				double ponderationSum = 0;
-				for (unsigned int b = minTimePos - 1; b <= minTimePos + 1; ++b) {
-					double binCenter = (minTimePos - 0.5) * (pdfSamplingRate);
-					double binVal = residualWaveform.waveform[minTimePos];
-					timeSum += binCenter * binVal;
-					ponderationSum += binVal;
-				}
+//				for (unsigned int b = minTimePos - 1; b <= minTimePos + 1; ++b) {
+                double binCenter = (minTimePos - 0.5) * (pdfSamplingRate);
+                double binVal = residualWaveform.waveform[minTimePos];
+                timeSum += binCenter * binVal;
+                ponderationSum += binVal;
+//				}
 				guessPE.time = float(PEFinderTimeOffset * 0.1) + timeSum / ponderationSum;
 			}
 			// Changing the multiple of PEFinerTimeOffset affects speed and chisq significantly
