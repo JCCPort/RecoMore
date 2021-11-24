@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
 	std::vector<std::string> splitString2;
 	boost::split(splitString2, splitString.back(), boost::is_any_of("."));
 
-	std::string directory = "";
+	std::string directory;
 	for(int i = 0; i < splitString.size() - 1; i++){
 		directory += splitString[i];
 		directory += "/";

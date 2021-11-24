@@ -248,8 +248,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		// Creating the x values that the solver will use
 		std::vector<double> xValues;
 		for (unsigned int j = 0; j < waveformData.waveform.size(); j++) {
-			xValues.push_back(
-					((double) j * 100) + pdfT0SampleConv);  // Multiplying index to match position on ideal PDF
+			xValues.push_back(((double) j * 100) + pdfT0SampleConv);  // Multiplying index to match position on ideal PDF
 		}
 
 		// Set up the only cost function (also known as residual). This uses
@@ -259,10 +258,10 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			                                                                                            waveformData.waveform[j],
 			                                                                                            idealPDFInterpolator,
 			                                                                                            pesFound.size()));
-			costFunction->AddParameterBlock(1);
+			costFunction->AddParameterBlock(1); // Baseline param
 			for (auto pe: pesFound) {
-				costFunction->AddParameterBlock(1);
-				costFunction->AddParameterBlock(1);
+				costFunction->AddParameterBlock(1); // Amplitude param for PE
+				costFunction->AddParameterBlock(1); // Time param for PE
 			}
 			costFunction->SetNumResiduals(1);
 			problem.AddResidualBlock(costFunction, nullptr, params);
