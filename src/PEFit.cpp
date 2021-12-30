@@ -82,11 +82,6 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 	evFitDat.date = event->date;
 	evFitDat.TDCCorrTime = event->TDCCorrTime;
 
-//	if(evFitDat.eventID != 2897){
-//		return;
-//	}
-//	std::cout << evFitDat.eventID << std::endl;
-
 	for (const auto &waveformData: event->chData) {
 		auto residualWaveform = waveformData; // This will be the variable that is modified to be the residual distribution after each iteration
 
@@ -95,9 +90,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		if (ch == 15) {
 			continue;
 		}
-//		if(ch != 0){
-//			return;
-//		}
+
 		chFit.ch = ch;
 
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
@@ -139,7 +132,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 				float fitVal = npe_pdf_func(pesFound[i].time, params, chIdealWaveform);
 				float extraAmplitude = fitVal - waveformData.waveform[peTimeBinPos];
 				float newAmplitude = pesFound[i].amplitude + extraAmplitude;
-				if (newAmplitude > 0.0035) { // TODO(josh): We need to consider the situations that this would ever be true
+				if (newAmplitude > waveformSigThresh) { // TODO(josh): We need to consider the situations that this would ever be true
 				    params[2 + (2*i)] = newAmplitude;
 					pesFound[i].amplitude = newAmplitude;
 				}
@@ -166,7 +159,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			auto minPosIt = std::min_element(residualWaveform.waveform.begin(), residualWaveform.waveform.end());
 			unsigned int minTimePos = std::distance(residualWaveform.waveform.begin(), minPosIt);
 
-			if (-residualWaveform.waveform[minTimePos] < 0.0035) {
+			if (-residualWaveform.waveform[minTimePos] < waveformSigThresh) {
 				break;
 			}
 

@@ -17,3 +17,4 @@ const float pdfResidualRMS = 0.827;
 double meanReducedChisq = 0;
 const double samplingRate2Inv = 1 / (0.01 * pdfSamplingRate);
 const double pdfT0SampleConv = (double) pdfT0Sample;
+const double waveformSigThresh = 0.0035;
