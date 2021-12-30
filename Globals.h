@@ -41,6 +41,9 @@ extern const float pdfResidualRMS;
 
 extern double meanReducedChisq;
 
+extern const double samplingRate2Inv;
+extern const double pdfT0SampleConv;
+
 
 
 #endif //RECOMORE_GLOBALS_H

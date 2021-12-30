@@ -6,7 +6,7 @@
 #include "include/DataStructures.h"
 
 template<typename T>
-void nanInfChecker(const std::list<T> list){
+[[maybe_unused]] void nanInfChecker(const std::list<T> list){
 	for(auto entry: list){
 		if(std::isnan(entry)){
 			throw std::runtime_error("Number should not be NaN.");

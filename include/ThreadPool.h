@@ -368,7 +368,7 @@ private:
 	 * @brief Sleep for sleep_duration microseconds. If that variable is set to zero, yield instead.
 	 *
 	 */
-	void sleep_or_yield()
+	void sleep_or_yield() const
 	{
 		if (sleep_duration)
 			std::this_thread::sleep_for(std::chrono::microseconds(sleep_duration));

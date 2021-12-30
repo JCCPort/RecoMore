@@ -7,8 +7,6 @@
 #include <memory>
 #include <utility>
 
-const double samplingRate2Inv = 1 / (0.01 * pdfSamplingRate);
-const double pdfT0SampleConv = (double) pdfT0Sample;
 
 struct npe_pdf_functor {
 	npe_pdf_functor(double x, double y, ceres::CubicInterpolator<ceres::Grid1D<double, true>> *PDFInterpolator,
@@ -141,7 +139,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 				float fitVal = npe_pdf_func(pesFound[i].time, params, chIdealWaveform);
 				float extraAmplitude = fitVal - waveformData.waveform[peTimeBinPos];
 				float newAmplitude = pesFound[i].amplitude + extraAmplitude;
-				if (newAmplitude > 0.0075) { // TODO(josh): We need to consider the situations that this would ever be true
+				if (newAmplitude > 0.0035) { // TODO(josh): We need to consider the situations that this would ever be true
 				    params[2 + (2*i)] = newAmplitude;
 					pesFound[i].amplitude = newAmplitude;
 				}
@@ -168,7 +166,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			auto minPosIt = std::min_element(residualWaveform.waveform.begin(), residualWaveform.waveform.end());
 			unsigned int minTimePos = std::distance(residualWaveform.waveform.begin(), minPosIt);
 
-			if (-residualWaveform.waveform[minTimePos] < 0.0075) {
+			if (-residualWaveform.waveform[minTimePos] < 0.0035) {
 				break;
 			}
 
