@@ -44,7 +44,8 @@ extern double meanReducedChisq;
 extern const double samplingRate2Inv; // Effectively the data sampling rate... should probably just have that
 extern const double pdfT0SampleConv; // Conversion of sampling rate to a double
 
-extern const double waveformSigThresh; // Threshold for considering either PEs or after-pulses
+extern const double WFSigThresh; // Threshold for considering either PEs or after-pulses
+extern const int maxPEs;
 
 
 
