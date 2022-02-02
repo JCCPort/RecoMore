@@ -40,6 +40,7 @@ int main(int argc, char** argv) {
 
 	unsigned int numThreads = 16;
 	unsigned int batchNumber = 200;
+	unsigned int numChannels = 16;
 	static std::atomic<unsigned long> count{0};
 	std::mutex m;
 
@@ -47,8 +48,8 @@ int main(int argc, char** argv) {
 	Writer writer(file);
 
 	// TODO(josh): Use info read in from wavecatcher data file to determine what channels ideal PDFs to load.
-	std::vector<std::vector<double>> idealWaveforms{64};
-	for (int ch = 0; ch < 64; ch++) {
+	std::vector<std::vector<double>> idealWaveforms{numChannels};
+	for (int ch = 0; ch < numChannels; ch++) {
 		if ((ch == 32) || (ch == 36) || (ch == 40) || (ch == 44) || (ch == 48) || (ch == 52) || (ch == 56) ||
 		    (ch == 60)) {
 			continue;
@@ -85,8 +86,6 @@ int main(int argc, char** argv) {
 			eventPos += threadRepeatCount[i];
 		}
 	}
-
-
 
 	progressThread.join();
 
