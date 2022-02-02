@@ -337,8 +337,8 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
  * @return
  */
 bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long> &count, std::mutex &m,
-                 const std::vector<std::vector<double>> * idealWaveforms, const std::shared_ptr<SyncFile> &file) {
-	for (const auto& event: events) {
+                 const std::vector<std::vector<double>> *idealWaveforms, const std::shared_ptr<SyncFile> &file) {
+	for (const auto &event: events) {
 		m.lock();
 		++count;
 		m.unlock();

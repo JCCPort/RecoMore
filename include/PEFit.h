@@ -14,6 +14,6 @@ void
 fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file);
 
 bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long> &count, std::mutex &m,
-                 const std::vector<std::vector<double>> * idealWaveforms, const std::shared_ptr<SyncFile> &file);
+                 const std::vector<std::vector<double>> *idealWaveforms, const std::shared_ptr<SyncFile> &file);
 
 #endif //RECOMORE_PEFIT_H
