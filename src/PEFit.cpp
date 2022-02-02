@@ -83,8 +83,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
 		std::vector<double> tmp = (*idealWaveforms)[ch];
-		std::vector<double> * chIdealWF = &tmp;
-
+		std::vector<double> *chIdealWF = &tmp;
 
 		// Baseline calculation
 		float initBaseline = averageVector(WFData.waveform, 0, 150, 0.0015);
@@ -115,13 +114,15 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 //			auto tempRes = WFData.waveform;
 			for (int i = 0; i < pesFound.size(); i++) {
 				// TODO(josh): Improve the adjustment by averaging the shift based off of a few bins around the PE time
-				unsigned int peTimeBinPos = std::floor(pesFound[i].time / pdfSamplingRate); // This should use a variable
+				unsigned int peTimeBinPos = std::floor(
+						pesFound[i].time / pdfSamplingRate); // This should use a variable
 				// corresponding to the input sampling rate, however for now they're the same
 				float fitVal = npe_pdf_func(pesFound[i].time, params, chIdealWF);
 				float extraAmplitude = fitVal - WFData.waveform[peTimeBinPos];
 				float newAmplitude = pesFound[i].amplitude + extraAmplitude;
-				if (newAmplitude > WFSigThresh) { // TODO(josh): We need to consider the situations that this would ever be true
-				    params[2 + (2*i)] = newAmplitude;
+				if (newAmplitude >
+				    WFSigThresh) { // TODO(josh): We need to consider the situations that this would ever be true
+					params[2 + (2 * i)] = newAmplitude;
 					pesFound[i].amplitude = newAmplitude;
 				}
 			}
@@ -131,14 +132,14 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			for (unsigned int k = 0; k < residualWF.waveform.size(); ++k) {
 				// TODO(josh): Should it be k or k + 0.5?
 				float fitVal = npe_pdf_func(float(k) * pdfSamplingRate, params, chIdealWF);
-                residualWF.waveform[k] = residualWF.waveform[k] - fitVal;
-				fitVecForPlot.emplace_back(fitVal); // Debug line
+				residualWF.waveform[k] = residualWF.waveform[k] - fitVal;
+//				fitVecForPlot.emplace_back(fitVal); // Debug line
 			}
 
 			/** Debugging code - writing fits to CSV for plotting **/
-			writeVector("rawWaveform.csv", WFData.waveform);
-			writeVector("fit.csv", fitVecForPlot);
-			writeVector("residual.csv", residualWF.waveform);
+//			writeVector("rawWaveform.csv", WFData.waveform);
+//			writeVector("fit.csv", fitVecForPlot);
+//			writeVector("residual.csv", residualWF.waveform);
 			/** ================================================= **/
 
 			// Get initial guesses for the next PE
@@ -166,10 +167,10 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 				double timeSum = 0;
 				double ponderationSum = 0;
 //				for (unsigned int b = minTimePos - 1; b <= minTimePos + 1; ++b) {
-                double binCenter = (minTimePos - 0.5) * (pdfSamplingRate);
-                double binVal = residualWF.waveform[minTimePos];
-                timeSum += binCenter * binVal;
-                ponderationSum += binVal;
+				double binCenter = (minTimePos - 0.5) * (pdfSamplingRate);
+				double binVal = residualWF.waveform[minTimePos];
+				timeSum += binCenter * binVal;
+				ponderationSum += binVal;
 //				}
 				guessPE.time = float(PEFinderTimeOffset * 0.1) + timeSum / ponderationSum;
 			}
@@ -177,7 +178,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 
 			numPEsFound += 1;
 			pesFound.push_back(guessPE);
-            residualWF = WFData;
+			residualWF = WFData;
 
 			if (numPEsFound > maxPEs) {  // To handle the possibility of the algorithm being overly keen.
 				break;
@@ -227,16 +228,17 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		// Creating the x values that the solver will use
 		std::vector<double> xValues;
 		for (unsigned int j = 0; j < WFData.waveform.size(); j++) {
-			xValues.push_back(((double) j * 100) + pdfT0SampleConv);  // Multiplying index to match position on ideal PDF
+			xValues.push_back(
+					((double) j * 100) + pdfT0SampleConv);  // Multiplying index to match position on ideal PDF
 		}
 
 		// Set up the only cost function (also known as residual). This uses
 		// auto-differentiation to obtain the derivative (Jacobian).
 		for (unsigned int j = 0; j < WFData.waveform.size(); ++j) {
 			auto costFunction = new DynamicAutoDiffCostFunction<npe_pdf_functor, 4>(new npe_pdf_functor(xValues[j],
-                                                                                                        WFData.waveform[j],
-                                                                                                        idealPDFInterpolator,
-                                                                                                        pesFound.size()));
+			                                                                                            WFData.waveform[j],
+			                                                                                            idealPDFInterpolator,
+			                                                                                            pesFound.size()));
 			costFunction->AddParameterBlock(1); // Baseline param
 			for (auto pe: pesFound) {
 				costFunction->AddParameterBlock(1); // Amplitude param for PE
@@ -250,7 +252,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		Solver::Options options;
 //		options.minimizer_type = ceres::LINE_SEARCH; // THIS GIVES WORSE CHISQ BUT MUCH, MUCH FASTER, CHISQ STILL GOOD THOUGH
 		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
-        options.parameter_tolerance = 1e-4; // default is 1e-8, check if this is tolerance for any or all params
+		options.parameter_tolerance = 1e-4; // default is 1e-8, check if this is tolerance for any or all params
 		options.minimizer_progress_to_stdout = false;
 		Solver::Summary summary;
 		Solve(options, &problem, &summary);
@@ -286,12 +288,12 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		delete idealPDFInterpolator;
 
 		/** Debugging code - writing fits to CSV for plotting **/
-		std::vector<float> fullFitVecForPlot;
-		for (unsigned int k = 0; k < WFData.waveform.size(); k++) {
-			auto thing = npe_pdf_func(k * pdfSamplingRate, finalParams, chIdealWF);
-			fullFitVecForPlot.emplace_back(thing);
-		}
-		writeVector("fullFit.csv", fullFitVecForPlot);
+//		std::vector<float> fullFitVecForPlot;
+//		for (unsigned int k = 0; k < WFData.waveform.size(); k++) {
+//			auto thing = npe_pdf_func(k * pdfSamplingRate, finalParams, chIdealWF);
+//			fullFitVecForPlot.emplace_back(thing);
+//		}
+//		writeVector("fullFit.csv", fullFitVecForPlot);
 		/** ================================================= **/
 
 //		for (int k = 0; k < pesFound.size(); k++) {

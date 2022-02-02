@@ -9,14 +9,6 @@
 #include "include/DataWriting.h"
 #include <boost/algorithm/string.hpp>
 
-#include <boost/asio/io_service.hpp>
-#include <boost/bind.hpp>
-#include <boost/thread/thread.hpp>
-#include <boost/asio/thread_pool.hpp>
-#include <boost/asio/post.hpp>
-
-
-
 #include "include/ThreadPool.h"
 
 /**

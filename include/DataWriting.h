@@ -33,8 +33,8 @@ public:
 		myFile_.close();
 
 		std::ifstream file2(path_);
-		if(file2.peek() == std::ifstream::traits_type::eof()){
-		    std::cout << "Output file is empty" << std::endl;
+		if (file2.peek() == std::ifstream::traits_type::eof()) {
+			std::cout << "Output file is empty" << std::endl;
 		}
 	};
 
