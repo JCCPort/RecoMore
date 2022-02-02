@@ -41,19 +41,19 @@ namespace client {
 
 /**
  *
- * @param fileName
- * @return
+ * @param fileName Path to the raw data file to run RecoMore over.
+ * @return Raw data events parsed into a WCData instance that contains a list of events to be split across multiple threads.
  */
 WCData ReadWCDataFile(const std::string &fileName) {
 	// Defining regular expression searches to be used for getting event and channel numbers.
 	std::regex eventNumberRegex("=== EVENT (\\d*) ===\\r");
 	std::regex channelNumberRegex(R"(=== CH: (\d*) EVENTID: (\d*) FCR: (\d*) ===\r)");
 	std::regex timeRegex("(=== UnixTime = (\\d*\\.\\d*)"
-						 " date = (\\d*\\.\\d*\\.\\d*)"
-						 " time = (\\d*h\\.\\d*m\\.\\d*s\\.\\d*ms) == "
-						 "TDC = (\\d*) == "
-						 "TDC corrected time = (\\d*h\\d*m\\d*s,\\d*\\.\\d*\\.\\d*ns) == "
-						 "Nb of channels = (\\d*) ===\r\n)");
+	                     " date = (\\d*\\.\\d*\\.\\d*)"
+	                     " time = (\\d*h\\.\\d*m\\.\\d*s\\.\\d*ms) == "
+	                     "TDC = (\\d*) == "
+	                     "TDC corrected time = (\\d*h\\d*m\\d*s,\\d*\\.\\d*\\.\\d*ns) == "
+	                     "Nb of channels = (\\d*) ===\r\n)");
 
 	WCData readData;
 	WaveformData wf;
@@ -84,7 +84,7 @@ WCData ReadWCDataFile(const std::string &fileName) {
 		getline(&line, &len, fp);
 
 		std::cmatch timeMatch;
-		bool timeInfo = std::regex_search(&line[0], timeMatch, timeRegex);
+		std::regex_search(&line[0], timeMatch, timeRegex);
 		event.TDCCorrTime = timeMatch[6].str();
 		event.date = timeMatch[3].str();
 
@@ -99,10 +99,10 @@ WCData ReadWCDataFile(const std::string &fileName) {
 
 			std::vector<float> temp;
 			temp.reserve(1024);
-
 			std::string lineStr = std::string(line);
 			client::parse_numbers(lineStr.begin(), lineStr.end(), temp);
 			wf.waveform = temp;
+
 			event.chData.push_back(wf);
 			getline(&line, &len, fp);
 		}
@@ -116,11 +116,13 @@ WCData ReadWCDataFile(const std::string &fileName) {
 
 
 /**
- *
- * @param array Array of length equal to the number of channels being read in, where each entry is an array of the ideal
- * waveform for the corresponding channel.
+ * This function reads the ideal PDFs for each channel which is then used for finding PEs in data by overlapping the ideal PDF with
+ * data PEs and subtracting them until none remain.
  * @param ch The channel to fill in.
  * @param interpFactor Number of points in interpolated waveform divided by number of points in original waveform.
+ * @param idealWFDir Path to directory containing ideal PDFs for each channel.
+ * @param expectedSize Check that the PDF is the expected length.
+ * @return
  */
 // TODO(josh): Fix performance of this as it seems to be slower than the WC data opening!
 std::vector<double>
@@ -146,7 +148,7 @@ readIdealWFs(unsigned int ch, int interpFactor, const std::string &idealWFDir, u
 	while (idealWFFile >> idealWFTime >> idealWFAmp) {
 		double delta_v = (idealWFAmp - prevAmp) / double(interpFactor);
 
-		for (int step = 1; step < interpFactor; ++step)
+		for (int step = 1; step < interpFactor; ++step)  // Add linearly interpolated points to ideal PDF
 			waveform.emplace_back(prevAmp + double(step) * delta_v);
 
 		waveform.emplace_back(idealWFAmp);

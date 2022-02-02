@@ -24,7 +24,6 @@ struct npe_pdf_functor {
 			residual[0] += (params[i2 + 1][0] * f);
 		}
 		residual[0] -= y_;
-//		residual[0] = residual[0] * residual[0];
 		return true;
 	}
 
@@ -68,13 +67,6 @@ float npe_pdf_func(float X, const std::vector<float> &p, std::vector<double> *id
 }
 
 
-float ampDiff = 0;
-float timeDiff = 0;
-float baselineDiff = 0;
-
-int N = 0;
-int N2 = 0;
-
 void
 fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file) {
 	EventFitData evFitDat;
@@ -82,15 +74,11 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 	evFitDat.date = event->date;
 	evFitDat.TDCCorrTime = event->TDCCorrTime;
 
-	for (const auto &WFData: event->chData) {
+	for (const auto &WFData: event->chData) { // Looping through all channels for a given event
 		auto residualWF = WFData; // This will be the variable that is modified to be the residual distribution after each iteration
 
 		ChannelFitData chFit;
 		unsigned int ch = WFData.channel;
-		if (ch == 15) {
-			continue;
-		}
-
 		chFit.ch = ch;
 
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
@@ -138,27 +126,26 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 				}
 			}
 
-			writeVector("rawWaveform.csv", WFData.waveform);
-
 			// Compute residual
-			// TODO(josh): I suspect the residual is running into issues for short waveforms.
-			std::vector<float> fitVecForPlot;
+			std::vector<float> fitVecForPlot; // Debug line
 			for (unsigned int k = 0; k < residualWF.waveform.size(); ++k) {
 				// TODO(josh): Should it be k or k + 0.5?
 				float fitVal = npe_pdf_func(float(k) * pdfSamplingRate, params, chIdealWF);
                 residualWF.waveform[k] = residualWF.waveform[k] - fitVal;
-				fitVecForPlot.emplace_back(fitVal);
+				fitVecForPlot.emplace_back(fitVal); // Debug line
 			}
 
+			/** Debugging code - writing fits to CSV for plotting **/
+			writeVector("rawWaveform.csv", WFData.waveform);
 			writeVector("fit.csv", fitVecForPlot);
-
 			writeVector("residual.csv", residualWF.waveform);
-
+			/** ================================================= **/
 
 			// Get initial guesses for the next PE
 			auto minPosIt = std::min_element(residualWF.waveform.begin(), residualWF.waveform.end());
 			unsigned int minTimePos = std::distance(residualWF.waveform.begin(), minPosIt);
 
+			// If lowest point in waveform isn't below threshold there are no more PEs
 			if (-residualWF.waveform[minTimePos] < WFSigThresh) {
 				break;
 			}
@@ -192,7 +179,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			pesFound.push_back(guessPE);
             residualWF = WFData;
 
-			if (numPEsFound > maxPEs) {
+			if (numPEsFound > maxPEs) {  // To handle the possibility of the algorithm being overly keen.
 				break;
 			}
 		}
@@ -207,6 +194,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			initialTimes.push_back(k.time);
 		}
 
+		// Want to create a copy of the initial estimates to modify in below running correction.
 		std::vector<double> times = initialTimes;
 		std::vector<double> amplitudes = initialAmplitudes;
 
@@ -260,7 +248,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 
 		// Run the solver!
 		Solver::Options options;
-//		options.minimizer_type = ceres::LINE_SEARCH; // THIS GIVES WORSE CHISQ BUT MUCH MUCH FASTER, CHISQ STILL GOOD THOUGH
+//		options.minimizer_type = ceres::LINE_SEARCH; // THIS GIVES WORSE CHISQ BUT MUCH, MUCH FASTER, CHISQ STILL GOOD THOUGH
 		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
         options.parameter_tolerance = 1e-4; // default is 1e-8, check if this is tolerance for any or all params
 		options.minimizer_progress_to_stdout = false;
@@ -283,6 +271,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			finalParams.push_back((float) times[k]);
 		}
 
+		// TODO(josh): ChiSq calculation needs improvement/validating.
 		double chiSq = 0;
 		for (int j = 0; j < WFData.waveform.size(); j++) {
 			double observed = WFData.waveform[j];
@@ -291,20 +280,19 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			         (pdfResidualRMS / 1000); //TODO(josh): Need to calculate the residual RMS on a per waveform basis?
 		}
 		double redChiSq = chiSq / (finalParams.size() - 1);
-		N2++;
-		meanReducedChisq = meanReducedChisq + (redChiSq - meanReducedChisq) / N2;
+		sysProcWFCount++;
+		meanReducedChisq = meanReducedChisq + (redChiSq - meanReducedChisq) / sysProcWFCount;
 
 		delete idealPDFInterpolator;
 
-
-//
+		/** Debugging code - writing fits to CSV for plotting **/
 		std::vector<float> fullFitVecForPlot;
 		for (unsigned int k = 0; k < WFData.waveform.size(); k++) {
 			auto thing = npe_pdf_func(k * pdfSamplingRate, finalParams, chIdealWF);
 			fullFitVecForPlot.emplace_back(thing);
 		}
-
 		writeVector("fullFit.csv", fullFitVecForPlot);
+		/** ================================================= **/
 
 //		for (int k = 0; k < pesFound.size(); k++) {
 //			std::cout << "Amplitude:\t" << initialAmplitudes[k] << " -> " << amplitudes[k] << std::endl;
@@ -319,15 +307,15 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			pe.amplitude = float(amplitudes[k]);
 			pe.time = float(times[k]);
 			FitPEs.push_back(pe);
-			N++;
-			ampDiff = ampDiff + ((pe.amplitude - initialAmplitudes[k]) - ampDiff) / N;
-			timeDiff = timeDiff + ((pe.time - initialTimes[k]) - timeDiff) / N;
-			baselineDiff = baselineDiff + ((baseline - initBaseline) - baselineDiff) / N;
+			sysProcPECount++;
+			ampDiff = ampDiff + ((pe.amplitude - initialAmplitudes[k]) - ampDiff) / sysProcPECount;
+			timeDiff = timeDiff + ((pe.time - initialTimes[k]) - timeDiff) / sysProcPECount;
+			baselineDiff = baselineDiff + ((baseline - initBaseline) - baselineDiff) / sysProcPECount;
 		}
 
 		chFit.pes = FitPEs;
 		chFit.baseline = float(baseline);
-		evFitDat.sipm.push_back(chFit);
+		evFitDat.SiPM.push_back(chFit);
 
 
 		// TODO(josh): No magic numbers for different lengths of data

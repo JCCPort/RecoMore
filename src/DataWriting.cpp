@@ -66,7 +66,7 @@ void Writer::writeEventInfo(const EventFitData &evData) {
 	boost::split(timeSplitString, evData.TDCCorrTime.substr(10, 11), boost::is_any_of("."));
 	writeString += evData.TDCCorrTime.substr(0, 8) + "." + timeSplitString[0] + timeSplitString[1] + timeSplitString[2] + "s";
 	writeString += '\n';
-	for (auto &chDat: evData.sipm) {
+	for (auto &chDat: evData.SiPM) {
 		writeString += writeWaveformInfo(chDat);
 	}
 	writeString += "\n\n";
