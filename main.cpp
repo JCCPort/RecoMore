@@ -2,6 +2,7 @@
 #include <atomic>
 #include <mutex>
 #include <thread>
+#include "Utils.h"
 #include "include/DataReading.h"
 #include "include/DataStructures.h"
 #include "include/PEFit.h"
@@ -11,59 +12,6 @@
 
 #include "include/ThreadPool.h"
 
-/**
- *
- * @tparam T
- * @param v
- * @param m
- * @param n
- * @return
- */
-template<typename T>
-std::vector<T> slice(std::vector<T> const &v, unsigned int m, unsigned int n) {
-	auto first = v.cbegin() + m;
-	auto last = v.cbegin() + n + 1;
-
-	std::vector<T> vec(first, last);
-	return vec;
-}
-
-/**
- *
- * @param count
- * @param m
- * @param dataLength
- */
-void displayProgress(std::atomic<unsigned long> &count, std::mutex &m, unsigned int dataLength) {
-	while (count != dataLength) {
-		std::this_thread::sleep_for(std::chrono::seconds(1));
-		m.lock();
-		std::cout << "Processed: " << count << "/" << dataLength << std::endl;
-		m.unlock();
-
-	}
-
-}
-
-/**
- *
- * @param events
- * @param count
- * @param m
- * @param idealWaveforms
- * @param file
- * @return
- */
-bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long> &count, std::mutex &m,
-                 const std::vector<std::vector<double>> * idealWaveforms, const std::shared_ptr<SyncFile> &file) {
-	for (const auto& event: events) {
-		m.lock();
-		++count;
-		m.unlock();
-		fitPE(&event, idealWaveforms, file);
-	}
-	return true;
-}
 
 
 int main(int argc, char** argv) {

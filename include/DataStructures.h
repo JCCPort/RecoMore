@@ -55,7 +55,7 @@ typedef struct {
 } EventFitData;
 
 
-class FitParams {
+class [[maybe_unused]] FitParams {
 public:
 	FitParams(unsigned int, double, std::vector<double>, std::vector<double>);
 

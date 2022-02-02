@@ -1,9 +1,10 @@
 #include "../include/PEFit.h"
-#include "../Globals.h"
+#include "../Utils.h"
+#include <mutex>
+#include <atomic>
 #include <cmath>
 #include "ceres/ceres.h"
 #include "ceres/cubic_interpolation.h"
-#include "../Utils.h"
 #include <memory>
 #include <utility>
 
@@ -324,4 +325,24 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 	}
 	Writer writer(std::move(file));
 	writer.writeEventInfo(evFitDat);
+}
+
+/**
+ *
+ * @param events
+ * @param count
+ * @param m
+ * @param idealWaveforms
+ * @param file
+ * @return
+ */
+bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long> &count, std::mutex &m,
+                 const std::vector<std::vector<double>> * idealWaveforms, const std::shared_ptr<SyncFile> &file) {
+	for (const auto& event: events) {
+		m.lock();
+		++count;
+		m.unlock();
+		fitPE(&event, idealWaveforms, file);
+	}
+	return true;
 }

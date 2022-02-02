@@ -4,7 +4,22 @@
 #include <list>
 #include <cmath>
 #include <exception>
+#include <iostream>
+#include <atomic>
+#include <mutex>
+#include <thread>
+#include <boost/algorithm/string.hpp>
 #include "include/DataStructures.h"
+#include "include/DataReading.h"
+#include "Globals.h"
+#include <fstream>
+#include "Utils.cpp"
+
+struct comparePETime {
+	inline bool operator()(const PEData &PE1, const PEData &PE2) {
+		return (PE1.time < PE2.time);
+	}
+};
 
 template<typename T>
 [[maybe_unused]] void nanInfChecker(const std::list<T> list) {
@@ -17,11 +32,6 @@ template<typename T>
 	}
 }
 
-struct comparePETime {
-	inline bool operator()(const PEData &PE1, const PEData &PE2) {
-		return (PE1.time < PE2.time);
-	}
-};
 
 template<typename T>
 float averageVector(std::vector<T> vec, int start, int end, float cut) {
@@ -45,4 +55,22 @@ void writeVector(const std::string &fileName, std::vector<T> vector) {
 	file.close();
 }
 
+/**
+ *
+ * @tparam T
+ * @param v
+ * @param m
+ * @param n
+ * @return
+ */
+template<typename T>
+std::vector<T> slice(std::vector<T> const &v, unsigned int m, unsigned int n) {
+	auto first = v.cbegin() + m;
+	auto last = v.cbegin() + n + 1;
+	std::vector<T> vec(first, last);
+	return vec;
+}
+
+
+void displayProgress(std::atomic<unsigned long> &count, std::mutex &m, unsigned int dataLength);
 #endif //RECOMORE_UTILS_H
