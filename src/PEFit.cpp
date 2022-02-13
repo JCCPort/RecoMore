@@ -82,12 +82,16 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		unsigned int ch = WFData.channel;
 		chFit.ch = ch;
 
+		if(ch == 15){
+			continue;
+		}
+
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
 		std::vector<double> tmp = (*idealWaveforms)[ch];
 		std::vector<double> *chIdealWF = &tmp;
 
 		// Baseline calculation
-		float initBaseline = averageVector(WFData.waveform, 0, 150, 0.0015);
+		float initBaseline = averageVector(WFData.waveform, 0, 20, 10);
 		chFit.baseline = initBaseline; // Will want to replace this with the fit baseline
 
 		// Start loop that will break when no more PEs are present
@@ -129,7 +133,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			}
 
 			// Compute residual
-			std::vector<float> fitVecForPlot; // Debug line
+//			std::vector<float> fitVecForPlot; // Debug line
 			for (unsigned int k = 0; k < residualWF.waveform.size(); ++k) {
 				// TODO(josh): Should it be k or k + 0.5?
 				float fitVal = npe_pdf_func(float(k) * pdfSamplingRate, params, chIdealWF);
@@ -253,7 +257,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		Solver::Options options;
 //		options.minimizer_type = ceres::LINE_SEARCH; // THIS GIVES WORSE CHISQ BUT MUCH, MUCH FASTER, CHISQ STILL GOOD THOUGH
 		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
-		options.parameter_tolerance = 1e-4; // default is 1e-8, check if this is tolerance for any or all params
+		options.parameter_tolerance = 5e-5; // default is 1e-8, check if this is tolerance for any or all params
 		options.minimizer_progress_to_stdout = false;
 		Solver::Summary summary;
 		Solve(options, &problem, &summary);

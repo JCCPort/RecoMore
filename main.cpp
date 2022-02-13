@@ -18,10 +18,11 @@ int main(int argc, char** argv) {
 	// TODO(josh): I strongly suspect we're being slowed down due to competing access for ideal waveform data.
 	//  somewhere there's an inefficiency as CPU usage isn't being maxed out
 
+	std::string pdfDir = std::string(argv[2]);
+
 	std::string inputFile = std::string(argv[1]);
 	std::vector<std::string> splitString;
 	boost::split(splitString, inputFile, boost::is_any_of("/"));
-	std::string pdfDir = std::string(argv[2]);
 
 	std::vector<std::string> splitString2;
 	boost::split(splitString2, splitString.back(), boost::is_any_of("."));
@@ -38,7 +39,7 @@ int main(int argc, char** argv) {
 	WCData data = ReadWCDataFile(inputFile);
 	// TODO(josh): Add error checking to if the data file is corrupted/invalid
 
-	unsigned int numThreads = 16;
+	unsigned int numThreads = 20;
 	unsigned int batchNumber = 200;
 	unsigned int numChannels = 16;
 	static std::atomic<unsigned long> count{0};
