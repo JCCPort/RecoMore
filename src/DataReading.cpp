@@ -6,6 +6,7 @@
 #include <boost/phoenix.hpp>
 #include <fstream>
 #include "../include/DataReading.h"
+#include "../Utils.h"
 
 // Parser shamelessly stolen from https://www.boost.org/doc/libs/1_68_0/libs/spirit/example/qi/num_list2.cpp
 namespace qi = boost::spirit::qi;
@@ -39,6 +40,20 @@ namespace client {
 	}
 }
 
+
+const char* BinaryStringToText(std::string binaryString) {
+	std::string text = "";
+	std::stringstream sstream(binaryString);
+	while (sstream.good())
+	{
+		std::bitset<8> bits;
+		sstream >> bits;
+		text += char(bits.to_ulong());
+	}
+	return text.c_str();
+}
+
+
 /**
  *
  * @param fileName Path to the raw data file to run RecoMore over.
@@ -59,6 +74,7 @@ WCData ReadWCDataFile(const std::string &fileName) {
 	WaveformData wf;
 
 	FILE *fp = fopen(fileName.c_str(), "r");
+	std::ifstream input_file(fileName.c_str(), std::ios::binary | std::ios::in);
 	if (fp == nullptr) {
 		throw std::runtime_error("WaveCatcher data file: " + fileName + " not found.");
 	}
@@ -111,6 +127,84 @@ WCData ReadWCDataFile(const std::string &fileName) {
 	fclose(fp);
 	if (line)
 		free(line);
+	return readData;
+}
+#pragma pack(1)
+struct eventData {
+	int EventNumber;
+	double EpochTime;
+	unsigned int Year;
+	unsigned int Month;
+	unsigned int Day;
+	unsigned int Hour;
+	unsigned int Minute;
+	unsigned int Second;
+	unsigned int Millisecond;
+	unsigned long long int TDCsamIndex;
+	int nchannelstored;
+};
+
+struct waveformNoMeas {
+	int channel;
+	int EventIDsamIndex;
+	int FirstCellToPlotsamIndex;
+	short waveform[1024];
+};
+#pragma pack()
+
+WCData ReadWCDataFileBinary(const std::string &fileName) {
+	WCData readData;
+	WaveformData wf;
+
+	std::ifstream input_file(fileName.c_str(), std::ios::binary | std::ios::in);
+	if (!input_file) {
+		throw std::runtime_error("WaveCatcher data file: " + fileName + " not found.");
+	}
+
+	std::string line;
+
+	// Skipping lines of unneeded metadata.
+	getline(input_file, line, '\n');
+	getline(input_file, line, '\n');
+	getline(input_file, line, '\n');
+	getline(input_file, line, '\n');
+
+	unsigned long long int previous_event_tdc = 0;
+	double previous_event_time = 0;
+	unsigned long long int tdc_overflow_counter = 0;
+	const double tdc2ns = 5.0E-9; // SAMLONG clock @ 200 MHz
+	const double tdcmax = pow(2, 40);
+	const float adc2mv = (2500. / 4096.);
+	eventData event_;
+	while (input_file.read((char *) (&event_), sizeof(event_))) {
+		EventData event;
+		event.eventID = event_.EventNumber;
+		event.date = std::to_string(event_.Year) + "." + std::to_string(event_.Month) + "." + std::to_string(event_.Day);
+
+		if (event_.TDCsamIndex < previous_event_tdc)
+			tdc_overflow_counter++;
+
+		double output_time = tdc_overflow_counter * tdcmax * tdc2ns + event_.TDCsamIndex * tdc2ns;
+		double output_delta_time = output_time - previous_event_time;
+		previous_event_time = output_time;
+
+		std::string subSec = to_string_with_precision(output_delta_time+(event_.Millisecond/1000.), 9);
+		event.TDCCorrTime = std::to_string(event_.Hour) + "h" + std::to_string(event_.Minute) + "m" + std::to_string(event_.Second) + "s"
+				+ "," + subSec.substr(2, 3) + "." + subSec.substr(5, 3) + "." + subSec.substr(8, 3) + "ns";
+
+		for(int j = 0; j < event_.nchannelstored; j++){
+			waveformNoMeas waveform;
+			input_file.read((char *) (&waveform), sizeof(waveformNoMeas));
+			wf.channel = waveform.channel;
+			std::vector<float> temp;
+			for(short i : waveform.waveform){
+				temp.push_back(adc2mv * i / 10000);
+			}
+			wf.waveform = temp;
+			event.chData.push_back(wf);
+		}
+		readData.addRow(event);
+	}
 	return readData;
 }
 

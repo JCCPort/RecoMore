@@ -82,16 +82,12 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		unsigned int ch = WFData.channel;
 		chFit.ch = ch;
 
-		if(ch == 15){
-			continue;
-		}
-
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
 		std::vector<double> tmp = (*idealWaveforms)[ch];
 		std::vector<double> *chIdealWF = &tmp;
 
 		// Baseline calculation
-		float initBaseline = averageVector(WFData.waveform, 0, 20, 10);
+		float initBaseline = averageVector(WFData.waveform, 0, 50, 0.01);
 		chFit.baseline = initBaseline; // Will want to replace this with the fit baseline
 
 		// Start loop that will break when no more PEs are present
@@ -257,7 +253,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		Solver::Options options;
 //		options.minimizer_type = ceres::LINE_SEARCH; // THIS GIVES WORSE CHISQ BUT MUCH, MUCH FASTER, CHISQ STILL GOOD THOUGH
 		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
-		options.parameter_tolerance = 5e-5; // default is 1e-8, check if this is tolerance for any or all params
+		options.parameter_tolerance = 1e-4; // default is 1e-8, check if this is tolerance for any or all params
 		options.minimizer_progress_to_stdout = false;
 		Solver::Summary summary;
 		Solve(options, &problem, &summary);
@@ -272,7 +268,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 
 		std::vector<float> finalParams;
 		finalParams.push_back(pesFound.size());
-		finalParams.push_back(initBaseline);
+		finalParams.push_back(baseline);
 		for (int k = 0; k < pesFound.size(); k++) {
 			finalParams.push_back((float) amplitudes[k]);
 			finalParams.push_back((float) times[k]);
@@ -323,9 +319,6 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		chFit.pes = FitPEs;
 		chFit.baseline = float(baseline);
 		evFitDat.SiPM.push_back(chFit);
-
-
-		// TODO(josh): No magic numbers for different lengths of data
 	}
 	Writer writer(std::move(file));
 	writer.writeEventInfo(evFitDat);

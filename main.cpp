@@ -36,10 +36,10 @@ int main(int argc, char** argv) {
 	std::string outputFile = directory + splitString2[0] + "PES.dat";
 
 	// TODO(josh): Way to exclude specific channels from being read
-	WCData data = ReadWCDataFile(inputFile);
+	WCData data = ReadWCDataFileBinary(inputFile);
 	// TODO(josh): Add error checking to if the data file is corrupted/invalid
 
-	unsigned int numThreads = 20;
+	unsigned int numThreads = 16;
 	unsigned int batchNumber = 200;
 	unsigned int numChannels = 16;
 	static std::atomic<unsigned long> count{0};
@@ -49,8 +49,8 @@ int main(int argc, char** argv) {
 	Writer writer(file);
 
 	// TODO(josh): Use info read in from wavecatcher data file to determine what channels ideal PDFs to load.
-	std::vector<std::vector<double>> idealWaveforms{numChannels};
-	for (int ch = 0; ch < numChannels; ch++) {
+	std::vector<std::vector<double>> idealWaveforms{64};
+	for (int ch = 0; ch < 64; ch++) {
 		if ((ch == 32) || (ch == 36) || (ch == 40) || (ch == 44) || (ch == 48) || (ch == 52) || (ch == 56) ||
 		    (ch == 60)) {
 			continue;
