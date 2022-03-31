@@ -1,16 +1,17 @@
 #include <string>
 #include <cstring>
 #include <regex>
+#include <boost/format.hpp>
 #include <boost/fusion/adapted.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/phoenix.hpp>
 #include <fstream>
+#include <iomanip>
 #include "../include/DataReading.h"
 #include "../Utils.h"
 
 WCData ReadWCDataFile(const std::string &fileName){
 	std::string ending = fileName.substr(fileName.length() - 4);
-	std::cout << ending << std::endl;
 	if(ending == ".dat"){
 		return ReadWCDataFileDat(fileName);
 	}
@@ -79,7 +80,6 @@ WCData ReadWCDataFileDat(const std::string &fileName) {
 	if (fp == nullptr) {
 		throw std::runtime_error("WaveCatcher data file: " + fileName + " not found.");
 	}
-
 
 	char *line = nullptr;
 	size_t len = 0;
@@ -153,6 +153,11 @@ struct WCChannelDataNoMeasurement {
 };
 #pragma pack()
 
+/**
+ *
+ * @param fileName Path to the raw data file to run RecoMore over.
+ * @return Raw data events parsed into a WCData instance that contains a list of events to be split across multiple threads.
+ */
 WCData ReadWCDataFileBinary(const std::string &fileName) {
 	WCData readData;
 	WaveformData wf;
@@ -174,9 +179,9 @@ WCData ReadWCDataFileBinary(const std::string &fileName) {
 	double previousEventTime = 0;
 	unsigned long long int TDCOverflowCounter = 0;
 	const double TDC2ns = 5.0E-9; // SAMLONG clock @ 200 MHz
-	const double TDCMax = pow(2, 40);
+	const double TDCMax = std::pow(2, 40);
 	const float ADC2mV = (2500. / 4096.);
-	WCBinaryEventData event_;
+	WCBinaryEventData event_{};
 	while (input_file.read((char *) (&event_), sizeof(event_))) {
 		EventData event;
 		event.eventID = event_.eventNumber;
@@ -185,21 +190,31 @@ WCData ReadWCDataFileBinary(const std::string &fileName) {
 		if (event_.TDCSAMIndex < previousEventTDC)
 			TDCOverflowCounter++;
 
-		double outputTime = TDCOverflowCounter * TDCMax * TDC2ns + event_.TDCSAMIndex * TDC2ns;
+		double outputTime = (double)TDCOverflowCounter * TDCMax * TDC2ns + (double)event_.TDCSAMIndex * TDC2ns;
 		double outputDeltaTime = outputTime - previousEventTime;
 		previousEventTime = outputTime;
-
 		std::string subSec = to_string_with_precision(outputDeltaTime + (event_.millisecond / 1000.), 9);
-		event.TDCCorrTime = std::to_string(event_.hour) + "h" + std::to_string(event_.minute) + "m" + std::to_string(event_.second) + "s"
+
+		std::ostringstream ssh;
+		ssh << std::setw(2) << std::setfill('0') << std::to_string(event_.hour);
+
+		std::ostringstream ssm;
+		ssm << std::setw(2) << std::setfill('0') << std::to_string(event_.minute);
+
+		std::ostringstream sss;
+		sss << std::setw(2) << std::setfill('0') << std::to_string(event_.second);
+
+		event.TDCCorrTime = ssh.str() + "h" + ssm.str() + "m" + sss.str() + "s"
 		                    + "," + subSec.substr(2, 3) + "." + subSec.substr(5, 3) + "." + subSec.substr(8, 3) + "ns";
 
+
 		for(int j = 0; j < event_.nChannelStored; j++){
-			WCChannelDataNoMeasurement waveform;
+			WCChannelDataNoMeasurement waveform{};
 			input_file.read((char *) (&waveform), sizeof(WCChannelDataNoMeasurement));
 			wf.channel = waveform.channel;
 			std::vector<float> temp;
 			for(short i : waveform.waveform){
-				temp.push_back(ADC2mV * i / 10000);  // There was a factor of 10 originally in recozor, it became 10000 because we're using V not mV
+				temp.push_back(ADC2mV * (float)i / 10000);  // There was a factor of 10 originally in recozor, it became 10000 because we're using V not mV
 			}
 			wf.waveform = temp;
 			event.chData.push_back(wf);
@@ -219,7 +234,6 @@ WCData ReadWCDataFileBinary(const std::string &fileName) {
  * @param expectedSize Check that the PDF is the expected length.
  * @return
  */
-// TODO(josh): Fix performance of this as it seems to be slower than the WC data opening!
 std::vector<double>
 readIdealWFs(unsigned int ch, int interpFactor, const std::string &idealWFDir, unsigned int expectedSize) {
 	std::string idealWFPath = idealWFDir + "ch" + std::to_string(ch) + ".txt";

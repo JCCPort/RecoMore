@@ -184,7 +184,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			if (numPEsFound > maxPEs) {  // To handle the possibility of the algorithm being overly keen.
 				break;
 			}
-		}
+		} // End of PE find loop
 
 		using namespace ceres;
 		Problem problem;
@@ -251,9 +251,8 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 
 		// Run the solver!
 		Solver::Options options;
-//		options.minimizer_type = ceres::LINE_SEARCH; // THIS GIVES WORSE CHISQ BUT MUCH, MUCH FASTER, CHISQ STILL GOOD THOUGH
 		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
-		options.parameter_tolerance = 1e-4; // default is 1e-8, check if this is tolerance for any or all params
+		options.parameter_tolerance = 1e-5; // default is 1e-8, check if this is tolerance for any or all params
 		options.minimizer_progress_to_stdout = false;
 		Solver::Summary summary;
 		Solve(options, &problem, &summary);
