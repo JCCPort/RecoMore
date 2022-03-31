@@ -21,22 +21,22 @@ int main(int argc, char** argv) {
 	std::string pdfDir = std::string(argv[2]);
 
 	std::string inputFile = std::string(argv[1]);
-	std::vector<std::string> splitString;
-	boost::split(splitString, inputFile, boost::is_any_of("/"));
+	std::vector<std::string> pathDirSplit;
+	boost::split(pathDirSplit, inputFile, boost::is_any_of("/"));
 
-	std::vector<std::string> splitString2;
-	boost::split(splitString2, splitString.back(), boost::is_any_of("."));
+	std::vector<std::string> fileExtSplit;
+	boost::split(fileExtSplit, pathDirSplit.back(), boost::is_any_of("."));
 
 	std::string directory;
-	for(int i = 0; i < splitString.size() - 1; i++){
-		directory += splitString[i];
+	for(int i = 0; i < pathDirSplit.size() - 1; i++){
+		directory += pathDirSplit[i];
 		directory += "/";
 	}
 
-	std::string outputFile = directory + splitString2[0] + "PES.dat";
+	std::string outputFile = directory + fileExtSplit[0] + "PES.dat";
 
 	// TODO(josh): Way to exclude specific channels from being read
-	WCData data = ReadWCDataFileBinary(inputFile);
+	WCData data = ReadWCDataFile(inputFile);
 	// TODO(josh): Add error checking to if the data file is corrupted/invalid
 
 	unsigned int numThreads = 16;

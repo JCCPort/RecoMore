@@ -8,6 +8,20 @@
 #include "../include/DataReading.h"
 #include "../Utils.h"
 
+WCData ReadWCDataFile(const std::string &fileName){
+	std::string ending = fileName.substr(fileName.length() - 4);
+	std::cout << ending << std::endl;
+	if(ending == ".dat"){
+		return ReadWCDataFileDat(fileName);
+	}
+	else if(ending == ".bin"){
+		return ReadWCDataFileBinary(fileName);
+	}
+	else{
+		throw std::runtime_error("Provided data file (" + fileName + ") is not one of the accepted formats .dat, .bin.");
+	}
+}
+
 // Parser shamelessly stolen from https://www.boost.org/doc/libs/1_68_0/libs/spirit/example/qi/num_list2.cpp
 namespace qi = boost::spirit::qi;
 
@@ -41,25 +55,12 @@ namespace client {
 }
 
 
-const char* BinaryStringToText(std::string binaryString) {
-	std::string text = "";
-	std::stringstream sstream(binaryString);
-	while (sstream.good())
-	{
-		std::bitset<8> bits;
-		sstream >> bits;
-		text += char(bits.to_ulong());
-	}
-	return text.c_str();
-}
-
-
 /**
  *
  * @param fileName Path to the raw data file to run RecoMore over.
  * @return Raw data events parsed into a WCData instance that contains a list of events to be split across multiple threads.
  */
-WCData ReadWCDataFile(const std::string &fileName) {
+WCData ReadWCDataFileDat(const std::string &fileName) {
 	// Defining regular expression searches to be used for getting event and channel numbers.
 	std::regex eventNumberRegex("=== EVENT (\\d*) ===\\r");
 	std::regex channelNumberRegex(R"(=== CH: (\d*) EVENTID: (\d*) FCR: (\d*) ===\r)");
@@ -130,24 +131,24 @@ WCData ReadWCDataFile(const std::string &fileName) {
 	return readData;
 }
 #pragma pack(1)
-struct eventData {
-	int EventNumber;
-	double EpochTime;
-	unsigned int Year;
-	unsigned int Month;
-	unsigned int Day;
-	unsigned int Hour;
-	unsigned int Minute;
-	unsigned int Second;
-	unsigned int Millisecond;
-	unsigned long long int TDCsamIndex;
-	int nchannelstored;
+struct WCBinaryEventData {
+	int eventNumber;
+	double UNIXTime;
+	unsigned int year;
+	unsigned int month;
+	unsigned int day;
+	unsigned int hour;
+	unsigned int minute;
+	unsigned int second;
+	unsigned int millisecond;
+	unsigned long long int TDCSAMIndex;
+	int nChannelStored;
 };
 
-struct waveformNoMeas {
+struct WCChannelDataNoMeasurement {
 	int channel;
-	int EventIDsamIndex;
-	int FirstCellToPlotsamIndex;
+	int eventIDSAMIndex;
+	int firstCellToPlotSAMIndex;
 	short waveform[1024];
 };
 #pragma pack()
@@ -169,36 +170,36 @@ WCData ReadWCDataFileBinary(const std::string &fileName) {
 	getline(input_file, line, '\n');
 	getline(input_file, line, '\n');
 
-	unsigned long long int previous_event_tdc = 0;
-	double previous_event_time = 0;
-	unsigned long long int tdc_overflow_counter = 0;
-	const double tdc2ns = 5.0E-9; // SAMLONG clock @ 200 MHz
-	const double tdcmax = pow(2, 40);
-	const float adc2mv = (2500. / 4096.);
-	eventData event_;
+	unsigned long long int previousEventTDC = 0;
+	double previousEventTime = 0;
+	unsigned long long int TDCOverflowCounter = 0;
+	const double TDC2ns = 5.0E-9; // SAMLONG clock @ 200 MHz
+	const double TDCMax = pow(2, 40);
+	const float ADC2mV = (2500. / 4096.);
+	WCBinaryEventData event_;
 	while (input_file.read((char *) (&event_), sizeof(event_))) {
 		EventData event;
-		event.eventID = event_.EventNumber;
-		event.date = std::to_string(event_.Year) + "." + std::to_string(event_.Month) + "." + std::to_string(event_.Day);
+		event.eventID = event_.eventNumber;
+		event.date = std::to_string(event_.year) + "." + std::to_string(event_.month) + "." + std::to_string(event_.day);
 
-		if (event_.TDCsamIndex < previous_event_tdc)
-			tdc_overflow_counter++;
+		if (event_.TDCSAMIndex < previousEventTDC)
+			TDCOverflowCounter++;
 
-		double output_time = tdc_overflow_counter * tdcmax * tdc2ns + event_.TDCsamIndex * tdc2ns;
-		double output_delta_time = output_time - previous_event_time;
-		previous_event_time = output_time;
+		double outputTime = TDCOverflowCounter * TDCMax * TDC2ns + event_.TDCSAMIndex * TDC2ns;
+		double outputDeltaTime = outputTime - previousEventTime;
+		previousEventTime = outputTime;
 
-		std::string subSec = to_string_with_precision(output_delta_time+(event_.Millisecond/1000.), 9);
-		event.TDCCorrTime = std::to_string(event_.Hour) + "h" + std::to_string(event_.Minute) + "m" + std::to_string(event_.Second) + "s"
-				+ "," + subSec.substr(2, 3) + "." + subSec.substr(5, 3) + "." + subSec.substr(8, 3) + "ns";
+		std::string subSec = to_string_with_precision(outputDeltaTime + (event_.millisecond / 1000.), 9);
+		event.TDCCorrTime = std::to_string(event_.hour) + "h" + std::to_string(event_.minute) + "m" + std::to_string(event_.second) + "s"
+		                    + "," + subSec.substr(2, 3) + "." + subSec.substr(5, 3) + "." + subSec.substr(8, 3) + "ns";
 
-		for(int j = 0; j < event_.nchannelstored; j++){
-			waveformNoMeas waveform;
-			input_file.read((char *) (&waveform), sizeof(waveformNoMeas));
+		for(int j = 0; j < event_.nChannelStored; j++){
+			WCChannelDataNoMeasurement waveform;
+			input_file.read((char *) (&waveform), sizeof(WCChannelDataNoMeasurement));
 			wf.channel = waveform.channel;
 			std::vector<float> temp;
 			for(short i : waveform.waveform){
-				temp.push_back(adc2mv * i / 10000);
+				temp.push_back(ADC2mV * i / 10000);  // There was a factor of 10 originally in recozor, it became 10000 because we're using V not mV
 			}
 			wf.waveform = temp;
 			event.chData.push_back(wf);
