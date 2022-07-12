@@ -69,7 +69,7 @@ float npe_pdf_func(float X, const std::vector<float> &p, std::vector<double> *id
 
 
 void
-fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file) {
+fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file, std::mutex &m) {
 	EventFitData evFitDat;
 	evFitDat.eventID = event->eventID;
 	evFitDat.date = event->date;
@@ -129,18 +129,24 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			}
 
 			// Compute residual
-//			std::vector<float> fitVecForPlot; // Debug line
+			#ifdef ISDEBUG
+			std::vector<float> fitVecForPlot; // Debug line
+			#endif
 			for (unsigned int k = 0; k < residualWF.waveform.size(); ++k) {
 				// TODO(josh): Should it be k or k + 0.5?
 				float fitVal = npe_pdf_func(float(k) * pdfSamplingRate, params, chIdealWF);
 				residualWF.waveform[k] = residualWF.waveform[k] - fitVal;
-//				fitVecForPlot.emplace_back(fitVal); // Debug line
+				#ifdef ISDEBUG
+				fitVecForPlot.emplace_back(fitVal); // Debug line
+				#endif
 			}
 
 			/** Debugging code - writing fits to CSV for plotting **/
-//			writeVector("rawWaveform.csv", WFData.waveform);
-//			writeVector("fit.csv", fitVecForPlot);
-//			writeVector("residual.csv", residualWF.waveform);
+			#ifdef ISDEBUG
+			writeVector("rawWaveform.csv", WFData.waveform);
+			writeVector("fit.csv", fitVecForPlot);
+			writeVector("residual.csv", residualWF.waveform);
+			#endif
 			/** ================================================= **/
 
 			// Get initial guesses for the next PE
@@ -282,25 +288,24 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			         (pdfResidualRMS / 1000); //TODO(josh): Need to calculate the residual RMS on a per waveform basis?
 		}
 		double redChiSq = chiSq / (finalParams.size() - 1);
+		m.lock();
+		reducedChiSqs.emplace_back(redChiSq);
+		m.unlock();
+
 		sysProcWFCount++;
 		meanReducedChisq = meanReducedChisq + (redChiSq - meanReducedChisq) / sysProcWFCount;
 
 		delete idealPDFInterpolator;
 
 		/** Debugging code - writing fits to CSV for plotting **/
-//		std::vector<float> fullFitVecForPlot;
-//		for (unsigned int k = 0; k < WFData.waveform.size(); k++) {
-//			auto thing = npe_pdf_func(k * pdfSamplingRate, finalParams, chIdealWF);
-//			fullFitVecForPlot.emplace_back(thing);
-//		}
-//		writeVector("fullFit.csv", fullFitVecForPlot);
-		/** ================================================= **/
-
-//		for (int k = 0; k < pesFound.size(); k++) {
-//			std::cout << "Amplitude:\t" << initialAmplitudes[k] << " -> " << amplitudes[k] << std::endl;
-//			std::cout << "Time:\t\t" << initialTimes[k] << " -> " << times[k] << std::endl;
-//			std::cout << std::endl;
-//		}
+		#ifdef ISDEBUG
+		std::vector<float> fullFitVecForPlot;
+		for (unsigned int k = 0; k < WFData.waveform.size(); k++) {
+			auto thing = npe_pdf_func(k * pdfSamplingRate, finalParams, chIdealWF);
+			fullFitVecForPlot.emplace_back(thing);
+		}
+		writeVector("fullFit.csv", fullFitVecForPlot);
+		#endif
 
 		std::vector<PEData> FitPEs;
 
@@ -338,7 +343,7 @@ bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long
 		m.lock();
 		++count;
 		m.unlock();
-		fitPE(&event, idealWaveforms, file);
+		fitPE(&event, idealWaveforms, file, m);
 	}
 	return true;
 }

@@ -31,6 +31,7 @@ extern const float PEFinderTimeOffset;
 extern const float pdfResidualRMS;
 
 extern double meanReducedChisq;
+extern std::vector<double> reducedChiSqs;
 
 extern const double samplingRate2Inv; // Effectively the data sampling rate... should probably just have that
 extern const double pdfT0SampleConv; // Conversion of sampling rate to a double

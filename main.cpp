@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
 	WCData data = ReadWCDataFile(inputFile);
 	// TODO(josh): Add error checking to if the data file is corrupted/invalid
 
-	unsigned int numThreads = 16;
+	unsigned int numThreads = 1;
 	unsigned int batchNumber = 200;
 	unsigned int numChannels = 16;
 	static std::atomic<unsigned long> count{0};
@@ -91,6 +91,7 @@ int main(int argc, char** argv) {
 	progressThread.join();
 
 	file->closeFile();
+	writeVector("RecoMoreRedChisqs.csv", reducedChiSqs);
 	std::cout << "Mean reduced chisq:\t" << meanReducedChisq << std::endl;
 
 	return 0;
