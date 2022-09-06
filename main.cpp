@@ -47,12 +47,11 @@ int main(int argc, char** argv) {
 
 	auto file = std::make_shared<SyncFile>(outputFile);
 	Writer writer(file);
-
+	
 	// TODO(josh): Use info read in from wavecatcher data file to determine what channels ideal PDFs to load.
 	std::vector<std::vector<double>> idealWaveforms{64};
 	for (int ch = 0; ch < 64; ch++) {
-		if ((ch == 32) || (ch == 36) || (ch == 40) || (ch == 44) || (ch == 48) || (ch == 52) || (ch == 56) ||
-		    (ch == 60)) {
+		if (std::count(skipChannels.begin(), skipChannels.end(), ch)) {
 			continue;
 		}
 		idealWaveforms.at(ch) = readIdealWFs(ch, 10, pdfDir, pdfNSamples);
