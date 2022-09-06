@@ -1,7 +1,7 @@
 import typing
 
 import re as re
-from datetime import datetime
+import datetime
 from copy import copy
 
 # RECOMORE REGEX SEARCHES ================================================================================
@@ -26,7 +26,7 @@ class PE:
 
 class ChannelWF:
     def __init__(self):
-        self.eventTime: datetime = datetime(1970, 1, 1)
+        self.eventTime: datetime = datetime.datetime(1970, 1, 1)
         self.extraTimePrecision: float = 0
         self.eventNumber: int = -1
         self.channelNumber: int = -1
@@ -44,10 +44,10 @@ def readRecoMore(RMDataFile) -> typing.List[ChannelWF]:
             tempWF.eventNumber = int(lineSearch.group("evt"))
             if lineSearch.group("date") == "0.0.0":
                 print("Date was not correctly recorded for event {}".format(tempWF.eventNumber))
-                tempWF.date = datetime(1970, 1, 1)
+                tempWF.date = datetime.datetime(1970, 1, 1)
                 dateTimeString = "1970.01.01 " + "00h00m00.000000000s"
             else:
-                tempWF.date = datetime(*map(int, lineSearch.group("date").split('.')))
+                tempWF.date = datetime.datetime(*map(int, lineSearch.group("date").split('.')))
                 dateTimeString = lineSearch.group("date") + " " + lineSearch.group("corrTime")
 
             testString = dateTimeString.replace("h", ".")
@@ -57,7 +57,7 @@ def readRecoMore(RMDataFile) -> typing.List[ChannelWF]:
 
             extraTimePrecision = dateTimeString.split(".")[-1].split("s")[0]
 
-            time = datetime(*map(int, testString.split('.')))
+            time = datetime.datetime(*map(int, testString.split('.')))
             tempWF.eventTime = time + datetime.timedelta(seconds=float("." + extraTimePrecision))
             if len(extraTimePrecision) > 6:
                 tempWF.extraTimePrecision = int(extraTimePrecision[6:])
@@ -78,7 +78,7 @@ def readRecoMore(RMDataFile) -> typing.List[ChannelWF]:
                     line = RMDataFile.readline()
                 tempWF.PEData = PEs
                 line = RMDataFile.readline()
-                if tempWF.date != datetime(1970, 1, 1):
+                if tempWF.date != datetime.datetime(1970, 1, 1):
                     WFs.append(copy(tempWF))
         line = RMDataFile.readline()
         line = RMDataFile.readline()
