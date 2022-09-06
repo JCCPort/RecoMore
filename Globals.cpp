@@ -2,7 +2,7 @@
 
 unsigned int winS = 1024;
 unsigned int numC = 64;
-std::vector<unsigned int> skipChannels{};
+std::vector<unsigned int> skipChannels{32, 36, 40, 44, 48, 52, 56, 60};
 const int baselineNSamples = 32;
 const float baselineRange = 1.5;
 const float PEThreshold = -7.5;

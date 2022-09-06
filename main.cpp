@@ -37,22 +37,22 @@ int main(int argc, char** argv) {
 
 	// TODO(josh): Way to exclude specific channels from being read
 	WCData data = ReadWCDataFile(inputFile);
+	std::cout << "Data file read" << std::endl;
 	// TODO(josh): Add error checking to if the data file is corrupted/invalid
 
-	unsigned int numThreads = 1;
+	unsigned int numThreads = 2;
 	unsigned int batchNumber = 200;
-	unsigned int numChannels = 16;
+	unsigned int numChannels = 64;
 	static std::atomic<unsigned long> count{0};
 	std::mutex m;
 
 	auto file = std::make_shared<SyncFile>(outputFile);
 	Writer writer(file);
-
+	
 	// TODO(josh): Use info read in from wavecatcher data file to determine what channels ideal PDFs to load.
 	std::vector<std::vector<double>> idealWaveforms{64};
 	for (int ch = 0; ch < 64; ch++) {
-		if ((ch == 32) || (ch == 36) || (ch == 40) || (ch == 44) || (ch == 48) || (ch == 52) || (ch == 56) ||
-		    (ch == 60)) {
+		if (std::count(skipChannels.begin(), skipChannels.end(), ch)) {
 			continue;
 		}
 		idealWaveforms.at(ch) = readIdealWFs(ch, 10, pdfDir, pdfNSamples);
@@ -91,7 +91,6 @@ int main(int argc, char** argv) {
 	progressThread.join();
 
 	file->closeFile();
-	writeVector("RecoMoreRedChisqs.csv", reducedChiSqs);
 	std::cout << "Mean reduced chisq:\t" << meanReducedChisq << std::endl;
 
 	return 0;

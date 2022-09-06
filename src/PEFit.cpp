@@ -80,6 +80,9 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 
 		ChannelFitData chFit;
 		unsigned int ch = WFData.channel;
+		if (std::count(skipChannels.begin(), skipChannels.end(), ch)) {
+			continue;
+		}
 		chFit.ch = ch;
 
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
