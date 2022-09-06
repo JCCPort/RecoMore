@@ -47,7 +47,6 @@ void GetRecozorList(std::string filename)
 	for (int iEntry = 0; tree->LoadTree(iEntry) >= 0; ++iEntry) {
 		// Load the data for the given tree entry
 		tree->GetEntry(iEntry);
-		printf("%d\n", eventID);
 		
 		for(int i = 0; i<(*sipmData).size(); i++){
 			for(int j = 0; j<((*sipmData)[i]).pes.size(); j++){
@@ -64,4 +63,6 @@ void GetRecozorList(std::string filename)
 	std::fstream timeFile("time.dat", std::ios::out | std::ios::binary);
 	timeFile.write((char*)&amps[0], amps.size() * sizeof(double));
 	timeFile.close();
+	
+	file->Close();
 }
