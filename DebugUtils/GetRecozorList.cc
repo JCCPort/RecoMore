@@ -6,6 +6,17 @@
 
 // run using $> root 'ampVsTime.cc("[datafile name]")'
 
+#ifdef __CLING__
+#pragma link C++ class pe_data;
+//#pragma link C++ class std::vector<pe_data>;
+#pragma link C++ class sipm_data;
+//#pragma link C++ class pmt_data;
+//#pragma link C++ class std::vector<sipm_data>;
+//#pragma link C++ class event_data;
+//#pragma link C++ class event_data_v2;
+#endif
+
+
 typedef struct {
 	float amplitude;
 	float amplitude_error;
