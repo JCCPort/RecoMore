@@ -37,11 +37,12 @@ int main(int argc, char** argv) {
 
 	// TODO(josh): Way to exclude specific channels from being read
 	WCData data = ReadWCDataFile(inputFile);
+	std::cout << "Data file read" << std::endl;
 	// TODO(josh): Add error checking to if the data file is corrupted/invalid
 
-	unsigned int numThreads = 16;
+	unsigned int numThreads = 2;
 	unsigned int batchNumber = 200;
-	unsigned int numChannels = 16;
+	unsigned int numChannels = 64;
 	static std::atomic<unsigned long> count{0};
 	std::mutex m;
 
