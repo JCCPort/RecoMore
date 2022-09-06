@@ -4,9 +4,6 @@
 
 // run using $> root 'ampVsTime.cc("[datafile name]")'
 
-gInterpreter->GenerateDictionary("std::vector<pe_data>", "vector");
-gInterpreter->GenerateDictionary("std::vector<sipm_data>", "vector");
-
 typedef struct {
 	float amplitude;
 	float amplitude_error;
@@ -45,6 +42,9 @@ typedef struct {
 
 void GetRecozorList(std::string filename)
 {
+	gInterpreter->GenerateDictionary("std::vector<pe_data>", "vector");
+	gInterpreter->GenerateDictionary("std::vector<sipm_data>", "vector");
+	
 	TFile* file = TFile::Open(filename.c_str());
 	TTree* tree = (TTree*)file->Get("reco_tree");
 	
