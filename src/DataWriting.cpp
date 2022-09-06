@@ -63,7 +63,8 @@ void Writer::writeEventInfo(const EventFitData &evData) {
 	writeString += ", ";
 	writeString += "TDCCorrTime=";
 	std::vector<std::string> timeSplitString;
-	boost::split(timeSplitString, evData.TDCCorrTime.substr(10, 11), boost::is_any_of("."));
+	std::string tempString = evData.TDCCorrTime.substr(10, 11);
+	boost::split(timeSplitString, tempString, boost::is_any_of("."));
 	writeString +=
 			evData.TDCCorrTime.substr(0, 8) + "." + timeSplitString[0] + timeSplitString[1] + timeSplitString[2] + "s";
 	writeString += '\n';
