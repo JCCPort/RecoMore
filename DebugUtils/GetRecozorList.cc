@@ -4,6 +4,27 @@
 
 // run using $> root 'ampVsTime.cc("[datafile name]")'
 
+typedef struct {
+	float amplitude;
+	float amplitude_error;
+	// float npe;
+	// float npe_error;
+	float time;
+	float time_error;
+	
+	// for debugging purpose
+	float found_amplitude;
+	float found_time;
+} pe_data;
+
+typedef struct {
+	unsigned short ch; // channel_id
+	unsigned short id; // sipm_id
+	float chi2ndf;
+	float baseline;
+	std::vector<pe_data> pes;
+} sipm_data ;
+
 //typedef struct {
 //	float amplitude;
 //	float time;
@@ -21,29 +42,6 @@
 
 void GetRecozorList(std::string filename)
 {
-	
-	typedef struct {
-		float amplitude;
-		float amplitude_error;
-		// float npe;
-		// float npe_error;
-		float time;
-		float time_error;
-		
-		// for debugging purpose
-		float found_amplitude;
-		float found_time;
-	} pe_data;
-	
-	typedef struct {
-		unsigned short ch; // channel_id
-		unsigned short id; // sipm_id
-		float chi2ndf;
-		float baseline;
-		std::vector<pe_data> pes;
-	} sipm_data ;
-	
-	
 	gInterpreter->GenerateDictionary("std::vector<pe_data>", "vector");
 	gInterpreter->GenerateDictionary("std::vector<sipm_data>", "vector");
 	
