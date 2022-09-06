@@ -1,6 +1,8 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include "TTree.h"
+#include "TFile.h"
 
 // run using $> root 'ampVsTime.cc("[datafile name]")'
 
@@ -42,8 +44,8 @@ typedef struct {
 
 void GetRecozorList(std::string filename)
 {
-	gInterpreter->GenerateDictionary("std::vector<pe_data>", "vector");
-	gInterpreter->GenerateDictionary("std::vector<sipm_data>", "vector");
+//	gInterpreter->GenerateDictionary("std::vector<pe_data>", "vector");
+//	gInterpreter->GenerateDictionary("std::vector<sipm_data>", "vector");
 	
 	TFile* file = TFile::Open(filename.c_str());
 	TTree* tree = (TTree*)file->Get("reco_tree");
