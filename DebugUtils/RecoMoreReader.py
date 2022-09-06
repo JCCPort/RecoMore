@@ -26,7 +26,7 @@ class PE:
 
 class ChannelWF:
     def __init__(self):
-        self.eventTime: datetime = datetime.datetime(1970, 1, 1)
+        self.eventTime: datetime = datetime(1970, 1, 1)
         self.extraTimePrecision: float = 0
         self.eventNumber: int = -1
         self.channelNumber: int = -1
