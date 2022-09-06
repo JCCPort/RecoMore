@@ -5,10 +5,10 @@ project(RecoMore)
 # Not working for GCC on arm64 mac
 
 # Not your situation, but in case you have a different linker
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--verbose")
+#set(CMAKE_EXE_LINKER_FLAGS "-Wl,--verbose")
 
 # Clang passes flags through to the linker (likely ld) by
-set(CMAKE_EXE_LINKER_FLAGS "-Xlinker -v")
+#set(CMAKE_EXE_LINKER_FLAGS "-Xlinker -v")
 
 # Will compile and run for C++ 17 too
 set(CMAKE_CXX_STANDARD 20)
@@ -79,4 +79,4 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 add_executable(RecoMore main.cpp src/DataWriting.cpp src/DataReading.cpp src/DataStructures.cpp Globals.h Globals.cpp src/PEFit.cpp include/ThreadPool.h Utils.h Utils.cpp)
 target_link_libraries(RecoMore Ceres::ceres)
 target_link_libraries(RecoMore Boost::thread)
-target_compile_options(RecoMore PRIVATE -v)
+#target_compile_options(RecoMore PRIVATE -v)
