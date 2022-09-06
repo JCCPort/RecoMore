@@ -45,13 +45,13 @@ void GetRecozorList(std::string filename)
 	TFile* file = TFile::Open(filename.c_str());
 	TTree* tree = (TTree*)file->Get("reco_tree");
 	
-	unsigned int eventID;
-	double time;
-	double deltaTime;
-	std::vector<sipm_data> sipmData;
-	pmt_data pmtData;
-	pmt_data topVeto;
-	pmt_data bottomVeto;
+	unsigned int* eventID;
+	double* time;
+	double* deltaTime;
+	std::vector<sipm_data>* sipmData;
+	pmt_data* pmtData;
+	pmt_data* topVeto;
+	pmt_data* bottomVeto;
 	
 	tree->SetBranchAddress("event_id", &eventID);
 	tree->SetBranchAddress("time", &time);
@@ -69,10 +69,10 @@ void GetRecozorList(std::string filename)
 		tree->GetEntry(iEntry);
 		printf("%d\n", eventID);
 		
-		for(int i = 0; i<sipmData.size(); i++){
-			for(int j = 0; j<sipmData[i].pes.size(); j++){
-				amps.emplace_back(sipmData[i].pes[j].amplitude);
-				times.emplace_back(sipmData[i].pes[j].time);
+		for(int i = 0; i<(*sipmData).size(); i++){
+			for(int j = 0; j<((*sipmData)[i]).pes.size(); j++){
+				amps.emplace_back(((*sipmData)[i]).pes[j].amplitude);
+				times.emplace_back(((*sipmData)[i]).pes[j].time);
 			}
 		}
 	}
