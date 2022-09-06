@@ -4,6 +4,9 @@
 
 // run using $> root 'ampVsTime.cc("[datafile name]")'
 
+gInterpreter->GenerateDictionary("std::vector<pe_data>", "vector");
+gInterpreter->GenerateDictionary("std::vector<sipm_data>", "vector");
+
 typedef struct {
 	float amplitude;
 	float amplitude_error;
@@ -25,20 +28,20 @@ typedef struct {
 	std::vector<pe_data> pes;
 } sipm_data ;
 
-typedef struct {
-	float amplitude;
-	float time;
-} pmt_data ;
-
-typedef struct {
-	unsigned int event_id;
-	double time;
-	double delta_time;
-	std::vector<sipm_data> sipm;
-	pmt_data pmt;
-	pmt_data top_veto;
-	pmt_data bottom_veto;
-} event_data_v2 ;
+//typedef struct {
+//	float amplitude;
+//	float time;
+//} pmt_data ;
+//
+//typedef struct {
+//	unsigned int event_id;
+//	double time;
+//	double delta_time;
+//	std::vector<sipm_data> sipm;
+//	pmt_data pmt;
+//	pmt_data top_veto;
+//	pmt_data bottom_veto;
+//} event_data_v2 ;
 
 void GetRecozorList(std::string filename)
 {
@@ -49,17 +52,17 @@ void GetRecozorList(std::string filename)
 	double* time;
 	double* deltaTime;
 	std::vector<sipm_data>* sipmData;
-	pmt_data* pmtData;
-	pmt_data* topVeto;
-	pmt_data* bottomVeto;
+//	pmt_data* pmtData;
+//	pmt_data* topVeto;
+//	pmt_data* bottomVeto;
 	
 	tree->SetBranchAddress("event_id", &eventID);
 	tree->SetBranchAddress("time", &time);
 	tree->SetBranchAddress("delta_time", &deltaTime);
 	tree->SetBranchAddress("sipm", &sipmData);
-	tree->SetBranchAddress("pmt", &pmtData);
-	tree->SetBranchAddress("top_veto", &topVeto);
-	tree->SetBranchAddress("bottom_veto", &bottomVeto);
+//	tree->SetBranchAddress("pmt", &pmtData);
+//	tree->SetBranchAddress("top_veto", &topVeto);
+//	tree->SetBranchAddress("bottom_veto", &bottomVeto);
 	
 	std::vector<double> amps;
 	std::vector<double> times;
