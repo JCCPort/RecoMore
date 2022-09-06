@@ -1,7 +1,7 @@
 import typing
 
 import re as re
-import datetime
+from datetime import datetime
 from copy import copy
 
 # RECOMORE REGEX SEARCHES ================================================================================
