@@ -7,7 +7,7 @@ extern unsigned int winS; // Number of samples in the trigger window, x length o
 
 extern unsigned int numC; // Number of channels in readout.
 
-extern std::vector<unsigned int> skipChannels; // Channels to skip (main use is if a channel is a trigger).
+extern std::vector<int> skipChannels; // Channels to skip (main use is if a channel is a trigger).
 
 extern const int baselineNSamples; // Number of bins used for baseline computation (input value for the fit).
 
