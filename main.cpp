@@ -8,30 +8,10 @@
 #include "include/PEFit.h"
 #include "Globals.h"
 #include "include/DataWriting.h"
-#include <boost/algorithm/string.hpp>
 #include <utility>
 
 #include "include/ThreadPool.h"
 #include "include/argparse.h"
-
-
-std::string defaultOutputName(std::string inputName){
-	std::string inputFile = std::string(std::move(inputName));
-	std::vector<std::string> pathDirSplit;
-	boost::split(pathDirSplit, inputFile, boost::is_any_of("/"));
-	
-	std::vector<std::string> fileExtSplit;
-	boost::split(fileExtSplit, pathDirSplit.back(), boost::is_any_of("."));
-	
-	std::string directory;
-	for(int i = 0; i < pathDirSplit.size() - 1; i++){
-		directory += pathDirSplit[i];
-		directory += "/";
-	}
-	
-	std::string outputFile = directory + fileExtSplit[0] + "PES.dat";
-	return outputFile;
-}
 
 
 int main(int argc, char** argv) {
@@ -58,6 +38,9 @@ int main(int argc, char** argv) {
 		.nargs(argparse::nargs_pattern::any)
 		.default_value(std::vector<unsigned int>{})
 		.help("Channels to skip.");
+	program.add_argument("--save_waveforms")
+		.default_value(false)
+		.help("Save waveforms with initial and final fits to csv files.");
 	
 	std::string inputFileName = program.get<std::string>("-i");
 	std::string outputFileName = program.get<std::string>("-o");
@@ -65,6 +48,7 @@ int main(int argc, char** argv) {
 	unsigned int numThreads = program.get<unsigned int>("--n_threads");
 	unsigned int batchNumber = program.get<unsigned int>("--batch_size");
 	skipChannels = program.get<std::vector<unsigned int>>("--skip_channels");
+	saveWaveforms = program.get<bool>("--save_waveforms");
 	
 	WCData data = ReadWCDataFile(inputFileName);
 	auto file = std::make_shared<SyncFile>(outputFileName);

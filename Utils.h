@@ -75,6 +75,8 @@ std::vector<T> slice(std::vector<T> const &v, unsigned int m, unsigned int n) {
 
 void displayProgress(std::atomic<unsigned long> &count, std::mutex &m, unsigned int dataLength);
 
+std::string defaultOutputName(std::string inputName);
+
 template <typename T>
 std::string to_string_with_precision(const T a_value, const int n) {
 	std::ostringstream out;

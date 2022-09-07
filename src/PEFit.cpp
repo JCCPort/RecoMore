@@ -132,24 +132,20 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			}
 
 			// Compute residual
-			#ifdef ISDEBUG
 			std::vector<float> fitVecForPlot; // Debug line
-			#endif
 			for (unsigned int k = 0; k < residualWF.waveform.size(); ++k) {
 				// TODO(josh): Should it be k or k + 0.5?
 				float fitVal = npe_pdf_func(float(k) * pdfSamplingRate, params, chIdealWF);
 				residualWF.waveform[k] = residualWF.waveform[k] - fitVal;
-				#ifdef ISDEBUG
-				fitVecForPlot.emplace_back(fitVal); // Debug line
-				#endif
+				if(saveWaveforms){fitVecForPlot.emplace_back(fitVal);} // Debug line
 			}
 
 			/** Debugging code - writing fits to CSV for plotting **/
-			#ifdef ISDEBUG
-			writeVector("rawWaveform.csv", WFData.waveform);
-			writeVector("fit.csv", fitVecForPlot);
-			writeVector("residual.csv", residualWF.waveform);
-			#endif
+			if(saveWaveforms){
+				writeVector("rawWaveform_" + std::to_string(waveformCount) + ".csv", WFData.waveform);
+				writeVector("fit_" + std::to_string(waveformCount) + ".csv", fitVecForPlot);
+				writeVector("residual_" + std::to_string(waveformCount) + ".csv", residualWF.waveform);
+			}
 			/** ================================================= **/
 
 			// Get initial guesses for the next PE
@@ -301,15 +297,18 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		delete idealPDFInterpolator;
 
 		/** Debugging code - writing fits to CSV for plotting **/
-		#ifdef ISDEBUG
-		std::vector<float> fullFitVecForPlot;
-		for (unsigned int k = 0; k < WFData.waveform.size(); k++) {
-			auto thing = npe_pdf_func(k * pdfSamplingRate, finalParams, chIdealWF);
-			fullFitVecForPlot.emplace_back(thing);
+		if(saveWaveforms){
+			std::vector<float> fullFitVecForPlot;
+			for (unsigned int k = 0; k < WFData.waveform.size(); k++) {
+				auto posVal = npe_pdf_func(k * pdfSamplingRate, finalParams, chIdealWF);
+				fullFitVecForPlot.emplace_back(posVal);
+			}
+			writeVector("fullFit_" + std::to_string(waveformCount) + ".csv", fullFitVecForPlot);
+			m.lock();
+			waveformCount++;
+			m.unlock();
 		}
-		writeVector("fullFit.csv", fullFitVecForPlot);
-		#endif
-
+		
 		std::vector<PEData> FitPEs;
 
 		for (int k = 0; k < pesFound.size(); k++) {
