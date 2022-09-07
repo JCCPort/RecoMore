@@ -1112,7 +1112,7 @@ namespace argparse {
 		friend auto operator<<(std::ostream &stream, const ArgumentParser &parser)
 		-> std::ostream & {
 			stream.setf(std::ios_base::left);
-			stream << "Usage: " << parser.m_program_name << " [options] ";
+			stream << "Usage: " << parser.m_program_name << " ";
 			std::size_t longest_arg_length = parser.get_length_of_longest_argument();
 			
 			for (const auto &argument : parser.m_positional_arguments) {
