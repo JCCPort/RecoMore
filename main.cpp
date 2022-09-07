@@ -9,47 +9,70 @@
 #include "Globals.h"
 #include "include/DataWriting.h"
 #include <boost/algorithm/string.hpp>
+#include <utility>
 
 #include "include/ThreadPool.h"
+#include "include/argparse.h"
 
 
-
-int main(int argc, char** argv) {
-	// TODO(josh): I strongly suspect we're being slowed down due to competing access for ideal waveform data.
-	//  somewhere there's an inefficiency as CPU usage isn't being maxed out
-
-	std::string pdfDir = std::string(argv[2]);
-
-	std::string inputFile = std::string(argv[1]);
+std::string defaultOutputName(std::string inputName){
+	std::string inputFile = std::string(std::move(inputName));
 	std::vector<std::string> pathDirSplit;
 	boost::split(pathDirSplit, inputFile, boost::is_any_of("/"));
-
+	
 	std::vector<std::string> fileExtSplit;
 	boost::split(fileExtSplit, pathDirSplit.back(), boost::is_any_of("."));
-
+	
 	std::string directory;
 	for(int i = 0; i < pathDirSplit.size() - 1; i++){
 		directory += pathDirSplit[i];
 		directory += "/";
 	}
-
-	std::string outputFile = directory + fileExtSplit[0] + "PES.dat";
-
-	// TODO(josh): Way to exclude specific channels from being read
-	WCData data = ReadWCDataFile(inputFile);
-
-	unsigned int numThreads = 2;
-	unsigned int batchNumber = 200;
-	unsigned int numChannels = 64;
 	
+	std::string outputFile = directory + fileExtSplit[0] + "PES.dat";
+	return outputFile;
+}
+
+
+int main(int argc, char** argv) {
+	argparse::ArgumentParser program("RecoMore");
+	program.add_argument("-i", "--input")
+		.required()
+		.help("Path to raw data file (.dat or .bin).");
+	program.add_argument("-o", "--output")
+		.default_value(defaultOutputName(program.get<std::string>("-i")))
+		.help("Path for output reco file.");
+	program.add_argument("--pdf_dir")
+		.default_value("../pdf/")
+		.help("Path for ideal PDFs to use for fitting.");
+	program.add_argument("--n_threads")
+		.default_value("1")
+		.help("Number of threads to run RecoMore on.")
+		.scan<'d', unsigned int>();
+	program.add_argument("--batch_size")
+		.default_value(200)
+		.help("Number of batches to split run into. Smaller values will reduce overhead, "
+			  "but increase the likelihood of one thread hanging.")
+		.scan<'d', unsigned int>();
+	program.add_argument("--skip_channels")
+		.nargs(argparse::nargs_pattern::any)
+		.default_value(std::vector<unsigned int>{})
+		.help("Channels to skip.");
+	
+	std::string inputFileName = program.get<std::string>("-i");
+	std::string outputFileName = program.get<std::string>("-o");
+	std::string pdfDir = program.get<std::string>("--pdf_dir");
+	unsigned int numThreads = program.get<unsigned int>("--n_threads");
+	unsigned int batchNumber = program.get<unsigned int>("--batch_size");
+	skipChannels = program.get<std::vector<unsigned int>>("--skip_channels");
+	
+	WCData data = ReadWCDataFile(inputFileName);
+	auto file = std::make_shared<SyncFile>(outputFileName);
+	Writer writer(file);
 	
 	static std::atomic<unsigned long> count{0};
 	std::mutex m;
-
-	auto file = std::make_shared<SyncFile>(outputFile);
-	Writer writer(file);
 	
-	// TODO(josh): Use info read in from wavecatcher data file to determine what channels ideal PDFs to load.
 	std::vector<std::vector<double>> idealWaveforms{64};
 	for (int ch = 0; ch < 64; ch++) {
 		if (std::count(skipChannels.begin(), skipChannels.end(), ch)) {
@@ -91,7 +114,7 @@ int main(int argc, char** argv) {
 	progressThread.join();
 
 	file->closeFile();
-	std::cout << "Mean reduced chisq:\t" << meanReducedChisq << std::endl;
+	std::cout << "Mean reduced ChiSq:\t" << meanReducedChisq << std::endl;
 
 	return 0;
 }
