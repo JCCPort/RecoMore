@@ -46,4 +46,7 @@ extern float baselineDiff;
 extern int sysProcPECount; // Count of number of PEs processed during entire application run. Used to calculate average error in parameter estimate.
 extern int sysProcWFCount; // Count of number of waveforms processed during entire application run. Used for average reduced chisq.
 
+extern bool saveWaveforms;
+extern unsigned int waveformCount;
+
 #endif //RECOMORE_GLOBALS_H

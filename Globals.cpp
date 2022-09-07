@@ -25,3 +25,6 @@ float timeDiff = 0;
 float baselineDiff = 0;
 int sysProcPECount = 0;
 int sysProcWFCount = 0;
+
+bool saveWaveforms = true;
+unsigned int waveformCount = 0;

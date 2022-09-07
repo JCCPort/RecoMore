@@ -5,6 +5,8 @@
 #include <atomic>
 #include <mutex>
 #include <thread>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include "Globals.h"
 
 
@@ -21,6 +23,25 @@ void displayProgress(std::atomic<unsigned long> &count, std::mutex &m, unsigned 
 		std::cout << "Processed: " << count << "/" << dataLength << std::endl;
 		m.unlock();
 	}
+}
+
+
+std::string defaultOutputName(std::string inputName){
+	std::string inputFile = std::string(std::move(inputName));
+	std::vector<std::string> pathDirSplit;
+	boost::split(pathDirSplit, inputFile, boost::is_any_of("/"));
+	
+	std::vector<std::string> fileExtSplit;
+	boost::split(fileExtSplit, pathDirSplit.back(), boost::is_any_of("."));
+	
+	std::string directory;
+	for(int i = 0; i < pathDirSplit.size() - 1; i++){
+		directory += pathDirSplit[i];
+		directory += "/";
+	}
+	
+	std::string outputFile = directory + fileExtSplit[0] + "PES.dat";
+	return outputFile;
 }
 
 #endif //RECOMORE_UTILS_H
