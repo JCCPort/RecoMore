@@ -15,39 +15,52 @@
 
 
 int main(int argc, char** argv) {
-	argparse::ArgumentParser program("RecoMore");
+	argparse::ArgumentParser program("\n  _____                    __  __                   \n"
+	                                 " |  __ \\                  |  \\/  |                  \n"
+	                                 " | |__) | ___   ___  ___  | \\  / |  ___   _ __  ___ \n"
+	                                 " |  _  / / _ \\ / __|/ _ \\ | |\\/| | / _ \\ | '__|/ _ \\\n"
+	                                 " | | \\ \\|  __/| (__| (_) || |  | || (_) || |  |  __/\n"
+	                                 " |_|  \\_\\\\___| \\___|\\___/ |_|  |_| \\___/ |_|   \\___|\n\n"
+	                                 "                                                    ");
+	program.add_description("Software for fitting PE peaks in waveforms.");
 	program.add_argument("-i", "--input")
 		.required()
 		.help("Path to raw data file (.dat or .bin).");
 	program.add_argument("-o", "--output")
-		.default_value(defaultOutputName(program.get<std::string>("-i")))
-		.help("Path for output reco file.");
+		.help("Path for output reco file. Defaults to input file name with PES appended.");
 	program.add_argument("--pdf_dir")
 		.default_value("../pdf/")
 		.help("Path for ideal PDFs to use for fitting.");
 	program.add_argument("--n_threads")
-		.default_value("1")
+		.default_value(1)
 		.help("Number of threads to run RecoMore on.")
-		.scan<'d', unsigned int>();
-	program.add_argument("--batch_size")
+		.scan<'i', int>();
+	program.add_argument("--num_batches")
 		.default_value(200)
 		.help("Number of batches to split run into. Smaller values will reduce overhead, "
 			  "but increase the likelihood of one thread hanging.")
-		.scan<'d', unsigned int>();
+		.scan<'i', int>();
 	program.add_argument("--skip_channels")
 		.nargs(argparse::nargs_pattern::any)
-		.default_value(std::vector<unsigned int>{})
-		.help("Channels to skip.");
+		.default_value(skipChannels)
+		.help("Channels to skip. Space separated.");
 	program.add_argument("--save_waveforms")
 		.default_value(false)
 		.help("Save waveforms with initial and final fits to csv files.");
 	
+	program.parse_args(argc, argv);
+	
 	std::string inputFileName = program.get<std::string>("-i");
-	std::string outputFileName = program.get<std::string>("-o");
+	std::string outputFileName;
+	if(program.is_used("-o")){
+		outputFileName = program.get<std::string>("-o");
+	} else {
+		outputFileName = defaultOutputName(program.get<std::string>("-i"));
+	}
 	std::string pdfDir = program.get<std::string>("--pdf_dir");
-	unsigned int numThreads = program.get<unsigned int>("--n_threads");
-	unsigned int batchNumber = program.get<unsigned int>("--batch_size");
-	skipChannels = program.get<std::vector<unsigned int>>("--skip_channels");
+	unsigned int numThreads = program.get<int>("--n_threads");
+	unsigned int batchNumber = program.get<int>("--num_batches");
+	skipChannels = program.get<std::vector<int>>("--skip_channels");
 	saveWaveforms = program.get<bool>("--save_waveforms");
 	
 	WCData data = ReadWCDataFile(inputFileName);
