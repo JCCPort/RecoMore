@@ -11,16 +11,20 @@
 #include "../Utils.h"
 
 WCData ReadWCDataFile(const std::string &fileName){
+	// TODO(josh): Add error checking to if the data file is corrupted/invalid
 	std::string ending = fileName.substr(fileName.length() - 4);
+	WCData returnDat;
 	if(ending == ".dat"){
-		return ReadWCDataFileDat(fileName);
+		returnDat = ReadWCDataFileDat(fileName);
 	}
 	else if(ending == ".bin"){
-		return ReadWCDataFileBinary(fileName);
+		returnDat = ReadWCDataFileBinary(fileName);
 	}
 	else{
 		throw std::runtime_error("Provided data file (" + fileName + ") is not one of the accepted formats .dat, .bin.");
 	}
+	std::cout << "Data file read" << std::endl;
+	return returnDat;
 }
 
 // Parser shamelessly stolen from https://www.boost.org/doc/libs/1_68_0/libs/spirit/example/qi/num_list2.cpp
