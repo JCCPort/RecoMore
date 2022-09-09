@@ -15,19 +15,19 @@
 
 
 int main(int argc, char** argv) {
-	argparse::ArgumentParser program("\n  _____                    __  __                   \n"
-	                                 " |  __ \\                  |  \\/  |                  \n"
-	                                 " | |__) | ___   ___  ___  | \\  / |  ___   _ __  ___ \n"
-	                                 " |  _  / / _ \\ / __|/ _ \\ | |\\/| | / _ \\ | '__|/ _ \\\n"
-	                                 " | | \\ \\|  __/| (__| (_) || |  | || (_) || |  |  __/\n"
-	                                 " |_|  \\_\\\\___| \\___|\\___/ |_|  |_| \\___/ |_|   \\___|\n"
-	                                 "                                                    ");
-	program.add_description("Software for fitting PE peaks in waveforms.");
+	argparse::ArgumentParser program("\n\n"
+	                                 "    ____                         __  ___                     \n"
+	                                 "   / __ \\  ___   _____  ____    /  |/  /  ____    _____  ___ \n"
+	                                 "  / /_/ / / _ \\ / ___/ / __ \\  / /|_/ /  / __ \\  / ___/ / _ \\\n"
+	                                 " / _, _/ /  __// /__  / /_/ / / /  / /  / /_/ / / /    /  __/\n"
+	                                 "/_/ |_|  \\___/ \\___/  \\____/ /_/  /_/   \\____/ /_/     \\___/ \n"
+	                                 "                                                             ");
+	program.add_description("Multi-threaded implementation of the RecoZoR PE finding algorithm.");
 	program.add_argument("-i", "--input")
 		.required()
 		.help("Path to raw data file (.dat or .bin).");
 	program.add_argument("-o", "--output")
-		.help("Path for output reco file. Defaults to input file name with PES appended.");
+		.help("Path for output reco file. Defaults to input file name with 'PES' appended.");
 	program.add_argument("--pdf_dir")
 		.default_value("../pdf/")
 		.help("Path for ideal PDFs to use for fitting.");
