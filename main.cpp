@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
 	program.add_argument("-o", "--output")
 		.help("Path for output reco file. Defaults to input file name with 'PES' appended.");
 	program.add_argument("--pdf_dir")
-		.default_value("../pdf/")
+		.default_value(std::string("../pdf/"))
 		.help("Path for ideal PDFs to use for fitting.");
 	program.add_argument("--n_threads")
 		.default_value(1)
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
 	} else {
 		outputFileName = defaultOutputName(program.get<std::string>("-i"));
 	}
-	std::string pdfDir = program.get<std::string>("--pdf_dir");
+	auto pdfDir = program.get<std::string>("--pdf_dir");
 	unsigned int numThreads = program.get<int>("--n_threads");
 	unsigned int batchNumber = program.get<int>("--num_batches");
 	skipChannels = program.get<std::vector<int>>("--skip_channels");
