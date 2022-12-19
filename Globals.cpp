@@ -18,7 +18,7 @@ double meanReducedChisq = 0;
 std::vector<double> reducedChiSqs {};
 const double samplingRate2Inv = 1 / (0.01 * pdfSamplingRate);
 const double pdfT0SampleConv = (double) pdfT0Sample;
-const double WFSigThresh = 0.005;
+const double WFSigThresh = 0.008;
 const int maxPEs = 100;
 float ampDiff = 0;
 float timeDiff = 0;

@@ -7,6 +7,7 @@
 #include <thread>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <iomanip>
 #include "Globals.h"
 
 
@@ -20,7 +21,7 @@ void displayProgress(std::atomic<unsigned long> &count, std::mutex &m, unsigned 
 	while (count != dataLength) {
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		m.lock();
-		std::cout << "Processed: " << count << "/" << dataLength << std::endl;
+		std::cout << "Processed: " << std::setw(20) << count << "/" << dataLength << " \r" << std::flush;
 		m.unlock();
 	}
 }
