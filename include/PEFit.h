@@ -8,7 +8,7 @@
 #include "../include/DataStructures.h"
 #include "DataWriting.h"
 
-float npe_pdf_func(float X, const std::vector<float> &p, std::vector<double> *idealWaveform);
+float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double> *idealWaveform);
 
 void
 fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file, std::mutex &m);

@@ -37,7 +37,7 @@ std::string Writer::writeWaveformInfo(const ChannelFitData &wfDat) {
 	writeString += std::to_string(wfDat.ch);
 	writeString += ", ";
 	writeString += "RedChisq=";
-	writeString += std::to_string(wfDat.chi2ndf);
+	writeString += std::to_string(wfDat.redChiSq);
 	writeString += ", ";
 	writeString += "Baseline=";
 	writeString += std::to_string(wfDat.baseline);
