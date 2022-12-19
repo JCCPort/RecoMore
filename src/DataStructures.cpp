@@ -30,7 +30,8 @@ FitParams::FitParams(double baseline, const std::vector<PEData> &PEs) {
 
 std::vector<double *> FitParams::makeFitterParams() {
 	std::vector<double *> temp_;
-	for (auto &param: params) {
+	temp_.reserve(params.size());
+for (auto &param: params) {
 		temp_.push_back(&param);
 	}
 	return temp_;

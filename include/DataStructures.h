@@ -41,8 +41,8 @@ typedef struct {
 
 typedef struct {
 	unsigned short ch;
-	float chi2ndf;
-	float baseline;
+	float          redChiSq;
+	float          baseline;
 	std::vector<PEData> pes;
 } ChannelFitData;
 
@@ -51,7 +51,7 @@ typedef struct {
 	unsigned int eventID;
 	std::string TDCCorrTime;
 	std::string date;
-	std::vector<ChannelFitData> SiPM;
+	std::vector<const ChannelFitData> SiPM;
 } EventFitData;
 
 
