@@ -58,7 +58,7 @@ class PE:
 
 
 @dataclasses.dataclass
-class ChannelRun:
+class RMChannelEvent:
     def __init__(self):
         self.channel: int = 0
         self.baseline: float = 0
@@ -66,16 +66,34 @@ class ChannelRun:
 
 
 @dataclasses.dataclass
-class Event:
+class RMEvent:
     def __init__(self):
         self.eventNumber: int = 0
-        self.channels: typing.List[ChannelRun] = []
+        self.TDCCorrTime: str
+        self.date: str
+        self.channels: typing.List[RMChannelEvent] = []
 
 
 @dataclasses.dataclass
 class Run:
     def __init__(self):
-        self.Events: typing.List[Event] = []
+        self.Events: typing.List[RMEvent] = []
+
+
+@dataclasses.dataclass
+class RawChannelEvent:
+    def __init__(self):
+        self.channelNumber: int = -1
+        self.rawData: np.array = None
+
+
+@dataclasses.dataclass
+class RawEvent:
+    def __init__(self):
+        self.eventNumber: int = 0
+        self.TDCCorrTime: str
+        self.date: str
+        self.channels: typing.List[RawChannelEvent] = []
 
 
 class ChannelWF:
@@ -87,6 +105,18 @@ class ChannelWF:
         self.xVals = None
 
         self.rawData: np.array = None
+
+
+class RecoMoreEvent:
+    def __init__(self):
+        self.eventTime: datetime = datetime.datetime(1970, 1, 1)
+        self.extraTimePrecision: float = 0
+        self.eventNumber: int = -1
+        self.channelNumber: int = -1
+        self.redChiSq: float = 0
+        self.baseline: float = 0
+
+        self.PEData: typing.List[PE] = []
 
 
 def plotWF(channelWF, *args, **kwargs):
@@ -149,18 +179,6 @@ def readWCWaveforms(WCDataFile) -> typing.List[ChannelWF]:
             # tempWF = ChannelWF()
         line = WCDataFile.readline()
     return WFs
-
-
-class RecoMoreEvent:
-    def __init__(self):
-        self.eventTime: datetime = datetime.datetime(1970, 1, 1)
-        self.extraTimePrecision: float = 0
-        self.eventNumber: int = -1
-        self.channelNumber: int = -1
-        self.redChiSq: float = 0
-        self.baseline: float = 0
-
-        self.PEData: typing.List[PE] = []
 
 
 def readRecoMore(RMDataFile) -> typing.List[RecoMoreEvent]:
