@@ -6,7 +6,6 @@
 #include "ceres/ceres.h"
 #include "ceres/cubic_interpolation.h"
 #include <memory>
-#include <utility>
 
 
 struct NPEPDFFunctor {

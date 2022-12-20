@@ -1,6 +1,5 @@
 #include <iostream>
 #include <atomic>
-#include <mutex>
 #include <thread>
 #include "Utils.h"
 #include "include/DataReading.h"
