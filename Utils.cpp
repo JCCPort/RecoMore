@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <atomic>
-#include <mutex>
 #include <thread>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>

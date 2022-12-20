@@ -14,7 +14,6 @@
 #include "Globals.h"
 #include <fstream>
 #include <sstream>
-#include "Utils.cpp"
 
 struct comparePETime {
 	inline bool operator()(const PEData &PE1, const PEData &PE2) {
