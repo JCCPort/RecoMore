@@ -250,25 +250,24 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			costFunction->AddParameterBlock(2); // Params for one PE
 		}
 		
-		std::vector<double *> parameter_blocks;
+		std::vector<double *> parameterBlocks; // Formatting parameters to allow grouping of params for one PE
 		double                x1[] = {*params[0]};
-		
-		parameter_blocks.push_back(x1);
+		parameterBlocks.push_back(x1);
 		auto **x2 = new double *[pesFound.size()];
 		for (int i = 1; i <= int((params.size() - 1) / 2); i++) {
 			x2[i-1]    = new double[2];
 			x2[i-1][0] = *params[2 * i - 1];
 			x2[i-1][1] = *params[2 * i];
-			parameter_blocks.push_back(x2[i-1]);
+			parameterBlocks.push_back(x2[i - 1]);
 		}
 		
 		
-		auto loss_function(new ceres::ArctanLoss(WFSigThresh));
+		auto lossFunction(new ceres::ArctanLoss(WFSigThresh));
 		
-		problem.AddResidualBlock(costFunction, loss_function, parameter_blocks);
+		problem.AddResidualBlock(costFunction, lossFunction, parameterBlocks);
 		
 		for (int i = 1; i < int((params.size() - 1) / 2); i++) {
-			problem.SetParameterLowerBound(parameter_blocks[i], 0, 0);
+			problem.SetParameterLowerBound(parameterBlocks[i], 0, 0);
 		}
 		
 		// Run the solver!
