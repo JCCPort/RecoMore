@@ -58,7 +58,7 @@ class RecoMoreFitExaminer:
         plt.show()
 
     def plotAllEvents(self):
-        eventChannelNumbers = [(event_.eventNumber, event_.channelNumber) for event_ in self.RMPEs if len(event_.PEData) > 60]
+        eventChannelNumbers = [(event_.eventNumber, event_.channelNumber) for event_ in self.RMPEs]
         for event_ in eventChannelNumbers:
             self.plotSingleEvent(event_[0], event_[1])
 
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R110/R110.dat"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
-    examiner.plotAllEvents()
-    # examiner.plotAmps()
-    # examiner.plotTimes()
-    # examiner.plotChiSq()
+    # examiner.plotAllEvents()
+    examiner.plotAmps()
+    examiner.plotTimes()
+    examiner.plotChiSq()
