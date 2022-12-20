@@ -256,13 +256,16 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		parameter_blocks.push_back(x1);
 		auto **x2 = new double *[pesFound.size()];
 		for (int i = 1; i <= int((params.size() - 1) / 2); i++) {
-			x2[i]    = new double[2];
-			x2[i][0] = *params[2 * i - 1];
-			x2[i][1] = *params[2 * i];
-			parameter_blocks.push_back(x2[i]);
+			x2[i-1]    = new double[2];
+			x2[i-1][0] = *params[2 * i - 1];
+			x2[i-1][1] = *params[2 * i];
+			parameter_blocks.push_back(x2[i-1]);
 		}
 		
-		problem.AddResidualBlock(costFunction, nullptr, parameter_blocks);
+		
+		auto loss_function(new ceres::ArctanLoss(WFSigThresh));
+		
+		problem.AddResidualBlock(costFunction, loss_function, parameter_blocks);
 		
 		for (int i = 1; i < int((params.size() - 1) / 2); i++) {
 			problem.SetParameterLowerBound(parameter_blocks[i], 0, 0);
@@ -348,6 +351,12 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			timeDiff = (double) timeDiff + ((times[k] - initialTimes[k]) - timeDiff) / sysProcPECount;
 		}
 		baselineDiff = (double) baselineDiff + ((baseline - initBaseline) - baselineDiff) / sysProcPECount;
+		
+		for (int i = 0; i < int((params.size() - 1) / 2); i++){
+			delete x2[i];
+		}
+		delete[] x2;
+		delete idealPDFInterpolator;
 	}
 	
 	EventFitData evFitDat{event->eventID, event->TDCCorrTime, event->date, chFits};
