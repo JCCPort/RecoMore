@@ -68,6 +68,17 @@ find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 ######
+#Subdirs
+add_subdirectory(extern/pybind11)
+
+
+option(BUILD_SUBDIR1 "Enable building CReader" ON)
+
+if(BUILD_SUBDIR1)
+    add_subdirectory(CReader)
+endif()
+
+######
 
 add_executable(RecoMore main.cpp src/DataWriting.cpp src/DataReading.cpp src/DataStructures.cpp Globals.h Globals.cpp src/PEFit.cpp include/ThreadPool.h Utils.h Utils.cpp)
 target_link_libraries(RecoMore Ceres::ceres)
