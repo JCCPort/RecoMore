@@ -1,6 +1,7 @@
 project(Bindings LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
+cmake_minimum_required(VERSION 3.20)
 
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -41,9 +42,9 @@ endif ()
 include_directories(${Boost_INCLUDE_DIRS})
 
 
-file(GLOB RMSources ../include/DataStructures.h ../src/DataStructures.cpp ../include/DataReading.h ../src/DataReading.cpp)
-
-add_library(cpp_library STATIC ${RMSources})
+file(GLOB SOURCES ../include/DataStructures.h ../src/DataStructures.cpp ../include/DataReading.h ../src/DataReading.cpp)
+message("${SOURCES}")
+add_library(cpp_library ${SOURCES})
 set_property(TARGET cpp_library PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 
