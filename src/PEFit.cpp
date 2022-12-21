@@ -71,7 +71,7 @@ float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double>
 
 void
 fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file, std::mutex &m) {
-	std::vector<const ChannelFitData> chFits;
+	std::vector<ChannelFitData> chFits;
 	
 	for (const auto &WFData: event->chData) { // Looping through all channels for a given event
 		auto residualWF = WFData; // This will be the variable that is modified to be the residual distribution after each iteration
