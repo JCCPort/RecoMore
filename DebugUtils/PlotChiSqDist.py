@@ -1,10 +1,11 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from CReader.PythonTypes import RawEvent, RawChannelEvent
+# from CReader.PythonTypes import RawEvent, RawChannelEvent
 from DebugUtils.GenerateRMFitView import makeWaveformArray
 from DebugUtils.RecoMoreReader import readRecoMore, readWCWaveforms, RecoMoreEvent
-from CReader.bindings import *
+# from CReader.bindings import *
+from bindings.core import ReadWCDataFileDat
 
 
 class RecoMoreFitExaminer:
