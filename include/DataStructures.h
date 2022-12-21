@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 
-struct WaveformData {
+struct ChannelData {
 	unsigned short channel;
 	std::vector<float> waveform{};
 };
@@ -13,8 +13,8 @@ struct WaveformData {
 typedef struct {
 	unsigned int eventID;
 	std::string TDCCorrTime;
-	std::string date;
-	std::vector<WaveformData> chData;
+	std::string              date;
+	std::vector<ChannelData> chData;
 } EventData;
 
 
