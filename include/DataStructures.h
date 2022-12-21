@@ -51,7 +51,7 @@ typedef struct {
 	unsigned int eventID;
 	std::string TDCCorrTime;
 	std::string date;
-	std::vector<const ChannelFitData> SiPM;
+	std::vector<ChannelFitData> SiPM;
 } EventFitData;
 
 

@@ -69,6 +69,9 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 ######
 #Subdirs
+
+set(PYBIND11_PYTHON_VERSION "3.9"  CACHE INTERNAL "" FORCE)
+set(PYTHON_EXECUTABLE "/Users/joshuaporter/.conda/envs/PETLO-1/bin/python3.9")
 add_subdirectory(extern/pybind11)
 
 
