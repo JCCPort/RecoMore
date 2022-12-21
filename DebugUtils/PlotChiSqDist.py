@@ -1,17 +1,21 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+from CReader.PythonTypes import RawEvent, RawChannelEvent
 from DebugUtils.GenerateRMFitView import makeWaveformArray
-from DebugUtils.RecoMoreReader import readRecoMore, readWCWaveforms
+from DebugUtils.RecoMoreReader import readRecoMore, readWCWaveforms, RecoMoreEvent
+from CReader.bindings import *
 
 
 class RecoMoreFitExaminer:
     def __init__(self, rawDataPath: str, recoMoreDataPath: str):
         with open(recoMoreDataPath, 'r') as RMFile:
+            # self.RMPEs = readRecoMore(RMFile)
             self.RMPEs = readRecoMore(RMFile)
 
-        with open(rawDataPath, 'r') as rawFile:
-            self.rawWFs = readWCWaveforms(rawFile)
+        # with open(rawDataPath, 'r') as rawFile:
+        #     self.rawWFs = readWCWaveforms(rawFile)
+        self.rawWFs = ReadWCDataFileDat(rawDataPath)
 
         self.reducedChiSqs = []
         self.amps = []
@@ -30,17 +34,20 @@ class RecoMoreFitExaminer:
             if (eventNumber == event_.eventNumber) and (channelNumber == event_.channelNumber):
                 RMEvent = event_
 
-        for WF_ in self.rawWFs:
-            if (WF_.eventNumber == eventNumber) and (WF_.channelNumber == channelNumber):
-                rawEvent = WF_
+        for WF_ in self.rawWFs.getEvents():
+            if WF_.eventID == eventNumber:
+                for channelWF in WF_.chData:
+                    if channelWF.channel == channelNumber:
+                        rawEvent = channelWF
 
         return RMEvent, rawEvent
 
     def plotSingleEvent(self, eventNumber: int, channelNumber: int):
         RMEvent_, rawEvent_ = self.getEventPair(eventNumber, channelNumber)
+        rawEvent_.xVals = [i * 0.3125 for i in range(len(rawEvent_.waveform))]
         xs, ys = makeWaveformArray(rawEvent_, RMEvent_)
         rawEvent_.xVals = np.array(rawEvent_.xVals)
-        plt.plot(rawEvent_.xVals, rawEvent_.rawData)
+        plt.plot(rawEvent_.xVals, rawEvent_.waveform)
         plt.title('Event: {}, Channel: {}'.format(RMEvent_.eventNumber,
                                                   RMEvent_.channelNumber))
         formattedPEList = ""
@@ -83,7 +90,7 @@ if __name__ == "__main__":
     rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R110/R110.dat"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
-    # examiner.plotAllEvents()
-    examiner.plotAmps()
-    examiner.plotTimes()
-    examiner.plotChiSq()
+    examiner.plotAllEvents()
+    # examiner.plotAmps()
+    # examiner.plotTimes()
+    # examiner.plotChiSq()

@@ -76,8 +76,8 @@ WCData ReadWCDataFileDat(const std::string &fileName) {
 	                     "TDC corrected time = (\\d*h\\d*m\\d*s,\\d*\\.\\d*\\.\\d*ns) == "
 	                     "Nb of channels = (\\d*) ===\r\n)");
 
-	WCData readData;
-	WaveformData wf;
+	WCData      readData;
+	ChannelData wf;
 
 	FILE *fp = fopen(fileName.c_str(), "r");
 	std::ifstream input_file(fileName.c_str(), std::ios::binary | std::ios::in);
@@ -163,8 +163,8 @@ struct WCChannelDataNoMeasurement {
  * @return Raw data events parsed into a WCData instance that contains a list of events to be split across multiple threads.
  */
 WCData ReadWCDataFileBinary(const std::string &fileName) {
-	WCData readData;
-	WaveformData wf;
+	WCData      readData;
+	ChannelData wf;
 
 	std::ifstream input_file(fileName.c_str(), std::ios::binary | std::ios::in);
 	if (!input_file) {

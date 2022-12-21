@@ -12,14 +12,15 @@ class RawChannelEvent:
     def __init__(self):
         self.channelNumber: int = -1
         self.rawData: np.array = None
+        self.xVals: np.array = None
 
 
 @dataclasses.dataclass
 class RawEvent:
     def __init__(self):
         self.eventNumber: int = 0
-        self.TDCCorrTime: str
-        self.date: str
+        self.TDCCorrTime: str = ''
+        self.date: str = ''
         self.channels: typing.List[RawChannelEvent] = []
 
 

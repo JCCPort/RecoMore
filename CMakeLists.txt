@@ -72,7 +72,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 set(PYBIND11_PYTHON_VERSION "3.9"  CACHE INTERNAL "" FORCE)
 set(PYTHON_EXECUTABLE "/Users/joshuaporter/.conda/envs/PETLO-1/bin/python3.9")
-add_subdirectory(extern/pybind11)
+add_subdirectory(CReader/extern/pybind11)
 
 
 option(BUILD_SUBDIR1 "Enable building CReader" ON)
