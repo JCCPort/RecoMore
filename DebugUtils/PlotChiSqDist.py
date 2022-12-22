@@ -1,11 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-# from CReader.PythonTypes import RawEvent, RawChannelEvent
+from CReader.PythonTypes import RawEvent, RawChannelEvent
 from DebugUtils.GenerateRMFitView import makeWaveformArray
 from DebugUtils.RecoMoreReader import readRecoMore, readWCWaveforms, RecoMoreEvent
-# from CReader.bindings import *
-from bindings.core import ReadWCDataFileDat
+from CReader.bindings import *
 
 
 class RecoMoreFitExaminer:
@@ -91,7 +90,7 @@ if __name__ == "__main__":
     rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R110/R110.dat"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
-    examiner.plotAllEvents()
-    # examiner.plotAmps()
-    # examiner.plotTimes()
-    # examiner.plotChiSq()
+    # examiner.plotAllEvents()
+    examiner.plotAmps()
+    examiner.plotTimes()
+    examiner.plotChiSq()

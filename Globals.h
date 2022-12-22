@@ -24,7 +24,7 @@ extern const float inTimeWindowTMax; // Time window for PEs considered in-time (
 
 extern const int pdfNSamples; // Expected number of rows in ideal waveform file.
 
-extern const double pdfSamplingRate; // Sampling rate used to create ideal waveforms.
+extern const float pdfSamplingRate; // Sampling rate used to create ideal waveforms.
 
 extern const int pdfT0Sample;
 extern const float PEFinderTimeOffset;
@@ -33,8 +33,8 @@ extern const float pdfResidualRMS;
 extern double meanReducedChisq;
 extern std::vector<double> reducedChiSqs;
 
-extern const double samplingRate2Inv; // Effectively the data sampling rate... should probably just have that
-extern const double pdfT0SampleConv; // Conversion of sampling rate to a double
+extern const float samplingRate2Inv; // Effectively the data sampling rate... should probably just have that
+extern const float pdfT0SampleConv; // Conversion of sampling rate to a double
 
 extern const double WFSigThresh; // Threshold for considering either PEs or after-pulses (V).
 extern const int maxPEs;

@@ -5,6 +5,8 @@ void WCData::addRow(const EventData &wf) {
 	events_.emplace_back(wf);
 }
 
+
+// TODO(josh): Implement this at some point to reduce the number of different ways the parameters are stored and moved.
 FitParams::FitParams(unsigned int numPEs, double baseline, std::vector<double> amplitudes, std::vector<double> times) {
 	numPEs_ = numPEs;
 	params.emplace_back(baseline);

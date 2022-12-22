@@ -45,6 +45,20 @@ float averageVector(std::vector<T> vec, int start, int end, float cut) {
 	return sum / ((float) end - (float) start);
 }
 
+
+template<typename T>
+float averageVector(std::vector<T> vec, float cut) {
+	float sum = 0;
+	for (auto val: vec) {
+		float temp = val;
+		if (std::abs(temp) < cut) {
+			sum += val;
+		}
+	}
+	return sum / vec.size();
+}
+
+
 template<typename T>
 void writeVector(const std::string &fileName, std::vector<T> vector) {
 	std::ofstream file;

@@ -10,14 +10,14 @@ const float mv2pe = 25.0;
 const float inTimeWindowTMin = 70.0; // ns
 const float inTimeWindowTMax = 170.0; // ns
 const int pdfNSamples = 105601;
-const double pdfSamplingRate = 0.003125;
+const float pdfSamplingRate = 0.003125;
 const int pdfT0Sample = 3201;
 const float PEFinderTimeOffset = 0.015935;
 const float pdfResidualRMS = 0.827;
 double meanReducedChisq = 0;
 std::vector<double> reducedChiSqs {};
-const double samplingRate2Inv = 1 / (0.01 * pdfSamplingRate);
-const double pdfT0SampleConv = (double) pdfT0Sample;
+const float samplingRate2Inv = 1.0f / (0.01f * pdfSamplingRate);
+const float pdfT0SampleConv = pdfT0Sample;
 const double WFSigThresh = 0.008;
 const int maxPEs = 100;
 float ampDiff = 0;

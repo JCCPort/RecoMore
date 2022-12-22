@@ -3,6 +3,8 @@ project(RecoMore)
 
 
 # Not working for GCC on arm64 mac
+set(CMAKE_OSX_ARCHITECTURES "arm64")
+
 
 # Will compile and run for C++ 17 too
 set(CMAKE_CXX_STANDARD 20)

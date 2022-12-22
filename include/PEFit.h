@@ -5,6 +5,7 @@
 #include <atomic>
 #include <mutex>
 #include <thread>
+#include <ceres/cubic_interpolation.h>
 #include "../include/DataStructures.h"
 #include "DataWriting.h"
 
