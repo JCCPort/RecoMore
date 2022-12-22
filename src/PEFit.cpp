@@ -20,11 +20,11 @@ struct NPEPDFFunctor {
 			T X_(x_[j]);
 			residual[j] = params[0][0];
 			for (unsigned int i = 0; i < numPES_; ++i) {
-				PDFInterpolator_->Evaluate((X_ - params[i][0]), &f);
-				residual[j] += (params[i][1] * f);
+				auto peParams = params[i];
+				PDFInterpolator_->Evaluate((X_ - peParams[0]), &f);
+				residual[j] += (peParams[1] * f);
 			}
 			residual[j] -= y_[j];
-//			residual[j] = (residual[j] * residual[j]);
 		}
 		return true;
 	}
