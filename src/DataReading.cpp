@@ -1,7 +1,5 @@
 #include <string>
-#include <cstring>
 #include <regex>
-#include <boost/format.hpp>
 #include <boost/fusion/adapted.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/phoenix.hpp>

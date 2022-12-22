@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
 	progressThread.join();
 
 	file->closeFile();
-	std::cout << "Mean reduced ChiSq:\t" << meanReducedChisq << std::endl;
+	std::cout << "Mean reduced ChiSq:\t" << meanReducedChiSq << std::endl;
 
 	return 0;
 }

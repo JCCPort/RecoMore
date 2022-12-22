@@ -330,7 +330,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		float            redChiSq = chiSq / ((float) WFData.waveform.size() - ((float) finalParams.size() - 1));
 		
 		sysProcWFCount++;
-		meanReducedChisq = meanReducedChisq + (redChiSq - meanReducedChisq) / sysProcWFCount;
+		meanReducedChiSq = meanReducedChiSq + (redChiSq - meanReducedChiSq) / sysProcWFCount;
 		
 		chFit.redChiSq = redChiSq;
 		

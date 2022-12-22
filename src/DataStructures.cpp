@@ -43,7 +43,7 @@ std::vector<float> FitParams::makeGuesserParams() {
 	std::vector<float> temp_;
 	temp_.push_back((float) numPEs_);
 	for (auto param: params) {
-		temp_.push_back(param);
+		temp_.push_back((float)param);
 	}
 	return temp_;
 }
