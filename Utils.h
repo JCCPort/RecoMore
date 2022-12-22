@@ -34,7 +34,7 @@ template<typename T>
 
 
 template<typename T>
-float averageVector(std::vector<T> vec, int start, int end, float cut) {
+[[maybe_unused]] float averageVector(std::vector<T> vec, int start, int end, float cut) {
 	float sum = 0;
 	for (int i = start; i < end; i++) {
 		float temp = vec[i];

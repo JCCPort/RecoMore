@@ -24,13 +24,13 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
 endif ()
 
 if (MAKE_PROFILE)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-generate -fprofile-dir=.")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-generate -fprofile-dir=.")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-generate")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-generate")
 endif ()
 
 if (USE_PROFILE)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-use -fprofile-dir=.")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-use -fprofile-dir=.")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-use")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-use")
 endif ()
 
 EXECUTE_PROCESS(COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE)

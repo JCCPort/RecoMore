@@ -40,7 +40,7 @@ channelRegex = re.compile(r"=== CH: (?P<ch>\d*) EVENTID: (?P<eid>\d*) FCR: (?P<f
 
 eventRegexRM = re.compile(r"EVENT=(?P<evt>\d*), DATE=(?P<date>\d*\.\d*\.\d*), TDCCorrTime=(?P<corrTime>\d*h\d*m\d*\.\d*s)\n")
 
-channelRegexRM = re.compile(r"Ch=(?P<ch>\d*), RedChisq=(?P<redChisq>\d*\.\d*), Baseline=(?P<baseline>[+-]?\d*\.\d*)\n")
+channelRegexRM = re.compile(r"Ch=(?P<ch>\d*), RedChiSq=(?P<redChiSq>\d*\.\d*), Baseline=(?P<baseline>[+-]?\d*\.\d*)\n")
 
 peRegexRM = re.compile(
     r"(?P<amp>-?\d*\.\d*),(?P<time>-?\d*\.\d*)\n")
@@ -149,7 +149,7 @@ def readWCWaveforms(WCDataFile) -> typing.List[ChannelWF]:
 
             if dateString == "0.0.0":
                 print("Time failed to be written to file for event {}".format(eventSearch.group("evt")))
-                tempWF.eventTime = datetime(1970, 1, 1)
+                tempWF.eventTime = datetime.datetime(1970, 1, 1)
             else:
                 tempWF.unixTime = float(timeSearch.group("unixTime"))
                 tempWF.numChannels = int(timeSearch.group("numCh"))
@@ -215,7 +215,7 @@ def readRecoMore(RMDataFile) -> typing.List[RecoMoreEvent]:
                 PEs = []
                 chRegSearch = channelRegexRM.search(line)
                 tempWF.channelNumber = int(chRegSearch.group("ch"))
-                tempWF.redChiSq = float(chRegSearch.group("redChisq"))
+                tempWF.redChiSq = float(chRegSearch.group("redChiSq"))
                 tempWF.baseline = float(chRegSearch.group("baseline"))
                 line = RMDataFile.readline()
                 while line != "\n":
