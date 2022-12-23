@@ -7,7 +7,7 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(_core, m) {
 	m.doc() = "Wrapped C++ readers for data files.";
-	py::class_<PEData>(m, "PE", py::dynamic_attr())
+	py::class_<PEData>(m, "PE")
 			.def(py::init<const float&, const float&, const float&, const float&, const float&, const float&>())
 			.def_readwrite("amplitude", &PEData::amplitude)
 			.def_readwrite("amplitudeError", &PEData::amplitudeError)

@@ -62,8 +62,8 @@ class CMakeBuild(build_ext):
             build_args += ["--", "-j4"]
 
         env = os.environ.copy()
-        env["CXXFLAGS"] = '{} -DVERSION_INFO=\\"{}\\"'.format(
-            env.get("CXXFLAGS", ""), self.distribution.get_version()
+        env["CXXFLAGS"] = '{}'.format(
+            env.get("CXXFLAGS", "")
         )
         if not os.path.exists(self.build_temp):
             os.makedirs(self.build_temp)
@@ -83,7 +83,7 @@ setup(
     author="Joshua Porter",
     author_email="jccporter@gmail.com",
     description="Pybind11 made reader for data files",
-    ext_modules=[CMakeExtension("bindings/_core")],
+    ext_modules=[CMakeExtension("bindings")],
     packages=find_packages(),
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,

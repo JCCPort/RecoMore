@@ -284,7 +284,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		ceres::Solver::Options options;
 //		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
 		options.linear_solver_type           = ceres::DENSE_QR;
-		options.parameter_tolerance          = 1e-4; // default is 1e-8, check if this is tolerance for any or all params
+		options.parameter_tolerance          = 1e-5; // default is 1e-8, check if this is tolerance for any or all params
 		options.minimizer_progress_to_stdout = false;
 		ceres::Solver::Summary summary;
 		Solve(options, &problem, &summary);
