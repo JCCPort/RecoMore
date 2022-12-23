@@ -5,7 +5,6 @@ from CReader.PythonTypes import RawEvent, RawChannelEvent
 from DebugUtils.GenerateRMFitView import makeWaveformArray
 from DebugUtils.RecoMoreReader import readRecoMore, readWCWaveforms, RecoMoreEvent
 from CReader import *
-from CReader.bindings import *
 
 
 class RecoMoreFitExaminer:

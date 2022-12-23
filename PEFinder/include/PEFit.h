@@ -6,7 +6,7 @@
 #include <mutex>
 #include <thread>
 #include <ceres/cubic_interpolation.h>
-#include "../include/DataStructures.h"
+#include "DataStructures.h"
 #include "DataWriting.h"
 
 float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double> *idealWaveform);
