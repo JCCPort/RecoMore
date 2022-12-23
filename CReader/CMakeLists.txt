@@ -42,12 +42,22 @@ endif ()
 include_directories(${Boost_INCLUDE_DIRS})
 
 
-file(GLOB SOURCES ../include/DataStructures.h ../src/DataStructures.cpp ../include/DataReading.h ../src/DataReading.cpp)
-message("${SOURCES}")
-add_library(cpp_library ${SOURCES})
-set_property(TARGET cpp_library PROPERTY POSITION_INDEPENDENT_CODE ON)
+file(GLOB RMSOURCES ../include/DataStructures.h ../src/DataStructures.cpp ../include/DataReading.h ../src/DataReading.cpp)
+
+set(SOURCES bindings/cpp_library.cpp /Users/joshuaporter/.conda/envs/PETLO-1/include/python3.9/Python.h)
+
+pybind11_add_module(bindings ${SOURCES} ${RMSOURCES})
 
 
-add_subdirectory(bindings)
+target_include_directories( bindings
+        INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/pybind11/include/> )
 
-#add_executable(CReader Bindings.cpp ${SOURCES})
+set_target_properties( bindings
+        PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
+        PREFIX ""
+        )
+
