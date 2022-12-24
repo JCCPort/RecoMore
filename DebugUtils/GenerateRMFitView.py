@@ -5,7 +5,8 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from CReader.PythonTypes import RawChannelEvent
+from CReader import *
+
 from DebugUtils.RecoMoreReader import ChannelWF, RecoMoreEvent, PE
 
 
@@ -26,7 +27,7 @@ def NPEPDFFunc(x, PEs: List[PE], baseline, idealWF):
 
 
 def makeWaveformArray(waveform, RMEvent: RecoMoreEvent):
-    pdf = pd.read_csv("../pdf/ch{}.txt".format(waveform.channel), sep="\t", names=['time', 'amp'])
+    pdf = pd.read_csv("../PEFinder/pdf/ch{}.txt".format(waveform.channel), sep="\t", names=['time', 'amp'])
     amps = pdf['amp'].values
     times = pdf['time'].values
 
