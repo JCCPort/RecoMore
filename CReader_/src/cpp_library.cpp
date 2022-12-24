@@ -15,7 +15,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(_core, m) {
+PYBIND11_MODULE(CReader, m) {
 	m.doc() = "Wrapper C++ readers for data files.";
 	py::class_<PEData>(m, "PE")
 			.def(py::init<const float&, const float&, const float&, const float&, const float&, const float&>())
