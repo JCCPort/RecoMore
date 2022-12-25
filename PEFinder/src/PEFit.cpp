@@ -88,7 +88,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		const std::vector<double> *chIdealWF = &tmp;
 		
 		// Baseline calculation
-		float initBaseline = averageVector(WFData.waveform, 0.008);
+		float initBaseline = averageVector(WFData.waveform, 2);
 		chFit.baseline = initBaseline;
 		float oldBaseline;
 		
@@ -98,6 +98,10 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		
 		// This is getting estimate PEs that will then be passed as initial guesses to the minimiser.
 		PEData guessPE{};
+		
+//		if(initBaseline > 1){
+//			std::cout << "woop" << std::endl;
+//		}
 		
 		for (float &k: residualWF.waveform) {
 			k = k - initBaseline;
@@ -135,7 +139,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			for (unsigned int  k = 0; k < residualWF.waveform.size(); ++k) {
 				// TODO(josh): Should it be k or k + 0.5?
 				const float fitVal = NPEPDFFunc((float)k * pdfSamplingRate, params, chIdealWF);
-				residualWF.waveform[k] = residualWF.waveform[k] - fitVal;
+				residualWF.waveform[k] = residualWF.waveform[k] - fitVal + initBaseline;
 				if (saveWaveforms) { fitVecForPlot.emplace_back(fitVal); } // Debug line
 			}
 			
@@ -149,11 +153,11 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			/** ================================================= **/
 			
 			if(!pesFound.empty()){
-				oldBaseline = initBaseline;
-				for (float &k: residualWF.waveform) {
-					k = k + oldBaseline;
-				}
-				initBaseline = averageVector(residualWF.waveform, 0.008);
+//				oldBaseline = initBaseline;
+//				for (float &k: residualWF.waveform) {
+//					k = k + oldBaseline;
+//				}
+				initBaseline = averageVector(residualWF.waveform, 2);
 				for (float &k: residualWF.waveform) {
 					k = k - initBaseline;
 				}
