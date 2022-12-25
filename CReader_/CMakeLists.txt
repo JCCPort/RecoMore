@@ -2,15 +2,25 @@ set(CMAKE_CXX_STANDARD 17)
 cmake_minimum_required(VERSION 3.20)
 project(CReader)
 
-set(CMAKE_C_FLAGS "-O3")
-set(CMAKE_CXX_FLAGS "-O3")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_C_FLAGS "-O0")
+    set(CMAKE_CXX_FLAGS "-O0")
+elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CMAKE_C_FLAGS "-O3 -flto")
+    set(CMAKE_CXX_FLAGS "-O3 -flto")
+elseif (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    set(CMAKE_C_FLAGS "-O2 -fprofile-arcs")
+    set(CMAKE_CXX_FLAGS "-O2 -fprofile-arcs")
+endif ()
 
-set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE INTERNAL "" FORCE)
-
-set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_EXE_LINKER_FLAGS "-Wl,--verbose")
-# set(CMAKE_EXE_LINKER_FLAGS "-Xlinker -v")
-#set(CMAKE_EXE_LINKER_FLAGS "-Xlinker -v -v")
+EXECUTE_PROCESS(COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE)
+if ("${ARCHITECTURE}" STREQUAL "arm64")
+    set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE INTERNAL "" FORCE)
+endif()
+if (NOT "${ARCHITECTURE}" STREQUAL "arm64" AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+endif ()
 
 #### Finding BOOST
 
@@ -32,23 +42,12 @@ endif ()
 
 include_directories(${Boost_INCLUDE_DIRS})
 
-#include_directories(/Users/joshuaporter/.conda/envs/PETLO-1/include/python3.9/)
-#include_directories(/Users/joshuaporter/.conda/envs/PETLO-1/include/)
-#include_directories(/Users/joshuaporter/.conda/envs/PETLO-1/)
-#set(PYTHON_EXECUTABLE "/Users/joshuaporter/.conda/envs/PETLO-1/bin/python3.9")
-
 add_subdirectory(extern/pybind11)
 find_package(Python 3.9 EXACT COMPONENTS Interpreter Development REQUIRED)
 set(PYBIND11_FINDPYTHON=ON)
 set(PYBIND11_PYTHON_VERSION "3.9.12"  CACHE INTERNAL "" FORCE)
-message(${Python_VERSION})
+
 pybind11_add_module(CReader src/cpp_library.cpp)
-
-#get_filename_component(PEFinderPath ../PEFinder ABSOLUTE)
-#target_include_directories(CReader PRIVATE PEFinderPath)
-#
-#set_target_properties(CReader PROPERTIES INSTALL_RPATH "\$ORIGIN")
-
 
 
 target_include_directories(CReader
@@ -58,7 +57,7 @@ target_include_directories(CReader
 
 set_target_properties(CReader
         PROPERTIES
-        CXX_STANDARD 17
+        CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
         PREFIX ""
         )

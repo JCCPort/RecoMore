@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import LogNorm
 
 # from CReader.PythonTypes import RawEvent, RawChannelEvent
 from DebugUtils.GenerateRMFitView import makeWaveformArray
@@ -72,6 +73,7 @@ class RecoMoreFitExaminer:
     def plotAmps(self):
         plt.hist(self.amps, bins=1000)
         plt.xlabel("PE amplitudes (V)")
+        plt.yscale('log')
         plt.show()
 
     def plotTimes(self):
@@ -84,13 +86,22 @@ class RecoMoreFitExaminer:
         plt.xlabel(r"$\chi^2_r$")
         plt.show()
 
+    def timeAmpCorrelation(self):
+        H, xEdges, yEdges = np.histogram2d(self.times, self.amps, bins=200)
+        plt.imshow(H, origin='lower',
+                   extent=[xEdges[0], xEdges[-1], yEdges[0], yEdges[-1]], aspect='auto', norm=LogNorm())
+        plt.ylabel('Amplitude (V)')
+        plt.xlabel('Time (ns)')
+        plt.show()
+
 
 if __name__ == "__main__":
-    recoMoreFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R110/R110PES.dat"
-    rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R110/R110.dat"
+    recoMoreFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R151/R151PES.dat"
+    rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R151/R151.dat"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
     examiner.plotAllEvents()
-    # examiner.plotAmps()
-    # examiner.plotTimes()
-    # examiner.plotChiSq()
+    examiner.timeAmpCorrelation()
+    examiner.plotAmps()
+    examiner.plotTimes()
+    examiner.plotChiSq()
