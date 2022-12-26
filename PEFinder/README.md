@@ -7,7 +7,7 @@ Dependencies:
 - Boost
 - Ceres-solver
 - CMake
-- pybind11 (for the CReader)
+- pybind11 (for CReader)
 
 
 To build:
