@@ -20,22 +20,26 @@ PYBIND11_MODULE(CReader, m) {
 			.def_readwrite("timeError", &PEData::timeError)
 			.def_readwrite("foundAmplitude", &PEData::foundAmplitude)
 			.def_readwrite("foundTime", &PEData::foundTime);
+	
 	py::class_<ChannelFitData>(m, "ChannelFitData", py::dynamic_attr())
 	        .def(py::init<const unsigned short&, const float&, const float&, const std::vector<PEData>&>())
 			.def_readwrite("ch", &ChannelFitData::ch)
 			.def_readwrite("redChiSq", &ChannelFitData::redChiSq)
 			.def_readwrite("baseline", &ChannelFitData::baseline)
 			.def_readwrite("pes", &ChannelFitData::pes);
+	
 	py::class_<EventFitData>(m, "EventFitData", py::dynamic_attr())
 	        .def(py::init<const unsigned int&, const std::string&, const std::string&, const std::vector<ChannelFitData>>())
 			.def_readwrite("eventID", &EventFitData::eventID)
 			.def_readwrite("TDCCorrTime", &EventFitData::TDCCorrTime)
 			.def_readwrite("date", &EventFitData::date)
 			.def_readwrite("SiPM", &EventFitData::SiPM);
+	
 	py::class_<ChannelData>(m, "ChannelData", py::dynamic_attr())
 	        .def(py::init<const unsigned short&, const std::vector<float>&>())
 			.def_readwrite("channel", &ChannelData::channel)
 			.def_readwrite("waveform", &ChannelData::waveform);
+	
 	py::class_<EventData>(m, "EventData", py::dynamic_attr())
 			.def(py::init<const unsigned int&, const std::string&, const std::string&, const std::vector<ChannelData>>())
 			.def_readwrite("eventID", &EventData::eventID)

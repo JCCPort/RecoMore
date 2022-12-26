@@ -75,6 +75,6 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 ######
 
-add_executable(PEFinder main.cpp src/DataWriting.cpp src/DataReading.cpp src/DataStructures.cpp Globals.h Globals.cpp src/PEFit.cpp include/ThreadPool.h Utils.h Utils.cpp)
+add_executable(PEFinder main.cpp src/DataWriting.cpp src/DataReading.cpp src/DataStructures.cpp Globals.h Globals.cpp src/PEFit.cpp include/ThreadPool.h include/Utils.h src/Utils.cpp)
 target_link_libraries(PEFinder Ceres::ceres)
 target_link_libraries(PEFinder Boost::thread)
