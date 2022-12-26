@@ -1,7 +1,7 @@
 #include <iostream>
 #include <atomic>
 #include <thread>
-#include "Utils.h"
+#include "include/Utils.h"
 #include "include/DataReading.h"
 #include "include/DataStructures.h"
 #include "include/PEFit.h"

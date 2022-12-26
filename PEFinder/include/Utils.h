@@ -9,9 +9,9 @@
 #include <mutex>
 #include <thread>
 #include <boost/algorithm/string.hpp>
-#include "include/DataStructures.h"
-#include "include/DataReading.h"
-#include "Globals.h"
+#include "DataStructures.h"
+#include "DataReading.h"
+#include "../Globals.h"
 #include <fstream>
 #include <sstream>
 

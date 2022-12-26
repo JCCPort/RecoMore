@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LogNorm
 
-# from CReader.PythonTypes import RawEvent, RawChannelEvent
 from DebugUtils.GenerateRMFitView import makeWaveformArray
 from DebugUtils.RecoMoreReader import readRecoMore, readWCWaveforms, RecoMoreEvent
 from CReader import *
@@ -19,8 +18,8 @@ class RecoMoreFitExaminer:
         self.amps = []
         self.times = []
         for event_ in self.RMPEs:
+            self.reducedChiSqs.append(event_.redChiSq)
             if len(event_.PEData) > 0:
-                self.reducedChiSqs.append(event_.redChiSq)
                 for PE in event_.PEData:
                     self.amps.append(PE.amplitude)
                     self.times.append(PE.time)
@@ -112,7 +111,7 @@ if __name__ == "__main__":
     rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R193/R193.bin"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
-    examiner.plotAllEvents()
+    # examiner.plotAllEvents()
     examiner.plotSumAmps(3)
     examiner.timeAmpCorrelation()
     examiner.plotAmps()
