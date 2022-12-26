@@ -11,12 +11,9 @@ from CReader import *
 class RecoMoreFitExaminer:
     def __init__(self, rawDataPath: str, recoMoreDataPath: str):
         with open(recoMoreDataPath, 'r') as RMFile:
-            # self.RMPEs = readRecoMore(RMFile)
             self.RMPEs = readRecoMore(RMFile)
 
-        # with open(rawDataPath, 'r') as rawFile:
-        #     self.rawWFs = readWCWaveforms(rawFile)
-        self.rawWFs = ReadWCDataFileDat(rawDataPath)
+        self.rawWFs = ReadWCDataFile(rawDataPath)
 
         self.reducedChiSqs = []
         self.amps = []
@@ -94,13 +91,29 @@ class RecoMoreFitExaminer:
         plt.xlabel('Time (ns)')
         plt.show()
 
+    def plotSumAmps(self, channel: int):
+        sumPES = []
+
+        for event_ in self.RMPEs:
+            if event_.channelNumber == channel:
+                runSum = 0
+                for PE in event_.PEData:
+                    if PE.amplitude > 0.01:
+                        runSum += PE.amplitude
+                if runSum > 0:
+                    sumPES.append(runSum)
+        plt.hist(sumPES, bins=3000)
+        plt.xlabel("Summed amplitude (V)")
+        plt.show()
+
 
 if __name__ == "__main__":
-    recoMoreFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R151/R151PES.dat"
-    rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R151/R151.dat"
+    recoMoreFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R193/R193PES.dat"
+    rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R193/R193.bin"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
     examiner.plotAllEvents()
+    examiner.plotSumAmps(3)
     examiner.timeAmpCorrelation()
     examiner.plotAmps()
     examiner.plotTimes()

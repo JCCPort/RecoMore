@@ -1,11 +1,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#define PYBIND11_DETAILED_ERROR_MESSAGES
-
-
-//#include "../include/DataStructures.h"
-//#include "../include/DataReading.h"
 #include "DataReading.cpp"
 #include "DataStructures.cpp"
 
@@ -16,7 +11,7 @@
 namespace py = pybind11;
 
 PYBIND11_MODULE(CReader, m) {
-	m.doc() = "Wrapper C++ readers for data files.";
+	m.doc() = "C++ readers for wavecatcher data files.";
 	py::class_<PEData>(m, "PE")
 			.def(py::init<const float&, const float&, const float&, const float&, const float&, const float&>())
 			.def_readwrite("amplitude", &PEData::amplitude)
@@ -54,6 +49,7 @@ PYBIND11_MODULE(CReader, m) {
 	
 	m.def("ReadWCDataFileDat", &ReadWCDataFileDat, "Read plain text WaveCatcher data files.");
 	m.def("ReadWCDataFileBinary", &ReadWCDataFileBinary, "Read binary WaveCatcher data files.");
+	m.def("ReadWCDataFile", &ReadWCDataFile, "Read WaveCatcher data files.");
 
 #ifdef VERSION_INFO
 	m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

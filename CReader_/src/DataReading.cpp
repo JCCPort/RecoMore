@@ -8,13 +8,19 @@
 #include "../include/DataReading.h"
 
 template <typename T>
-std::string to_string_with_precision(const T a_value, const int n) {
+std::string to_string_with_precision(const T aValue, const int n) {
 	std::ostringstream out;
 	out.precision(n);
-	out << std::fixed << a_value;
+	out << std::fixed << aValue;
 	return out.str();
 }
 
+
+/**
+ * Wrapper around the binary and plaintext file readers so that either can be read from the same function call.
+ * @param fileName Path to the data file you want to run RecoMore over.
+ * @return Raw data events parsed into a WCData instance that contains a list of events to be split across multiple threads.
+ */
 WCData ReadWCDataFile(const std::string &fileName){
 	// TODO(josh): Add error checking to if the data file is corrupted/invalid
 	std::string ending = fileName.substr(fileName.length() - 4);
