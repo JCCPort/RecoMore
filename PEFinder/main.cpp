@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
 		.help("Number of threads to run RecoMore on.")
 		.scan<'i', int>();
 	program.add_argument("--num_batches")
-		.default_value(200)
+		.default_value(8)
 		.help("Number of batches to split run into. Smaller values will reduce overhead, "
 			  "but increase the likelihood of one thread hanging.")
 		.scan<'i', int>();
