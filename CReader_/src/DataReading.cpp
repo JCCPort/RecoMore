@@ -294,7 +294,6 @@ readIdealWFs(unsigned int ch, int interpFactor, const std::string &idealWFDir, u
 std::vector<EventFitData> ReadRecoMoreOutput(const std::string &fileName){
 	std::regex eventHeaderRegex(R"(EVENT=(\d*), DATE=(\d*\.\d*\.\d*), TDCCorrTime=(\d*h\d*m\d*.\d*s))");
 	std::regex channelHeaderRegex(R"(Ch=(\d*), RedChiSq=(\d*.\d*), Baseline=([-+]?\d*.\d*))");
-	std::regex PERegex("((\\d*.\\d*),(\\d*.\\d*))+");
 	
 	std::vector<EventFitData> events;
 	
@@ -313,9 +312,9 @@ std::vector<EventFitData> ReadRecoMoreOutput(const std::string &fileName){
 	// This loop has should bring the variable `line` to the next line in the data file that gives the event number.
 	//  when it doesn't it means that the end of the file has been reached.
 	while (std::regex_search(&line[0], eventMatch, eventHeaderRegex)) {
-		EventFitData eventData;
-		eventData.eventID     = std::stoi(eventMatch[1].str());
-		eventData.date        = eventMatch[2].str();
+		EventFitData     eventData;
+		eventData.eventID = std::stoi(eventMatch[1].str());
+		eventData.date = eventMatch[2].str();
 		eventData.TDCCorrTime = eventMatch[3].str();
 		
 		getline(&line, &len, fp);
@@ -325,26 +324,29 @@ std::vector<EventFitData> ReadRecoMoreOutput(const std::string &fileName){
 		// Loop over all the channels for a given event. Will stop being true if you've just parsed the last channel for
 		//  the event.
 		while (std::regex_search(&line[0], channelMatch, channelHeaderRegex)) {
-			ChannelFitData channelData;
-			channelData.ch       = std::stoi(channelMatch[1]);
+			ChannelFitData   channelData;
+			channelData.ch = std::stoi(channelMatch[1]);
 			channelData.redChiSq = std::stof(channelMatch[2]);
 			channelData.baseline = std::stof(channelMatch[3]);
 			
 			getline(&line, &len, fp);
 			
-			std::cmatch PEMatch;
-			std::regex_search(&line[0], PEMatch, PERegex);
 			
-			for(int i = 1; i <= PEMatch.size(); i++){
-				PEData PE;
-				PE.amplitude = std::stof(PEMatch[1]);
-				PE.time      = std::stof(PEMatch[2]);
-				
+			if(line[0] != 'C'){
+				while(line != std::string("\n")){
+					std::string lineString = std::string(line);
+					std::string token2 = lineString.substr(0, lineString.find('\n'));
+					
+					PEData PE;
+					PE.amplitude = std::stof(token2.substr(0, ','));
+					PE.time = std::stof(token2.substr(1, ','));
+					
+					channelData.pes.push_back(PE);
+					
+					getline(&line, &len, fp);
+				}
 				getline(&line, &len, fp);
-				
-				channelData.pes.push_back(PE);
 			}
-			getline(&line, &len, fp);
 			eventData.SiPM.push_back(channelData);
 		}
 		events.push_back(eventData);
