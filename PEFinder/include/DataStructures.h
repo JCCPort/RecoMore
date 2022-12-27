@@ -11,8 +11,8 @@ struct ChannelData {
 };
 
 typedef struct {
-	unsigned int eventID;
-	std::string TDCCorrTime;
+	unsigned int             eventID;
+	std::string              TDCCorrTime;
 	std::string              date;
 	std::vector<ChannelData> chData;
 } EventData;
