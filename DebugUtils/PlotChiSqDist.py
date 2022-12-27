@@ -128,8 +128,8 @@ if __name__ == "__main__":
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
     # examiner.plotAllEvents()
-    examiner.plotSumAmps(3)
-    examiner.timeAmpCorrelation()
-    examiner.plotAmps()
-    examiner.plotTimes()
-    examiner.plotChiSq()
+    # examiner.plotSumAmps(3)
+    # examiner.timeAmpCorrelation()
+    # examiner.plotAmps()
+    # examiner.plotTimes()
+    # examiner.plotChiSq()

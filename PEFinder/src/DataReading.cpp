@@ -288,7 +288,6 @@ readIdealWFs(unsigned int ch, int interpFactor, const std::string &idealWFDir, u
 std::vector<EventFitData> ReadRecoMoreOutput(const std::string &fileName){
 	std::regex eventHeaderRegex(R"(EVENT=(\d*), DATE=(\d*\.\d*\.\d*), TDCCorrTime=(\d*h\d*m\d*.\d*s))");
 	std::regex channelHeaderRegex(R"(Ch=(\d*), RedChiSq=(\d*.\d*), Baseline=([-+]?\d*.\d*))");
-	std::regex PERegex(R"((\d*.\d*),(\d*.\d*\n))");
 	
 	std::vector<EventFitData> events;
 	
@@ -326,18 +325,22 @@ std::vector<EventFitData> ReadRecoMoreOutput(const std::string &fileName){
 			
 			getline(&line, &len, fp);
 			
-			std::cmatch PEMatch;
-			
-			while(std::regex_search(&line[0], PEMatch, PERegex)){
-				PEData PE;
-				PE.amplitude = std::stof(PEMatch[1]);
-				PE.time = std::stof(PEMatch[2]);
-				
+
+			if(line[0] != 'C'){
+				while(line != std::string("\n")){
+					std::string lineString = std::string(line);
+					std::string token2 = lineString.substr(0, lineString.find('\n'));
+					
+					PEData PE;
+					PE.amplitude = std::stof(token2.substr(0, ','));
+					PE.time = std::stof(token2.substr(1, ','));
+					
+					channelData.pes.push_back(PE);
+					
+					getline(&line, &len, fp);
+				}
 				getline(&line, &len, fp);
-				
-				channelData.pes.push_back(PE);
 			}
-			getline(&line, &len, fp);
 			eventData.SiPM.push_back(channelData);
 		}
 		events.push_back(eventData);
