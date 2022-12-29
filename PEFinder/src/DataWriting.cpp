@@ -74,3 +74,8 @@ void Writer::writeEventInfo(const EventFitData &evData) {
 	writeString += "\n\n";
 	_sf->write(writeString);
 }
+
+
+void Writer::binaryWriteEventInfo(const EventFitData &evData){
+	_sf->binaryWrite(evData);
+}
