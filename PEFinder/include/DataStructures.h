@@ -4,6 +4,9 @@
 #include <utility>
 #include <vector>
 #include <string>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/serialization/vector.hpp>
+
 
 struct ChannelData {
 	unsigned short channel;
@@ -28,7 +31,16 @@ private:
 };
 
 
-typedef struct {
+struct PEData {
+	friend class boost::serialization::access;
+	template<class Archive>
+	void serialize(Archive & ar, const unsigned int version)
+	{
+		ar & amplitude;
+		ar & amplitudeError;
+		ar & time;
+		ar & timeError;
+	}
 	float amplitude;
 	float amplitudeError;
 	float time;
@@ -37,22 +49,40 @@ typedef struct {
 	// For debugging purpose, initial estimates of parameters.
 	float foundAmplitude;
 	float foundTime;
-} PEData;
+};
 
-typedef struct {
+struct ChannelFitData {
+	friend class boost::serialization::access;
+	template<class Archive>
+	void serialize(Archive & ar, const unsigned int version)
+	{
+		ar & ch;
+		ar & redChiSq;
+		ar & baseline;
+		ar & pes;
+	}
 	unsigned short ch;
 	float          redChiSq;
 	float          baseline;
 	std::vector<PEData> pes;
-} ChannelFitData;
+};
 
 
-typedef struct {
-	unsigned int eventID;
+struct EventFitData{
+	friend class boost::serialization::access;
+	template<class Archive>
+	void serialize(Archive & ar, const unsigned int version)
+	{
+		ar & eventID;
+		ar & TDCCorrTime;
+		ar & date;
+		ar & SiPM;
+	}
+	unsigned int eventID{};
 	std::string TDCCorrTime;
 	std::string date;
 	std::vector<ChannelFitData> SiPM;
-} EventFitData;
+};
 
 
 class [[maybe_unused]] FitParams {

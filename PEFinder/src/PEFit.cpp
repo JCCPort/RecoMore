@@ -368,6 +368,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 	
 	Writer writer(std::move(file));
 	writer.writeEventInfo(evFitDat);
+	writer.binaryWriteEventInfo(evFitDat);
 }
 
 /**

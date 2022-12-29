@@ -7,6 +7,7 @@
 #include <string>
 #include <utility>
 #include <iostream>
+#include <boost/archive/binary_oarchive.hpp>
 #include "DataStructures.h"
 
 class SyncFile {
@@ -22,6 +23,18 @@ public:
 			writeCache_.clear();
 			cachedStates_ = 0;
 		}
+	}
+	
+	void binaryWrite(const EventFitData &evData) {
+		std::lock_guard<std::mutex> lock(writerMutex_);
+		boost::archive::binary_oarchive oa(myFile_);
+		oa << evData;
+//		cachedStates_++;
+//		if (cachedStates_ == 1e2) {
+//			myFile_ << writeCache_;
+//			writeCache_.clear();
+//			cachedStates_ = 0;
+//		}
 	}
 
 	void closeFile() {
@@ -41,6 +54,7 @@ public:
 private:
 	unsigned int cachedStates_ = 0;
 	std::string writeCache_;
+	std::vector<EventFitData> binaryWriteCache_;
 	std::ofstream myFile_;
 	std::mutex writerMutex_;
 	std::string path_;
@@ -50,11 +64,13 @@ class Writer {
 public:
 	explicit Writer(std::shared_ptr<SyncFile> sf) : _sf(std::move(sf)) {}
 
-	static std::string writeWaveformInfo(const ChannelFitData &wfDat);
+	static std::string writeWaveformInfo(const ChannelFitData &);
 
-	static std::string writeFitPE(PEData PEVar);
+	static std::string writeFitPE(PEData);
 
-	void writeEventInfo(const EventFitData &evData);
+	void writeEventInfo(const EventFitData &);
+	
+	void binaryWriteEventInfo(const EventFitData &);
 
 private:
 	std::shared_ptr<SyncFile> _sf;

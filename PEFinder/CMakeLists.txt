@@ -50,7 +50,7 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 
 #SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/usr/include/boost")
 
-find_package(Boost COMPONENTS thread REQUIRED)
+find_package(Boost REQUIRED COMPONENTS thread serialization REQUIRED)
 
 if (NOT TARGET Boost::filesystem)
     add_library(Boost::filesystem IMPORTED INTERFACE)
@@ -77,4 +77,4 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 add_executable(PEFinder main.cpp src/DataWriting.cpp src/DataReading.cpp src/DataStructures.cpp Globals.h Globals.cpp src/PEFit.cpp include/ThreadPool.h include/Utils.h src/Utils.cpp)
 target_link_libraries(PEFinder Ceres::ceres)
-target_link_libraries(PEFinder Boost::thread)
+target_link_libraries(PEFinder Boost::thread Boost::serialization)
