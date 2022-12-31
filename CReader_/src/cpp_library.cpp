@@ -54,7 +54,8 @@ PYBIND11_MODULE(CReader, m) {
 	m.def("ReadWCDataFileDat", &ReadWCDataFileDat, "Read plain text WaveCatcher data files.");
 	m.def("ReadWCDataFileBinary", &ReadWCDataFileBinary, "Read binary WaveCatcher data files.");
 	m.def("ReadWCDataFile", &ReadWCDataFile, "Read WaveCatcher data files.");
-	m.def("ReadRecoMoreOutput", &ReadRecoMoreOutput, "Read RecoMore output files.");
+	m.def("ReadRecoMoreOutput", &ReadRecoMoreOutput, "Read RecoMore output text files.");
+	m.def("ReadRecoMoreBinaryOutput", &ReadRecoMoreBinaryOutput, "Read RecoMore output binary files.");
 
 #ifdef VERSION_INFO
 	m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

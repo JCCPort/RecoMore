@@ -65,7 +65,8 @@ int main(int argc, char** argv) {
 	
 	WCData data = ReadWCDataFile(inputFileName);
 //	std::vector<EventFitData> RM = ReadRecoMoreOutput(outputFileName);
-	auto file = std::make_shared<SyncFile>(outputFileName);
+//	std::vector<EventFitData> RM = ReadRecoMoreBinaryOutput(outputFileName);
+	auto file = std::make_shared<SyncFile>(outputFileName, binary);
 	Writer writer(file);
 
 	static std::atomic<unsigned long> count{0};

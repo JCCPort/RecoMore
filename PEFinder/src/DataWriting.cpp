@@ -54,28 +54,27 @@ std::string Writer::writeWaveformInfo(const ChannelFitData &wfDat) {
  * @param evData
  */
 void Writer::writeEventInfo(const EventFitData &evData) {
-	std::string writeString;
-	writeString += "EVENT=";
-	writeString += std::to_string(evData.eventID);
-	writeString += ", ";
-	writeString += "DATE=";
-	writeString += evData.date;
-	writeString += ", ";
-	writeString += "TDCCorrTime=";
-	std::vector<std::string> timeSplitString;
-	std::string tempString = evData.TDCCorrTime.substr(10, 11);
-	boost::split(timeSplitString, tempString, boost::is_any_of("."));
-	writeString +=
-			evData.TDCCorrTime.substr(0, 8) + "." + timeSplitString[0] + timeSplitString[1] + timeSplitString[2] + "s";
-	writeString += '\n';
-	for (auto &chDat: evData.SiPM) {
-		writeString += writeWaveformInfo(chDat);
+	if(writeMode_ == text){
+		std::string writeString;
+		writeString += "EVENT=";
+		writeString += std::to_string(evData.eventID);
+		writeString += ", ";
+		writeString += "DATE=";
+		writeString += evData.date;
+		writeString += ", ";
+		writeString += "TDCCorrTime=";
+		std::vector<std::string> timeSplitString;
+		std::string tempString = evData.TDCCorrTime.substr(10, 11);
+		boost::split(timeSplitString, tempString, boost::is_any_of("."));
+		writeString +=
+				evData.TDCCorrTime.substr(0, 8) + "." + timeSplitString[0] + timeSplitString[1] + timeSplitString[2] + "s";
+		writeString += '\n';
+		for (auto &chDat: evData.SiPM) {
+			writeString += writeWaveformInfo(chDat);
+		}
+		writeString += "\n\n";
+		_sf->write(writeString);
+	} else if (writeMode_ == binary){
+		_sf->binaryWrite(evData);
 	}
-	writeString += "\n\n";
-	_sf->write(writeString);
-}
-
-
-void Writer::binaryWriteEventInfo(const EventFitData &evData){
-	_sf->binaryWrite(evData);
 }

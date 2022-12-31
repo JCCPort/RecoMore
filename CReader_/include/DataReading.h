@@ -13,4 +13,6 @@ std::vector<double> readIdealWFs(unsigned int, int, const std::string &, unsigne
 
 std::vector<EventFitData> ReadRecoMoreOutput(const std::string &);
 
+std::vector<EventFitData> ReadRecoMoreBinaryOutput(const std::string &fileName);
+
 #endif //RECOMORE_DATAREADING_H
