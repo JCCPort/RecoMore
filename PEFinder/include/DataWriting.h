@@ -10,9 +10,15 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include "DataStructures.h"
 
+enum WriteMode{
+	text = 0,
+	binary = 1
+};
+
+
 class SyncFile {
 public:
-	explicit SyncFile(const std::string &path) : path_(path) { myFile_.open(path, std::ios_base::out); }
+	explicit SyncFile(const std::string &path, WriteMode writeMode) : path_(path), writeMode_(writeMode) { myFile_.open(path, std::ios_base::out); }
 
 	void write(const std::string &dataToWrite) {
 		std::lock_guard<std::mutex> lock(writerMutex_);
@@ -27,21 +33,20 @@ public:
 	
 	void binaryWrite(const EventFitData &evData) {
 		std::lock_guard<std::mutex> lock(writerMutex_);
-		boost::archive::binary_oarchive oa(myFile_);
-		oa << evData;
-//		cachedStates_++;
-//		if (cachedStates_ == 1e2) {
-//			myFile_ << writeCache_;
-//			writeCache_.clear();
-//			cachedStates_ = 0;
-//		}
+		binaryWriteCache_.push_back(evData);
 	}
 
 	void closeFile() {
-		std::lock_guard<std::mutex> lock(writerMutex_);
-		myFile_ << writeCache_;
-		writeCache_.clear();
-		cachedStates_ = 0;
+		if(writeMode_ == text){
+			std::lock_guard<std::mutex> lock(writerMutex_);
+			myFile_ << writeCache_;
+			writeCache_.clear();
+			cachedStates_ = 0;
+		} else if(writeMode_ == binary){
+			boost::archive::binary_oarchive oa(myFile_);
+			oa << binaryWriteCache_;
+		}
+		
 		std::cout << "Finished writing to file " << path_ << std::endl;
 		myFile_.close();
 
@@ -50,11 +55,18 @@ public:
 			std::cout << "Output file is empty" << std::endl;
 		}
 	};
+	
+	WriteMode getWriteMode() const {
+		return writeMode_;
+	}
 
 private:
+	WriteMode writeMode_;
 	unsigned int cachedStates_ = 0;
 	std::string writeCache_;
+	
 	std::vector<EventFitData> binaryWriteCache_;
+	
 	std::ofstream myFile_;
 	std::mutex writerMutex_;
 	std::string path_;
@@ -62,7 +74,7 @@ private:
 
 class Writer {
 public:
-	explicit Writer(std::shared_ptr<SyncFile> sf) : _sf(std::move(sf)) {}
+	explicit Writer(std::shared_ptr<SyncFile> sf) : _sf(std::move(sf)) {writeMode_ = _sf->getWriteMode();}
 
 	static std::string writeWaveformInfo(const ChannelFitData &);
 
@@ -70,10 +82,9 @@ public:
 
 	void writeEventInfo(const EventFitData &);
 	
-	void binaryWriteEventInfo(const EventFitData &);
-
 private:
 	std::shared_ptr<SyncFile> _sf;
+	WriteMode writeMode_;
 };
 
 #endif //RECOMORE_DATAWRITING_H

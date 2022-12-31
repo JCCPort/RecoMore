@@ -5,6 +5,7 @@
 #include <boost/phoenix.hpp>
 #include <fstream>
 #include <iomanip>
+#include <boost/archive/binary_iarchive.hpp>
 #include "../include/DataReading.h"
 
 template <typename T>
@@ -356,5 +357,14 @@ std::vector<EventFitData> ReadRecoMoreOutput(const std::string &fileName){
 	fclose(fp);
 	if (line)
 		free(line);
+	return events;
+}
+
+std::vector<EventFitData> ReadRecoMoreBinaryOutput(const std::string &fileName){
+	std::vector<EventFitData> events;
+	std::ifstream ifs(fileName);
+	boost::archive::binary_iarchive ia(ifs);
+	
+	ia >> events;
 	return events;
 }
