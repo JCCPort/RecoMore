@@ -48,8 +48,6 @@ set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
-#SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/usr/include/boost")
-
 find_package(Boost REQUIRED COMPONENTS thread serialization REQUIRED)
 
 if (NOT TARGET Boost::filesystem)
