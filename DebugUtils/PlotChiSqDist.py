@@ -7,8 +7,6 @@ from DebugUtils.GenerateRMFitView import makeWaveformArray
 from DebugUtils.RecoMoreReader import readRecoMore, readWCWaveforms, RecoMoreEvent
 from CReader import *
 
-# from generated.CReader import *
-
 
 class RecoMoreFitExaminer:
     def __init__(self, rawDataPath: str, recoMoreDataPath: str):

@@ -58,20 +58,6 @@ class CMakeBuild(build_ext):
         if "CMAKE_ARGS" in os.environ:
             cmake_args += [item for item in os.environ["CMAKE_ARGS"].split(" ") if item]
 
-        # cmake_args.append("--find-package")
-        # cmake_args.append("-DNAME=Boost")
-        # cmake_args.append("-DCOMPILER_ID=clang")
-        # cmake_args.append("-DLANGUAGE=CXX")
-        # cmake_args.append("-DMODE=LINK")
-        # cmake_args.append("-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON")
-        # cmake_args.append("--debug-output")
-        # cmake_args.append("--trace")
-
-        # build_args.append("-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON")
-        # build_args.append("--debug-output")
-        # build_args.append("-v")
-        # build_args.append("--clean-first")
-
         # In this example, we pass in the version to C++. You might not need to.
         cmake_args += [f"-DEXAMPLE_VERSION_INFO={self.distribution.get_version()}"]  # type: ignore[attr-defined]
 
@@ -138,7 +124,6 @@ class CMakeBuild(build_ext):
             run = subprocess.run(
                 ["cmake", ext.sourcedir] + cmake_args, cwd=build_temp, check=True
             )
-            print(run.stdout, run.stderr, run.returncode)
         except subprocess.CalledProcessError as e:
             print("failed")
             print(e.output, e.stderr, e.stdout)
@@ -146,12 +131,11 @@ class CMakeBuild(build_ext):
 
         try:
             print('cmake build')
-            print(build_args)
             run = subprocess.run(
                 ["cmake", "--build", "."] + build_args, cwd=build_temp, check=True
             )
-            print(run.stdout, run.stderr, run.returncode)
         except subprocess.CalledProcessError as e:
+            print("failed")
             print(e.output, e.stderr, e.stdout)
             return
 
