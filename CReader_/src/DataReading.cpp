@@ -362,7 +362,7 @@ std::vector<EventFitData> ReadRecoMoreOutput(const std::string &fileName){
 
 std::vector<EventFitData> ReadRecoMoreBinaryOutput(const std::string &fileName){
 	std::vector<EventFitData> events;
-	events.reserve(50000);
+	events.reserve(20000);
 	std::ifstream ifs(fileName);
 	boost::archive::binary_iarchive ia(ifs);
 	
