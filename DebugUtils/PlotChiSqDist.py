@@ -10,7 +10,7 @@ from CReader import *
 
 class RecoMoreFitExaminer:
     def __init__(self, rawDataPath: str, recoMoreDataPath: str):
-        self.RMPEs = ReadRecoMoreOutput(recoMoreDataPath)
+        self.RMPEs = ReadRecoMoreBinaryOutput(recoMoreDataPath)
         self.rawWFs = ReadWCDataFile(rawDataPath)
 
         self.reducedChiSqs = []
@@ -24,28 +24,29 @@ class RecoMoreFitExaminer:
                         self.amps.append(PE.amplitude)
                         self.times.append(PE.time)
 
-    def getEventPair(self, eventNumber: int, channelNumber: int):
+    def getEventPair(self, eventID: int, channelNumber: int):
         RMEvent = None
         rawEvent = None
         for event_ in self.RMPEs:
-            if (eventNumber == event_.eventNumber) and (channelNumber == event_.channelNumber):
-                RMEvent = event_
+            for channel in event_.SiPM:
+                if (eventID == event_.eventID) and (channelNumber == channel.ch):
+                    RMEvent = channel
 
         for WF_ in self.rawWFs.getEvents():
-            if WF_.eventID == eventNumber:
+            if WF_.eventID == eventID:
                 for channelWF in WF_.chData:
                     if channelWF.channel == channelNumber:
                         rawEvent = channelWF
 
         return RMEvent, rawEvent
 
-    def plotSingleEvent(self, eventNumber: int, channelNumber: int):
-        RMEvent_, rawEvent_ = self.getEventPair(eventNumber, channelNumber)
+    def plotSingleEvent(self, eventID: int, channelNumber: int):
+        RMEvent_, rawEvent_ = self.getEventPair(eventID, channelNumber)
         rawEvent_.xVals = [i * 0.3125 for i in range(len(rawEvent_.waveform))]
         xs, ys = makeWaveformArray(rawEvent_, RMEvent_)
         rawEvent_.xVals = np.array(rawEvent_.xVals)
         plt.plot(rawEvent_.xVals, rawEvent_.waveform)
-        plt.title('Event: {}, Channel: {}'.format(RMEvent_.eventNumber,
+        plt.title('Event: {}, Channel: {}'.format(RMEvent_.eventID,
                                                   RMEvent_.channelNumber))
         formattedPEList = ""
         if len(RMEvent_.PEData) > 0:
@@ -62,9 +63,9 @@ class RecoMoreFitExaminer:
         plt.show()
 
     def plotAllEvents(self):
-        eventChannelNumbers = [(event_.eventNumber, event_.channelNumber) for event_ in self.RMPEs]
-        for event_ in eventChannelNumbers:
-            self.plotSingleEvent(event_[0], event_[1])
+        for event_ in self.RMPEs:
+            for channel in event_.SiPM:
+                self.plotSingleEvent(eventID=event_.eventID, channelNumber=channel.ch)
 
     def plotAmps(self):
         plt.hist(self.amps, bins=1000)
@@ -127,9 +128,9 @@ if __name__ == "__main__":
     rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R110/R110.dat"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
-    # examiner.plotAllEvents()
-    # examiner.plotSumAmps(3)
-    # examiner.timeAmpCorrelation()
-    # examiner.plotAmps()
-    # examiner.plotTimes()
-    # examiner.plotChiSq()
+    examiner.plotAllEvents()
+    examiner.plotSumAmps(3)
+    examiner.timeAmpCorrelation()
+    examiner.plotAmps()
+    examiner.plotTimes()
+    examiner.plotChiSq()

@@ -26,7 +26,7 @@ def NPEPDFFunc(x, PEs: List[PE], baseline, idealWF):
     return value
 
 
-def makeWaveformArray(waveform, RMEvent: RecoMoreEvent):
+def makeWaveformArray(waveform, RMEvent):
     pdf = pd.read_csv("../PEFinder/pdf/ch{}.txt".format(waveform.channel), sep="\t", names=['time', 'amp'])
     amps = pdf['amp'].values
     times = pdf['time'].values
@@ -53,7 +53,7 @@ def makeWaveformArray(waveform, RMEvent: RecoMoreEvent):
 
     for i in range(len(waveform.xVals)):
         x = waveform.xVals[i]
-        sumYs[i] = NPEPDFFunc(x, RMEvent.PEData, RMEvent.baseline, yS)
+        sumYs[i] = NPEPDFFunc(x, RMEvent.pes, RMEvent.baseline, yS)
 
     return waveform.xVals, sumYs
 
