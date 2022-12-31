@@ -15,21 +15,18 @@ endif ()
 
 EXECUTE_PROCESS(COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE)
 set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE INTERNAL "" FORCE)
-#if ("${ARCHITECTURE}" STREQUAL "arm64")
-#    set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE INTERNAL "" FORCE)
-#endif()
-#if (NOT "${ARCHITECTURE}" STREQUAL "arm64" AND CMAKE_BUILD_TYPE STREQUAL "Release")
-#    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-#endif ()
+
+if (NOT "${ARCHITECTURE}" STREQUAL "arm64" AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+endif ()
 
 #### Finding BOOST
 
-set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
-#SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/usr/include/boost")
 
 find_package(Boost REQUIRED COMPONENTS serialization REQUIRED)
 
@@ -44,14 +41,9 @@ endif ()
 include_directories(${Boost_INCLUDE_DIRS})
 
 add_subdirectory(extern/pybind11)
-#find_package(Python 3.9 EXACT COMPONENTS Interpreter Development REQUIRED)
-#set(PYBIND11_FINDPYTHON=ON)
-#set(PYBIND11_PYTHON_VERSION "3.9.12"  CACHE INTERNAL "" FORCE)
 
 pybind11_add_module(CReader src/cpp_library.cpp)
 target_link_libraries(CReader PRIVATE Boost::serialization)
-#set_target_properties(boost PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-
 
 
 target_include_directories(CReader
