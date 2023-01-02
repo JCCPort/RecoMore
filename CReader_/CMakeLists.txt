@@ -40,6 +40,8 @@ endif ()
 
 include_directories(${Boost_INCLUDE_DIRS})
 
+find_package(Python REQUIRED COMPONENTS Interpreter Development)
+
 add_subdirectory(extern/pybind11)
 
 pybind11_add_module(CReader src/cpp_library.cpp)
