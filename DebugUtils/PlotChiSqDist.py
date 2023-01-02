@@ -46,12 +46,12 @@ class RecoMoreFitExaminer:
         xs, ys = makeWaveformArray(rawEvent_, RMEvent_)
         rawEvent_.xVals = np.array(rawEvent_.xVals)
         plt.plot(rawEvent_.xVals, rawEvent_.waveform)
-        plt.title('Event: {}, Channel: {}'.format(RMEvent_.eventID,
-                                                  RMEvent_.channelNumber))
+        plt.title('Event: {}, Channel: {}'.format(eventID,
+                                                  RMEvent_.ch))
         formattedPEList = ""
-        if len(RMEvent_.PEData) > 0:
+        if len(RMEvent_.pes) > 0:
             formattedPEList += "\nAmp, time:"
-        for idx, PE in enumerate(RMEvent_.PEData):
+        for idx, PE in enumerate(RMEvent_.pes):
             formattedPEList += "\n{:.4f}, {:.3f}".format(PE.amplitude, PE.time)
 
         plt.plot(xs, ys, color='k', label='Fit:\nReduced ChiSq {:.6f}'
@@ -124,8 +124,8 @@ class RecoMoreFitExaminer:
 if __name__ == "__main__":
     # recoMoreFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R193/R193PES.dat"
     # rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R193/R193.bin"
-    recoMoreFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R110/R110PES.dat"
-    rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R110/R110.dat"
+    recoMoreFileName = "/home/josh/CLionProjects/RecoMore/data/R22120801PES.dat"
+    rawFileName = "/home/josh/CLionProjects/RecoMore/data/R22120801.bin"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
     examiner.plotAllEvents()
