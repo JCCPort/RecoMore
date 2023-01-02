@@ -2,3 +2,7 @@
 	path = extern/pybind11
 	url = ../../pybind/pybind11
 	branch = stable
+[submodule "/home/josh/CLionProjects/RecoMore/CReader_/extern/pybind11"]
+	path = /home/josh/CLionProjects/RecoMore/CReader_/extern/pybind11
+	url = ../../pybind/pybind11
+	branch = stable

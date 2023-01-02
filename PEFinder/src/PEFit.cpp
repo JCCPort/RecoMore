@@ -320,7 +320,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		for (unsigned int j        = 0; j < WFData.waveform.size(); j++) {
 			const float observed = WFData.waveform[j];
 			const float expected = NPEPDFFunc((float) j * pdfSamplingRate, finalParams, chIdealWF);
-			chiSq += std::powf(observed - expected, 2) / (pdfResidualRMS / 1000);
+			chiSq += std::pow(observed - expected, 2) / (pdfResidualRMS / 1000);
 			//TODO(josh): Need to calculate the residual RMS on a per waveform basis?
 		}
 		float            redChiSq = chiSq / ((float) WFData.waveform.size() - ((float) finalParams.size() - 1));
