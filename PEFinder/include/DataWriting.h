@@ -43,6 +43,15 @@ public:
 			writeCache_.clear();
 			cachedStates_ = 0;
 		} else if(writeMode_ == binary){
+			for(int i = 0; i < binaryWriteCache_.size(); i++){
+				for(int j = 0; j < binaryWriteCache_[i].SiPM.size(); j++){
+					for(int k = 0; k < binaryWriteCache_[i].SiPM[j].pes.size(); k++){
+						binaryWriteCache_[i].SiPM[j].pes[k].time = binaryWriteCache_[i].SiPM[j].pes[k].time * 100;
+						binaryWriteCache_[i].SiPM[j].pes[k].timeError = binaryWriteCache_[i].SiPM[j].pes[k].timeError * 100;
+						binaryWriteCache_[i].SiPM[j].pes[k].foundTime = binaryWriteCache_[i].SiPM[j].pes[k].timeError * 100;
+					}
+				}
+			}
 			boost::archive::binary_oarchive oa(myFile_);
 			oa << binaryWriteCache_;
 		}
