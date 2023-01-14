@@ -64,8 +64,6 @@ int main(int argc, char** argv) {
 	saveWaveforms = program.get<bool>("--save_waveforms");
 	
 	WCData data = ReadWCDataFile(inputFileName);
-//	std::vector<EventFitData> RM = ReadRecoMoreOutput(outputFileName);
-//	std::vector<EventFitData> RM = ReadRecoMoreBinaryOutput(outputFileName);
 	auto file = std::make_shared<SyncFile>(outputFileName, binary);
 	Writer writer(file);
 

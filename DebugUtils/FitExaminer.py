@@ -59,16 +59,19 @@ class RecoMoreFitExaminer:
                                                   RMEvent_.ch))
         formattedPEList = ""
         if len(RMEvent_.pes) > 0:
-            formattedPEList += "\nAmp, time:"
+            formattedPEList += "\n\n$PEs$\nAmp (V), time (ns):"
         for idx, PE_ in enumerate(RMEvent_.pes):
-            formattedPEList += "\n{:.4f}, {:.3f}".format(PE_.amplitude, PE_.time)
+            formattedPEList += "\n {:.4f},   {:.3f}".format(PE_.amplitude, PE_.time)
 
-        plt.plot(xs, ys, color='k', label='Fit:\nReduced ChiSq {:.6f}'
-                                          '\nBaseline: {:.5f}'
+        plt.plot(xs, ys, color='k', label='$\chi^2_r$: {:.2f}'
+                                          '\nBaseline: {:.2e} V'
                  .format(RMEvent_.redChiSq,
                          RMEvent_.baseline) + formattedPEList)
-
+        plt.xlabel("Times (ns)")
+        plt.ylabel("Amplitude (V)")
+        plt.grid()
         plt.legend()
+        plt.tight_layout()
         plt.show()
 
     def plotAllEvents(self):
@@ -138,7 +141,7 @@ class RecoMoreFitExaminer:
                     if runSum < minRunSum:
                         minRunSum = runSum
 
-        bins = np.linspace(minRunSum, maxRunSum, 300)
+        bins = np.linspace(minRunSum, maxRunSum, 100)
         for key, val in sumPES.items():
             plt.hist(val, bins=bins, label='{}'.format(key), histtype='step')
 
@@ -148,13 +151,14 @@ class RecoMoreFitExaminer:
 
 
 if __name__ == "__main__":
-    run = 195
-    recoMoreFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R{}/R{}PES.dat".format(run, run)
-    rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R{}/R{}.bin".format(run, run)
+    # recoMoreFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R193/R193PES.dat"
+    # rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R193/R193.bin"
+    recoMoreFileName = "/home/josh/CLionProjects/RecoMore/data/R22120801PES.dat"
+    rawFileName = "/home/josh/CLionProjects/RecoMore/data/R22120801.bin"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
     examiner.plotAllEvents()
-    examiner.plotSumAmps(channel=3, PEThresh=0.01)
+    examiner.plotSumAmps(channel=13, PEThresh=0.01)
     examiner.timeAmpCorrelation()
     examiner.plotAmps()
     examiner.plotTimes()
