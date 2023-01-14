@@ -68,18 +68,18 @@ class RecoMoreFitExaminer:
                 self.plotSingleEvent(eventID=event_.eventID, channelNumber=channel.ch)
 
     def plotAmps(self):
-        plt.hist(self.amps, bins=1000)
+        plt.hist(self.amps, bins=300)
         plt.xlabel("PE amplitudes (V)")
         plt.yscale('log')
         plt.show()
 
     def plotTimes(self):
-        plt.hist(self.times, bins=1000)
+        plt.hist(self.times, bins=300)
         plt.xlabel("PE times (ns)")
         plt.show()
 
     def plotChiSq(self):
-        plt.hist(self.reducedChiSqs, bins=1000)
+        plt.hist(self.reducedChiSqs, bins=300)
         plt.xlabel(r"$\chi^2_r$")
         plt.show()
 
@@ -112,8 +112,7 @@ class RecoMoreFitExaminer:
                 if channel_.ch == channel:
                     runSum = 0
                     for PE in channel_.pes:
-                        if PE.amplitude > 0.006:
-                            runSum += PE.amplitude
+                        runSum += PE.amplitude
                     if runSum > 0:
                         sumPES.append(runSum)
         plt.hist(sumPES, bins=300)
@@ -128,8 +127,8 @@ if __name__ == "__main__":
     rawFileName = "/home/josh/CLionProjects/RecoMore/data/R22120801.bin"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
-    examiner.plotAllEvents()
-    examiner.plotSumAmps(3)
+    # examiner.plotAllEvents()
+    examiner.plotSumAmps(1)
     examiner.timeAmpCorrelation()
     examiner.plotAmps()
     examiner.plotTimes()
