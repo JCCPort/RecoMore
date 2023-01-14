@@ -1,15 +1,18 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from matplotlib.colors import LogNorm
 
 from DebugUtils.GenerateRMFitView import makeWaveformArray
-from DebugUtils.RecoMoreReader import readRecoMore, readWCWaveforms, RecoMoreEvent
 from CReader import *
 
 
 class RecoMoreFitExaminer:
     def __init__(self, rawDataPath: str, recoMoreDataPath: str):
+        """
+        Utility for linking together raw and RecoMore data.
+        :param rawDataPath: Path to the run's raw data file.
+        :param recoMoreDataPath: Path to the run's processed RecoMore file.
+        """
         self.RMPEs = ReadRecoMoreBinaryOutput(recoMoreDataPath)
         self.rawWFs = ReadWCDataFile(rawDataPath)
 
@@ -20,11 +23,17 @@ class RecoMoreFitExaminer:
             for channel_ in event_.SiPM:
                 self.reducedChiSqs.append(channel_.redChiSq)
                 if len(channel_.pes) > 0:
-                    for PE in channel_.pes:
-                        self.amps.append(PE.amplitude)
-                        self.times.append(PE.time)
+                    for PE_ in channel_.pes:
+                        self.amps.append(PE_.amplitude)
+                        self.times.append(PE_.time)
 
     def getEventPair(self, eventID: int, channelNumber: int):
+        """
+        Gets the RecoMore fit data and raw waveform for an event in a given channel.
+        :param eventID:
+        :param channelNumber:
+        :return:
+        """
         RMEvent = None
         rawEvent = None
         for event_ in self.RMPEs:
@@ -51,8 +60,8 @@ class RecoMoreFitExaminer:
         formattedPEList = ""
         if len(RMEvent_.pes) > 0:
             formattedPEList += "\nAmp, time:"
-        for idx, PE in enumerate(RMEvent_.pes):
-            formattedPEList += "\n{:.4f}, {:.3f}".format(PE.amplitude, PE.time)
+        for idx, PE_ in enumerate(RMEvent_.pes):
+            formattedPEList += "\n{:.4f}, {:.3f}".format(PE_.amplitude, PE_.time)
 
         plt.plot(xs, ys, color='k', label='Fit:\nReduced ChiSq {:.6f}'
                                           '\nBaseline: {:.5f}'
@@ -93,11 +102,9 @@ class RecoMoreFitExaminer:
                         continue
                 self.reducedChiSqs.append(channel_.redChiSq)
                 if len(channel_.pes) > 0:
-                    for PE in channel_.pes:
-                        amps_.append(PE.amplitude)
-                        times_.append(PE.time - channel_.pes[0].time)
-
-        # H, xEdges, yEdges = np.histogram2d(self.times, self.amps, bins=200)
+                    for PE_ in channel_.pes:
+                        amps_.append(PE_.amplitude)
+                        times_.append(PE_.time - channel_.pes[0].time)
 
         H, xEdges, yEdges = np.histogram2d(times_, amps_, bins=200)
         H = H.transpose()
@@ -118,9 +125,9 @@ class RecoMoreFitExaminer:
                     if channel_.ch != channel:
                         continue
                 runSum = 0
-                for PE in channel_.pes:
-                    if PE.amplitude > PEThresh:
-                        runSum += PE.amplitude
+                for PE_ in channel_.pes:
+                    if PE_.amplitude > PEThresh:
+                        runSum += PE_.amplitude
                 if runSum > 0:
                     if channel_.ch not in sumPES:
                         sumPES[channel_.ch] = []
@@ -144,8 +151,6 @@ if __name__ == "__main__":
     run = 195
     recoMoreFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R{}/R{}PES.dat".format(run, run)
     rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R{}/R{}.bin".format(run, run)
-    # recoMoreFileName = "/home/josh/CLionProjects/RecoMore/data/R22120801PES.dat"
-    # rawFileName = "/home/josh/CLionProjects/RecoMore/data/R22120801.bin"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
 <<<<<<< HEAD:DebugUtils/PlotChiSqDist.py
