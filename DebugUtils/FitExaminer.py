@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LogNorm
 
+from DebugUtils.CalibFitter import fit
 from DebugUtils.GenerateRMFitView import makeWaveformArray
 from CReader import *
 
@@ -143,6 +144,7 @@ class RecoMoreFitExaminer:
 
         bins = np.linspace(minRunSum, maxRunSum, 600)
         for key, val in sumPES.items():
+            fit(val)
             plt.hist(val, bins=bins, label='{}'.format(key), histtype='step')
 
         plt.xlabel("Summed amplitude (V)")
@@ -153,12 +155,12 @@ class RecoMoreFitExaminer:
 if __name__ == "__main__":
     # recoMoreFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R193/R193PES.dat"
     # rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R193/R193.bin"
-    recoMoreFileName = "/home/josh/CLionProjects/RecoMore/data/CalGain_Ch7_56_0VPES.dat"
-    rawFileName = "/home/josh/CLionProjects/RecoMore/data/CalGain_Ch7_56_0V.dat"
+    recoMoreFileName = "/home/josh/CLionProjects/RecoMore/data/SiC_75_54VPES.dat"
+    rawFileName = "/home/josh/CLionProjects/RecoMore/data/SiC_75_54V.dat"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
     # examiner.plotAllEvents()
-    examiner.plotSumAmps(channel=7, PEThresh=0.0)
+    examiner.plotSumAmps(PEThresh=0.004)
     examiner.timeAmpCorrelation()
     examiner.plotAmps()
     examiner.plotTimes()
