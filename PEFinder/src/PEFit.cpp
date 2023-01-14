@@ -173,20 +173,20 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			// If the estimated PE time is larger than truth the residual will be negative on the left,
 			// and positive on the right (of the PE time), this means a1/(a1*a2*a3) will be less than one,
 			// and a3/(a1+a2+a3) will be greater than one, shifting the time to the right...
-			if ((minTimePos > 1) && (minTimePos < residualWF.waveform.size() - 1)) {
-				// improve initial time for a new PE based on average time
-				// over 3 consecutive sample ponderated by the amplitude
-				// of each sample... help a lot to resolve PEs very close!
-				float            timeSum        = 0;
-				float            ponderationSum = 0;
-				for (unsigned int b = minTimePos - 1; b <= minTimePos + 1; ++b) {
-					float binCenter = ((float)b - 0.5f) * (pdfSamplingRate);
-					float binVal    = residualWF.waveform[b];
-					timeSum += binCenter * binVal;
-					ponderationSum += binVal;
-				}
-				guessPE.time = (PEFinderTimeOffset * 0.1f) + timeSum / ponderationSum;
-			}
+//			if ((minTimePos > 1) && (minTimePos < residualWF.waveform.size() - 1)) {
+//				// improve initial time for a new PE based on average time
+//				// over 3 consecutive sample ponderated by the amplitude
+//				// of each sample... help a lot to resolve PEs very close!
+//				float            timeSum        = 0;
+//				float            ponderationSum = 0;
+//				for (unsigned int b = minTimePos - 1; b <= minTimePos + 1; ++b) {
+//					float binCenter = ((float)b - 0.5f) * (pdfSamplingRate);
+//					float binVal    = residualWF.waveform[b];
+//					timeSum += binCenter * binVal;
+//					ponderationSum += binVal;
+//				}
+//				guessPE.time = (PEFinderTimeOffset * 0.1f) + timeSum / ponderationSum;
+//			}
 			// Changing the multiple of PEFinerTimeOffset affects speed and chisq significantly
 			
 			numPEsFound += 1;
