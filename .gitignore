@@ -1,1 +1,4 @@
 /CReader/extern/
+/CReader_/extern/
+/cmake-build-*/
+/CReader_/build/

@@ -1,13 +1,9 @@
-from math import floor
 from typing import List
 
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
 
-from CReader import *
-
-from DebugUtils.RecoMoreReader import ChannelWF, RecoMoreEvent, PE
+from DebugUtils.PythonRecoMoreReader import PE
 
 
 def specialRound(x, base):
@@ -47,7 +43,7 @@ def makeWaveformArray(waveform, RMEvent):
     interpedAmps.append(amps[-1])
     interpedTimes.append(times[-1])
 
-    xS = np.array(interpedTimes)
+    # xS = np.array(interpedTimes)
     yS = np.array(interpedAmps)
     sumYs = np.zeros(len(waveform.waveform))
 
@@ -56,5 +52,3 @@ def makeWaveformArray(waveform, RMEvent):
         sumYs[i] = NPEPDFFunc(x, RMEvent.pes, RMEvent.baseline, yS)
 
     return waveform.xVals, sumYs
-
-
