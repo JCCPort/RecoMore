@@ -83,11 +83,14 @@ class RecoMoreFitExaminer:
         plt.xlabel(r"$\chi^2_r$")
         plt.show()
 
-    def timeAmpCorrelation(self):
+    def timeAmpCorrelation(self, channel=None):
         times_ = []
         amps_ = []
         for event_ in self.RMPEs:
             for channel_ in event_.SiPM:
+                if channel is not None:
+                    if channel_.ch != channel:
+                        continue
                 self.reducedChiSqs.append(channel_.redChiSq)
                 if len(channel_.pes) > 0:
                     for PE in channel_.pes:
@@ -101,34 +104,52 @@ class RecoMoreFitExaminer:
         plt.imshow(H, origin='lower',
                    extent=[xEdges[0], xEdges[-1], yEdges[0], yEdges[-1]], aspect='auto', norm=LogNorm())
         plt.ylabel('Amplitude (V)')
-        plt.xlabel('Time (ns)')
+        plt.xlabel('Time since first PE in waveform (ns)')
         plt.show()
 
-    def plotSumAmps(self, channel: int):
-        sumPES = []
+    def plotSumAmps(self, channel: int = None, PEThresh: float = 0):
+        sumPES = {}
+        minRunSum = 1000
+        maxRunSum = 0
 
         for event_ in self.RMPEs:
             for channel_ in event_.SiPM:
-                if channel_.ch == channel:
-                    runSum = 0
-                    for PE in channel_.pes:
+                if channel is not None:
+                    if channel_.ch != channel:
+                        continue
+                runSum = 0
+                for PE in channel_.pes:
+                    if PE.amplitude > PEThresh:
                         runSum += PE.amplitude
-                    if runSum > 0:
-                        sumPES.append(runSum)
-        plt.hist(sumPES, bins=300)
+                if runSum > 0:
+                    if channel_.ch not in sumPES:
+                        sumPES[channel_.ch] = []
+                    sumPES[channel_.ch].append(runSum)
+
+                    if runSum > maxRunSum:
+                        maxRunSum = runSum
+                    if runSum < minRunSum:
+                        minRunSum = runSum
+
+        bins = np.linspace(minRunSum, maxRunSum, 300)
+        for key, val in sumPES.items():
+            plt.hist(val, bins=bins, label='{}'.format(key), histtype='step')
+
         plt.xlabel("Summed amplitude (V)")
+        plt.legend()
         plt.show()
 
 
 if __name__ == "__main__":
-    # recoMoreFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R193/R193PES.dat"
-    # rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R193/R193.bin"
-    recoMoreFileName = "/home/josh/CLionProjects/RecoMore/data/R22120801PES.dat"
-    rawFileName = "/home/josh/CLionProjects/RecoMore/data/R22120801.bin"
+    run = 195
+    recoMoreFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R{}/R{}PES.dat".format(run, run)
+    rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R{}/R{}.bin".format(run, run)
+    # recoMoreFileName = "/home/josh/CLionProjects/RecoMore/data/R22120801PES.dat"
+    # rawFileName = "/home/josh/CLionProjects/RecoMore/data/R22120801.bin"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
-    # examiner.plotAllEvents()
-    examiner.plotSumAmps(1)
+    examiner.plotAllEvents()
+    examiner.plotSumAmps(channel=3, PEThresh=0.01)
     examiner.timeAmpCorrelation()
     examiner.plotAmps()
     examiner.plotTimes()
