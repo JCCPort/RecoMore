@@ -43,6 +43,7 @@ int main(int argc, char** argv) {
 	program.add_argument("--skip_channels")
 		.nargs(argparse::nargs_pattern::any)
 		.default_value(skipChannels)
+		.scan<'i', int>()
 		.help("Channels to skip. Space separated.");
 	program.add_argument("--save_waveforms")
 		.default_value(false)
