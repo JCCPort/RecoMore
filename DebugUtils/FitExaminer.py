@@ -160,7 +160,7 @@ if __name__ == "__main__":
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
     # examiner.plotAllEvents()
-    examiner.plotSumAmps(PEThresh=0.004)
+    examiner.plotSumAmps(PEThresh=0.00)
     examiner.timeAmpCorrelation()
     examiner.plotAmps()
     examiner.plotTimes()
