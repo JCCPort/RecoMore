@@ -87,13 +87,13 @@ struct EventFitData{
 
 class [[maybe_unused]] FitParams {
 public:
-	FitParams(unsigned int, double, std::vector<double>, std::vector<double>);
+	[[maybe_unused]] FitParams(unsigned int, double, std::vector<double>, std::vector<double>);
 
-	FitParams(double, const std::vector<PEData> &);
+	[[maybe_unused]] FitParams(double, const std::vector<PEData> &);
 
-	std::vector<double *> makeFitterParams();
+	[[maybe_unused]] std::vector<double *> makeFitterParams();
 
-	std::vector<float> makeGuesserParams();
+	[[maybe_unused]] std::vector<float> makeGuesserParams();
 
 	unsigned int numPEs_;
 	std::vector<double> params;

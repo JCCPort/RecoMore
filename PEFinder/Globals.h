@@ -9,27 +9,27 @@ extern const int pdfNSamples; // Expected number of rows in ideal waveform file.
 
 extern const float pdfSamplingRate; // Sampling rate used to create ideal waveforms.
 
-extern const int pdfT0Sample;
-extern const float PEFinderTimeOffset;
-extern const float pdfResidualRMS;
+// TODO(josh): Should pdfT0Sample be used somewhere it currently isn't being used. Probably not given how well things are working.
+extern const int pdfT0Sample; // Index corresponding to T=0 in ideal waveforms.
+extern const float pdfResidualRMS; // Average RMS in amplitude for a point on the waveform. Used as uncertainty in y value for chi-sq calculation.
 
-extern double              meanReducedChiSq;
-extern std::vector<double> reducedChiSqs;
+extern double meanReducedChiSq; // Average reduced chi-sq, printed at end of run to quickly check things are working/a change improved things.
+extern std::vector<double> reducedChiSqs; // Used for making CSV of reduced chi-sq for debugging. DEPRECATED.
 
 extern const float samplingRate2Inv; // Effectively the data sampling rate... should probably just have that
 extern const float pdfT0SampleConv; // Conversion of sampling rate to a double
 
 extern const double WFSigThresh; // Threshold for considering either PEs or after-pulses (V).
-extern const int maxPEs;
+extern const int maxPEs;  // Maximum number of PEs RecoMore will find before stopping looking and doing the fit.
 
-extern float ampDiff;
-extern float timeDiff;
-extern float baselineDiff;
+extern float ampDiff; // Running average of the difference between initial amplitude guess and amplitude fit value.
+extern float timeDiff; // Running average of the difference between initial time guess and time fit value.
+extern float baselineDiff; // Running average of the difference between initial baseline guess and baseline fit value.
 
 extern int sysProcPECount; // Count of number of PEs processed during entire application run. Used to calculate average error in parameter estimate.
 extern int sysProcWFCount; // Count of number of waveforms processed during entire application run. Used for average reduced chiSq.
 
-extern bool saveWaveforms;
-extern unsigned int waveformCount;
+extern bool saveWaveforms; // Save debug CSVs or not. This is DEPRECATED and will be removed in the future.
+extern unsigned int waveformCount; // Count of waveform number used for outputting debug CSVs.
 
 #endif //RECOMORE_GLOBALS_H

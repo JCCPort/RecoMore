@@ -7,7 +7,7 @@ void WCData::addRow(const EventData &wf) {
 
 
 // TODO(josh): Implement this at some point to reduce the number of different ways the parameters are stored and moved.
-FitParams::FitParams(unsigned int numPEs, double baseline, std::vector<double> amplitudes, std::vector<double> times) {
+[[maybe_unused]] FitParams::FitParams(unsigned int numPEs, double baseline, std::vector<double> amplitudes, std::vector<double> times) {
 	numPEs_ = numPEs;
 	params.emplace_back(baseline);
 	if (amplitudes.size() != times.size()) {
@@ -20,7 +20,7 @@ FitParams::FitParams(unsigned int numPEs, double baseline, std::vector<double> a
 }
 
 
-FitParams::FitParams(double baseline, const std::vector<PEData> &PEs) {
+[[maybe_unused]] FitParams::FitParams(double baseline, const std::vector<PEData> &PEs) {
 	numPEs_ = PEs.size();
 	params.push_back(baseline);
 	for (auto &pe: PEs) {
@@ -30,7 +30,7 @@ FitParams::FitParams(double baseline, const std::vector<PEData> &PEs) {
 }
 
 
-std::vector<double *> FitParams::makeFitterParams() {
+[[maybe_unused]] std::vector<double *> FitParams::makeFitterParams() {
 	std::vector<double *> temp_;
 	temp_.reserve(params.size());
 for (auto &param: params) {
@@ -39,7 +39,7 @@ for (auto &param: params) {
 	return temp_;
 }
 
-std::vector<float> FitParams::makeGuesserParams() {
+[[maybe_unused]] std::vector<float> FitParams::makeGuesserParams() {
 	std::vector<float> temp_;
 	temp_.push_back((float) numPEs_);
 	for (auto param: params) {

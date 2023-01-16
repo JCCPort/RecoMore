@@ -2,8 +2,6 @@
 #include <boost/algorithm/string/classification.hpp>
 #include "../include/DataWriting.h"
 
-// TODO(josh): the call to _sf->write must be done at the end of the event (more precisely the end of each unit of data
-//  processed by a single call to the fitting function).
 /**
  *
  * @param PEVar

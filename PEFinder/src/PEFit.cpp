@@ -273,7 +273,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		
 		std::vector<PEData> FitPEs;
 		for (int            k = 0; k < pesFound.size(); k++) {
-			PEData pe;
+			PEData pe{};
 			pe.amplitude = float(amplitudes[k]);
 			pe.time      = float(times[k]);
 			FitPEs.push_back(pe);
