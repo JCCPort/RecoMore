@@ -83,7 +83,7 @@ class RecoMoreFitExaminer:
     def plotAmps(self):
         plt.hist(self.amps, bins=300)
         plt.xlabel("PE amplitudes (V)")
-        plt.yscale('log')
+        # plt.yscale('log')
         plt.show()
 
     def plotTimes(self):
@@ -159,8 +159,8 @@ if __name__ == "__main__":
     rawFileName = "/home/josh/CLionProjects/RecoMore/data/SiC_75_54V.dat"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
-    # examiner.plotAllEvents()
-    examiner.plotSumAmps(PEThresh=0.00)
+    examiner.plotAllEvents()
+    examiner.plotSumAmps(PEThresh=0.008)
     examiner.timeAmpCorrelation()
     examiner.plotAmps()
     examiner.plotTimes()

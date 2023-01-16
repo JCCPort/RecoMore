@@ -90,15 +90,15 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		// Baseline calculation
 		float initBaseline = averageVector(WFData.waveform, 2);
 		chFit.baseline = initBaseline;
-		float oldBaseline;
-		
+
 		// Start loop that will break when no more PEs are present
 		std::vector<PEData> pesFound;
 		unsigned int        numPEsFound = 0;
 		
 		// This is getting estimate PEs that will then be passed as initial guesses to the minimiser.
 		PEData guessPE{};
-		
+
+		// Initial baseline removal.
 		for (float &k: residualWF.waveform) {
 			k = k - initBaseline;
 		}
@@ -147,7 +147,8 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 				writeVector("residual_" + std::to_string(waveformCount) + ".csv", residualWF.waveform);
 			}
 			/** ================================================= **/
-			
+
+			// Keep correcting baseline as new PEs are found.
 			if(!pesFound.empty()){
 				initBaseline = averageVector(residualWF.waveform, 2);
 				for (float &k: residualWF.waveform) {
@@ -166,28 +167,6 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			
 			guessPE.amplitude = -residualWF.waveform[minTimePos];
 			guessPE.time      = float(minTimePos) * pdfSamplingRate;
-			
-			
-			// This is effectively checking in what direction the residual is skewed.
-			// (t1*a1)/(a1*a2*a3) + (t2*a2)/(a1*a2*a3) + (t3*a3)/(a1*a2*a3)
-			// If the estimated PE time is larger than truth the residual will be negative on the left,
-			// and positive on the right (of the PE time), this means a1/(a1*a2*a3) will be less than one,
-			// and a3/(a1+a2+a3) will be greater than one, shifting the time to the right...
-//			if ((minTimePos > 1) && (minTimePos < residualWF.waveform.size() - 1)) {
-//				// improve initial time for a new PE based on average time
-//				// over 3 consecutive sample ponderated by the amplitude
-//				// of each sample... help a lot to resolve PEs very close!
-//				float            timeSum        = 0;
-//				float            ponderationSum = 0;
-//				for (unsigned int b = minTimePos - 1; b <= minTimePos + 1; ++b) {
-//					float binCenter = ((float)b - 0.5f) * (pdfSamplingRate);
-//					float binVal    = residualWF.waveform[b];
-//					timeSum += binCenter * binVal;
-//					ponderationSum += binVal;
-//				}
-//				guessPE.time = (PEFinderTimeOffset * 0.1f) + timeSum / ponderationSum;
-//			}
-			// Changing the multiple of PEFinerTimeOffset affects speed and chisq significantly
 			
 			numPEsFound += 1;
 			pesFound.push_back(guessPE);
@@ -255,8 +234,9 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		for ([[maybe_unused]] auto pe: pesFound) {
 			costFunction->AddParameterBlock(2); // Params for one PE
 		}
-		
-		std::vector<double *> parameterBlocks; // Formatting parameters to allow grouping of params for one PE
+
+		// Formatting parameters to allow grouping of params for one PE
+		std::vector<double *> parameterBlocks;
 		double                x1[] = {*params[0]};
 		parameterBlocks.push_back(x1);
 		auto **x2 = new double *[pesFound.size()];
@@ -266,8 +246,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			x2[i-1][1] = *params[2 * i];
 			parameterBlocks.push_back(x2[i - 1]);
 		}
-		
-		
+
 		auto lossFunction(new ceres::ArctanLoss(WFSigThresh));
 		
 		problem.AddResidualBlock(costFunction, lossFunction, parameterBlocks);
@@ -286,8 +265,6 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		Solve(options, &problem, &summary);
 
 //        std::cout << summary.FullReport() << "\n";
-		
-		
 		
 		// Going back from ideal waveform PDF index to time
 		for (double &time: times) {
@@ -313,9 +290,6 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			finalParams.push_back((float) PE.time);
 		}
 
-//		delete idealPDFInterpolator;
-		
-		// TODO(josh): ChiSq calculation needs improvement/validating.
 		float            chiSq    = 0;
 		for (unsigned int j        = 0; j < WFData.waveform.size(); j++) {
 			const float observed = WFData.waveform[j];
