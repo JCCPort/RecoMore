@@ -69,7 +69,6 @@ int main(int argc, char** argv) {
 	WCData data = ReadWCDataFile(inputFileName);
 	std::shared_ptr<SyncFile> file;
 	bool textOutput = program.get<bool>("--txt-output");
-	std::cout<<textOutput<<std::endl;
 	if(!textOutput) {
 	  file = std::make_shared<SyncFile>(outputFileName, binary);
 	} else {
