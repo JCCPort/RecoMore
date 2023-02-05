@@ -6,6 +6,8 @@
 #include <fstream>
 #include <iomanip>
 #include <boost/archive/binary_iarchive.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
 #include "../include/DataReading.h"
 
 template <typename T>
@@ -338,9 +340,13 @@ std::vector<EventFitData> ReadRecoMoreOutput(const std::string &fileName){
 					std::string lineString = std::string(line);
 					std::string token2 = lineString.substr(0, lineString.find('\n'));
 					
-					PEData PE;
-					PE.amplitude = std::stof(token2.substr(0, ','));
-					PE.time = std::stof(token2.substr(1, ','));
+					PEData PE{};
+					
+					std::vector<std::string> ampTimeSplitStr;
+					boost::split(ampTimeSplitStr, token2, boost::is_any_of(","));
+					
+					PE.amplitude = std::stof(ampTimeSplitStr[0]);
+					PE.time = std::stof(ampTimeSplitStr[1]);
 					
 					channelData.pes.push_back(PE);
 					

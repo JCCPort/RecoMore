@@ -64,54 +64,57 @@ int main(int argc, char** argv) {
 	saveWaveforms = program.get<bool>("--save_waveforms");
 	
 	WCData data = ReadWCDataFile(inputFileName);
-	auto file = std::make_shared<SyncFile>(outputFileName, binary);
-	Writer writer(file);
-
-	static std::atomic<unsigned long> count{0};
-	std::mutex m;
-
-	std::vector<std::vector<double>> idealWaveforms{64};
-	for (int ch = 0; ch < 64; ch++) {
-		if (std::count(skipChannels.begin(), skipChannels.end(), ch)) {
-			continue;
-		}
-		idealWaveforms.at(ch) = readIdealWFs(ch, 10, pdfDir, pdfNSamples);
-	}
-
-	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(m),
-	                           data.getEvents().size());
-
-	if (numThreads == 1) {
-		fitBatchPEs(data.getEvents(), count, m, &idealWaveforms, file);
-	} else {
-		// Determining how many events each thread should run over.
-		unsigned int threadRepeatCount[batchNumber];
-		unsigned int threadsWithExtra = data.getEvents().size() % batchNumber;
-		unsigned int minRepeatsPerThread = data.getEvents().size() / batchNumber;
-
-		for (unsigned int i = 0; i < batchNumber; i++) {
-			if (i < threadsWithExtra) {
-				threadRepeatCount[i] = minRepeatsPerThread + 1;
-			} else {
-				threadRepeatCount[i] = minRepeatsPerThread;
-			}
-		}
-
-		ThreadPool pool(numThreads);
-
-		unsigned int eventPos = 0;
-		for(int i = 0; i < batchNumber; i++){
-			std::vector passData = slice(data.getEvents(), eventPos, eventPos + threadRepeatCount[i] - 1);
-			pool.push_task(fitBatchPEs, passData, std::reference_wrapper(count), std::reference_wrapper(m), &idealWaveforms,
-			               file);
-			eventPos += threadRepeatCount[i];
-		}
-	}
-
-	progressThread.join();
-
-	file->closeFile();
-	std::cout << "Mean reduced ChiSq:\t" << meanReducedChiSq << std::endl;
-
-	return 0;
+	auto fuck = ReadRecoMoreOutput("/Users/joshuaporter/CLionProjects/RecoMore/DebugUtils/testData/RUN_940PES.dat");
+	
+	std::cout << "fuck" << std::endl;
+//	auto file = std::make_shared<SyncFile>(outputFileName, text);
+//	Writer writer(file);
+//
+//	static std::atomic<unsigned long> count{0};
+//	std::mutex m;
+//
+//	std::vector<std::vector<double>> idealWaveforms{64};
+//	for (int ch = 0; ch < 64; ch++) {
+//		if (std::count(skipChannels.begin(), skipChannels.end(), ch)) {
+//			continue;
+//		}
+//		idealWaveforms.at(ch) = readIdealWFs(ch, 10, pdfDir, pdfNSamples);
+//	}
+//
+//	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(m),
+//	                           data.getEvents().size());
+//
+//	if (numThreads == 1) {
+//		fitBatchPEs(data.getEvents(), count, m, &idealWaveforms, file);
+//	} else {
+//		// Determining how many events each thread should run over.
+//		unsigned int threadRepeatCount[batchNumber];
+//		unsigned int threadsWithExtra = data.getEvents().size() % batchNumber;
+//		unsigned int minRepeatsPerThread = data.getEvents().size() / batchNumber;
+//
+//		for (unsigned int i = 0; i < batchNumber; i++) {
+//			if (i < threadsWithExtra) {
+//				threadRepeatCount[i] = minRepeatsPerThread + 1;
+//			} else {
+//				threadRepeatCount[i] = minRepeatsPerThread;
+//			}
+//		}
+//
+//		ThreadPool pool(numThreads);
+//
+//		unsigned int eventPos = 0;
+//		for(int i = 0; i < batchNumber; i++){
+//			std::vector passData = slice(data.getEvents(), eventPos, eventPos + threadRepeatCount[i] - 1);
+//			pool.push_task(fitBatchPEs, passData, std::reference_wrapper(count), std::reference_wrapper(m), &idealWaveforms,
+//			               file);
+//			eventPos += threadRepeatCount[i];
+//		}
+//	}
+//
+//	progressThread.join();
+//
+//	file->closeFile();
+//	std::cout << "Mean reduced ChiSq:\t" << meanReducedChiSq << std::endl;
+//
+//	return 0;
 }
