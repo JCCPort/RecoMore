@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
-from tabulate import tabulate
+# from tabulate import tabulate
 
 
 def hitAmpDistribution(x, A, c, mu, Q, sigma1, sigma2, ratio):
@@ -56,11 +56,11 @@ def fit(amps):
     displayPOpt.append(reducedChiSq[3])
 
     # TODO(josh): Add this to be displayed on the graph
-    print(tabulate([p0, bounds[0], bounds[1], displayPOpt],
-                   headers=['A', 'c', 'mu', 'Q', 'sigma1', 'sigma2', 'ratio', 'reducedChiSq'],
-                   showindex=["Initial guess", "Lower bound", "Upper bound", "Fit"],
-                   floatfmt=['.1f', '.2f', '.4f', '.2f', '.3f', '.5f', '.5f', '.2f', '.2f'],
-                   numalign='left'))
+    # print(tabulate([p0, bounds[0], bounds[1], displayPOpt],
+    #                headers=['A', 'c', 'mu', 'Q', 'sigma1', 'sigma2', 'ratio', 'reducedChiSq'],
+    #                showindex=["Initial guess", "Lower bound", "Upper bound", "Fit"],
+    #                floatfmt=['.1f', '.2f', '.4f', '.2f', '.3f', '.5f', '.5f', '.2f', '.2f'],
+    #                numalign='left'))
 
     plt.plot(fitVals, hitAmpDistribution(fitVals, *pOpt), label="Fit")
     plt.step(bins, n, label="Data")

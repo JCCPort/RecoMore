@@ -14,7 +14,7 @@ class RecoMoreFitExaminer:
         :param rawDataPath: Path to the run's raw data file.
         :param recoMoreDataPath: Path to the run's processed RecoMore file.
         """
-        self.RMPEs = ReadRecoMoreBinaryOutput(recoMoreDataPath)
+        self.RMPEs = ReadRecoMoreOutput(recoMoreDataPath)
         self.rawWFs = ReadWCDataFile(rawDataPath)
 
         self.reducedChiSqs = []
@@ -155,8 +155,8 @@ class RecoMoreFitExaminer:
 if __name__ == "__main__":
     # recoMoreFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R193/R193PES.dat"
     # rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R193/R193.bin"
-    recoMoreFileName = "/home/josh/CLionProjects/RecoMore/data/SiC_75_54VPES.dat"
-    rawFileName = "/home/josh/CLionProjects/RecoMore/data/SiC_75_54V.dat"
+    recoMoreFileName = "/Users/joshuaporter/CLionProjects/RecoMore/DebugUtils/testData/RUN_940PES.dat"
+    rawFileName = "/Users/joshuaporter/CLionProjects/RecoMore/DebugUtils/testData/RUN_940.bin"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
     examiner.plotAllEvents()
