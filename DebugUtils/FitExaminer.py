@@ -20,7 +20,7 @@ class RecoMoreFitExaminer:
         self.reducedChiSqs = []
         self.amps = []
         self.times = []
-        for event_ in self.RMPEs:
+        for event_ in self.RMPEs.getFitEvents():
             for channel_ in event_.SiPM:
                 self.reducedChiSqs.append(channel_.redChiSq)
                 if len(channel_.pes) > 0:
@@ -35,18 +35,8 @@ class RecoMoreFitExaminer:
         :param channelNumber:
         :return:
         """
-        RMEvent = None
-        rawEvent = None
-        for event_ in self.RMPEs:
-            if eventID == event_.eventID:
-                for channel in event_.SiPM:
-                    if channelNumber == channel.ch:
-                        RMEvent = channel
-
-        WF_ = self.rawWFs.getEvent(eventID)
-        for channelWF in WF_.chData:
-            if channelWF.channel == channelNumber:
-                rawEvent = channelWF
+        RMEvent = self.RMPEs.getChannelFit(eventID, channelNumber)
+        rawEvent = self.rawWFs.getChannelWaveform(eventID, channelNumber)
 
         return RMEvent, rawEvent
 
@@ -76,7 +66,7 @@ class RecoMoreFitExaminer:
         plt.show()
 
     def plotAllEvents(self, numPEThresh: int = 0):
-        for event_ in self.RMPEs:
+        for event_ in self.RMPEs.getFitEvents():
             for channel in event_.SiPM:
                 if len(channel.pes) > numPEThresh:
                     self.plotSingleEvent(eventID=event_.eventID, channelNumber=channel.ch)
@@ -100,7 +90,7 @@ class RecoMoreFitExaminer:
     def timeAmpCorrelation(self, channel=None):
         times_ = []
         amps_ = []
-        for event_ in self.RMPEs:
+        for event_ in self.RMPEs.getFitEvents():
             for channel_ in event_.SiPM:
                 if channel is not None:
                     if channel_.ch != channel:
@@ -124,7 +114,7 @@ class RecoMoreFitExaminer:
         minRunSum = 1000
         maxRunSum = 0
 
-        for event_ in self.RMPEs:
+        for event_ in self.RMPEs.getFitEvents():
             for channel_ in event_.SiPM:
                 if channel is not None:
                     if channel_.ch != channel:
@@ -160,8 +150,8 @@ if __name__ == "__main__":
     rawFileName = "/Users/joshuaporter/CLionProjects/RecoMore/DebugUtils/testData/RUN_940.bin"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
-    examiner.plotAllEvents(4)
-    examiner.plotSumAmps(PEThresh=0.008)
+    # examiner.plotAllEvents(4)
+    # examiner.plotSumAmps(PEThresh=0.008)
     examiner.timeAmpCorrelation()
     examiner.plotAmps()
     examiner.plotTimes()
