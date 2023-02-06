@@ -22,21 +22,21 @@ PYBIND11_MODULE(CReader, m) {
 			.def_readwrite("foundTime", &PEData::foundTime);
 	
 	py::class_<ChannelFitData>(m, "ChannelFitData", py::dynamic_attr())
-	        .def(py::init<const unsigned short&, const float&, const float&, const std::vector<PEData>&>())
+			.def(py::init<const unsigned short&, const float&, const float&, const std::vector<PEData>&>())
 			.def_readwrite("ch", &ChannelFitData::ch)
 			.def_readwrite("redChiSq", &ChannelFitData::redChiSq)
 			.def_readwrite("baseline", &ChannelFitData::baseline)
 			.def_readwrite("pes", &ChannelFitData::pes);
 	
 	py::class_<EventFitData>(m, "EventFitData", py::dynamic_attr())
-	        .def(py::init<const unsigned int&, const std::string&, const std::string&, const std::vector<ChannelFitData>>())
+			.def(py::init<const unsigned int&, const std::string&, const std::string&, const std::vector<ChannelFitData>>())
 			.def_readwrite("eventID", &EventFitData::eventID)
 			.def_readwrite("TDCCorrTime", &EventFitData::TDCCorrTime)
 			.def_readwrite("date", &EventFitData::date)
 			.def_readwrite("SiPM", &EventFitData::SiPM);
 	
 	py::class_<ChannelData>(m, "ChannelData", py::dynamic_attr())
-	        .def(py::init<const unsigned short&, const std::vector<float>&>())
+			.def(py::init<const unsigned short&, const std::vector<float>&>())
 			.def_readwrite("channel", &ChannelData::channel)
 			.def_readwrite("waveform", &ChannelData::waveform);
 	
@@ -48,14 +48,23 @@ PYBIND11_MODULE(CReader, m) {
 			.def_readwrite("chData", &EventData::chData);
 	
 	py::class_<WCData>(m, "WCData")
-	        .def("addRow", &WCData::addRow, "Add entry row to WCData")
-			.def("getEvents", &WCData::getEvents, "Get rows");
+			.def("addRow", &WCData::addRow, "Add entry row to WCData")
+			.def("getEvents", &WCData::getEvents, "Get all events")
+			.def("getEvent", &WCData::getEvent, "Get event by event number")
+			.def("getChannelWaveform", &WCData::getChannelWaveform, "Get channel waveform by event and channel number");
+	
+	py::class_<FitData>(m, "FitData")
+			.def("addRow", &FitData::addRow, "Add entry row to FitData")
+			.def("getFitEvents", &FitData::getFitEvents, "Get all fit events")
+			.def("getEventFit", &FitData::getEventFit, "Get event fit by event number")
+			.def("getChannelFit", &FitData::getChannelFit, "Get channel fit by event and channel number");
 	
 	m.def("ReadWCDataFileDat", &ReadWCDataFileDat, "Read plain text WaveCatcher data files.");
 	m.def("ReadWCDataFileBinary", &ReadWCDataFileBinary, "Read binary WaveCatcher data files.");
 	m.def("ReadWCDataFile", &ReadWCDataFile, "Read WaveCatcher data files.");
 	m.def("ReadRecoMoreOutput", &ReadRecoMoreOutput, "Read RecoMore output text files.");
 	m.def("ReadRecoMoreBinaryOutput", &ReadRecoMoreBinaryOutput, "Read RecoMore output binary files.");
+	m.def("ReadRecoMoreOutput", &ReadRecoMoreOutput, "Read RecoMore output files.");
 
 #ifdef VERSION_INFO
 	m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

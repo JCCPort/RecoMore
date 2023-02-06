@@ -5,6 +5,55 @@ void WCData::addRow(const EventData &wf) {
 	events_.emplace_back(wf);
 }
 
+EventData WCData::getEvent(int eventNumber) {
+	for(auto & event : events_){
+		if(event.eventID == eventNumber){
+			return event;
+		}
+	}
+}
+
+ChannelData WCData::getChannelWaveform(int eventNumber, int channelNumber) {
+	for(auto & event : events_){
+		if(event.eventID == eventNumber){
+			for(auto & channelWF : event.chData){
+				if(channelWF.channel == channelNumber){
+					return channelWF;
+				}
+			}
+		}
+	}
+}
+
+
+void FitData::addRow(const EventFitData &eventFit) {
+	fitEvents_.emplace_back(eventFit);
+}
+
+EventFitData FitData::getEventFit(int eventNumber) {
+	for(auto & event : fitEvents_){
+		if(event.eventID == eventNumber){
+			return event;
+		}
+	}
+}
+
+ChannelFitData FitData::getChannelFit(int eventNumber, int channelNumber) {
+	for(auto & event : fitEvents_){
+		if(event.eventID == eventNumber){
+			for(auto & channelWF : event.SiPM){
+				if(channelWF.ch == channelNumber){
+					return channelWF;
+				}
+			}
+		}
+	}
+}
+
+void FitData::setRows(const std::vector<EventFitData> &setData) {
+	fitEvents_ = setData;
+}
+
 
 // TODO(josh): Implement this at some point to reduce the number of different ways the parameters are stored and moved.
 [[maybe_unused]] FitParams::FitParams(unsigned int numPEs, double baseline, std::vector<double> amplitudes, std::vector<double> times) {
@@ -33,7 +82,7 @@ void WCData::addRow(const EventData &wf) {
 [[maybe_unused]] std::vector<double *> FitParams::makeFitterParams() {
 	std::vector<double *> temp_;
 	temp_.reserve(params.size());
-for (auto &param: params) {
+	for (auto &param: params) {
 		temp_.push_back(&param);
 	}
 	return temp_;
