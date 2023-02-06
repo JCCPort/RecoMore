@@ -27,6 +27,10 @@ int main(int argc, char** argv) {
 		.help("Path to raw data file (.dat or .bin).");
 	program.add_argument("-o", "--output")
 		.help("Path for output reco file. Defaults to input file name with 'PES' appended.");
+	program.add_argument("--txt-output")
+         	.default_value(false)
+	        .implicit_value(true)
+		.help("Output reco file saved as text. Binary is default.");
 	program.add_argument("--pdf_dir")
 		.default_value(std::string("../pdf/"))
 		.help("Path for ideal PDFs to use for fitting.");
@@ -62,9 +66,16 @@ int main(int argc, char** argv) {
 	unsigned int batchNumber = program.get<int>("--num_batches");
 	skipChannels = program.get<std::vector<int>>("--skip_channels");
 	saveWaveforms = program.get<bool>("--save_waveforms");
-	
 	WCData data = ReadWCDataFile(inputFileName);
-	auto file = std::make_shared<SyncFile>(outputFileName, text);
+  
+	std::shared_ptr<SyncFile> file;
+	bool textOutput = program.get<bool>("--txt-output");
+	if(!textOutput) {
+	  file = std::make_shared<SyncFile>(outputFileName, binary);
+	} else {
+	  file = std::make_shared<SyncFile>(outputFileName, text);
+	}
+
 	Writer writer(file);
 
 	static std::atomic<unsigned long> count{0};
