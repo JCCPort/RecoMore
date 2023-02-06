@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
 	skipChannels = program.get<std::vector<int>>("--skip_channels");
 	saveWaveforms = program.get<bool>("--save_waveforms");
 	WCData data = ReadWCDataFile(inputFileName);
-  
+ 
 	std::shared_ptr<SyncFile> file;
 	bool textOutput = program.get<bool>("--txt-output");
 	if(!textOutput) {

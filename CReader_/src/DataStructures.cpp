@@ -30,6 +30,10 @@ void FitData::addRow(const EventFitData &eventFit) {
 	fitEvents_.emplace_back(eventFit);
 }
 
+void FitData::setRows(const std::vector<EventFitData> &setData) {
+	fitEvents_ = setData;
+}
+
 EventFitData FitData::getEventFit(int eventNumber) {
 	for(auto & event : fitEvents_){
 		if(event.eventID == eventNumber){
@@ -48,10 +52,6 @@ ChannelFitData FitData::getChannelFit(int eventNumber, int channelNumber) {
 			}
 		}
 	}
-}
-
-void FitData::setRows(const std::vector<EventFitData> &setData) {
-	fitEvents_ = setData;
 }
 
 

@@ -55,6 +55,7 @@ PYBIND11_MODULE(CReader, m) {
 	
 	py::class_<FitData>(m, "FitData")
 			.def("addRow", &FitData::addRow, "Add entry row to FitData")
+			.def("setRows", &FitData::setRows, "Set whole event fit vector at once.")
 			.def("getFitEvents", &FitData::getFitEvents, "Get all fit events")
 			.def("getEventFit", &FitData::getEventFit, "Get event fit by event number")
 			.def("getChannelFit", &FitData::getChannelFit, "Get channel fit by event and channel number");
@@ -62,7 +63,7 @@ PYBIND11_MODULE(CReader, m) {
 	m.def("ReadWCDataFileDat", &ReadWCDataFileDat, "Read plain text WaveCatcher data files.");
 	m.def("ReadWCDataFileBinary", &ReadWCDataFileBinary, "Read binary WaveCatcher data files.");
 	m.def("ReadWCDataFile", &ReadWCDataFile, "Read WaveCatcher data files.");
-	m.def("ReadRecoMoreOutput", &ReadRecoMoreOutput, "Read RecoMore output text files.");
+	m.def("ReadRecoMoreTextOutput", &ReadRecoMoreTextOutput, "Read RecoMore output text files.");
 	m.def("ReadRecoMoreBinaryOutput", &ReadRecoMoreBinaryOutput, "Read RecoMore output binary files.");
 	m.def("ReadRecoMoreOutput", &ReadRecoMoreOutput, "Read RecoMore output files.");
 

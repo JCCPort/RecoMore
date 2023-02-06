@@ -295,12 +295,12 @@ readIdealWFs(unsigned int ch, int interpFactor, const std::string &idealWFDir, u
  * @param fileName Path to the RecoMore data file you want to read.
  * @return RecoMore data events parsed into a FitData instance that contains a list of fit events.
  */
-FitData ReadRecoMoreFile(const std::string &fileName){
+FitData ReadRecoMoreOutput(const std::string &fileName){
 	// TODO(josh): Add error checking to if the data file is corrupted/invalid
 	std::string ending = fileName.substr(fileName.length() - 4);
 	FitData returnDat;
 	if(ending == ".dat"){
-		returnDat = ReadRecoMoreOutput(fileName);
+		returnDat = ReadRecoMoreTextOutput(fileName);
 	}
 	else if(ending == ".bin"){
 		returnDat = ReadRecoMoreBinaryOutput(fileName);
@@ -317,7 +317,7 @@ FitData ReadRecoMoreFile(const std::string &fileName){
  * @param fileName Path to RecoMore output file to be read.
  * @return Vector of events.
  */
-FitData ReadRecoMoreOutput(const std::string &fileName){
+FitData ReadRecoMoreTextOutput(const std::string &fileName){
 	std::regex eventHeaderRegex(R"(EVENT=(\d*), DATE=(\d*\.\d*\.\d*), TDCCorrTime=(\d*h\d*m\d*.\d*s))");
 	std::regex channelHeaderRegex(R"(Ch=(\d*), RedChiSq=(\d*.\d*), Baseline=([-+]?\d*.\d*))");
 	

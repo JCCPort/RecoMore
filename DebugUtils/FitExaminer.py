@@ -146,11 +146,11 @@ class RecoMoreFitExaminer:
 if __name__ == "__main__":
     # recoMoreFileName = "/Users/joshuaporter/Library/CloudStorage/OneDrive-UniversityofSussex/liquidOLab/dataSTOP_DO_NOT_WRITE_HERE/WavecatcherRuns/Runs/R193/R193PES.dat"
     # rawFileName = "/Users/joshuaporter/Library/CloudStorage/OneDrive-UniversityofSussex/liquidOLab/dataSTOP_DO_NOT_WRITE_HERE/WavecatcherRuns/Runs/R193/R193.bin"
-    recoMoreFileName = "/Users/joshuaporter/CLionProjects/RecoMore/DebugUtils/testData/RUN_940PES.dat"
-    rawFileName = "/Users/joshuaporter/CLionProjects/RecoMore/DebugUtils/testData/RUN_940.bin"
+    recoMoreFileName = "/Users/joshuaporter/CLionProjects/RecoMore/DebugUtils/testData/R185PES.dat"
+    rawFileName = "/Users/joshuaporter/CLionProjects/RecoMore/DebugUtils/testData/R185.bin"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
-    examiner.plotAllEvents(4)
+    examiner.plotAllEvents(0)
     examiner.plotSumAmps(PEThresh=0.008)
     examiner.timeAmpCorrelation()
     examiner.plotAmps()
