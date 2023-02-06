@@ -150,8 +150,8 @@ if __name__ == "__main__":
     rawFileName = "/Users/joshuaporter/CLionProjects/RecoMore/DebugUtils/testData/RUN_940.bin"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
-    # examiner.plotAllEvents(4)
-    # examiner.plotSumAmps(PEThresh=0.008)
+    examiner.plotAllEvents(4)
+    examiner.plotSumAmps(PEThresh=0.008)
     examiner.timeAmpCorrelation()
     examiner.plotAmps()
     examiner.plotTimes()
