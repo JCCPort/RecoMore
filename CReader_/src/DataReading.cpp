@@ -294,11 +294,11 @@ readIdealWFs(unsigned int ch, int interpFactor, const std::string &idealWFDir, u
  * @param fileName Path to RecoMore output file to be read.
  * @return Vector of events.
  */
-std::vector<EventFitData> ReadRecoMoreOutput(const std::string &fileName){
+FitData ReadRecoMoreOutput(const std::string &fileName){
 	std::regex eventHeaderRegex(R"(EVENT=(\d*), DATE=(\d*\.\d*\.\d*), TDCCorrTime=(\d*h\d*m\d*.\d*s))");
 	std::regex channelHeaderRegex(R"(Ch=(\d*), RedChiSq=(\d*.\d*), Baseline=([-+]?\d*.\d*))");
 	
-	std::vector<EventFitData> events;
+	FitData events;
 	
 	FILE *fp = fopen(fileName.c_str(), "r");
 	std::ifstream input_file(fileName.c_str(), std::ios::binary | std::ios::in);
@@ -356,7 +356,7 @@ std::vector<EventFitData> ReadRecoMoreOutput(const std::string &fileName){
 			}
 			eventData.SiPM.push_back(channelData);
 		}
-		events.push_back(eventData);
+		events.addRow(eventData);
 		getline(&line, &len, fp);
 		getline(&line, &len, fp);
 	}

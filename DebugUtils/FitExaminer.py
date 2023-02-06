@@ -38,15 +38,15 @@ class RecoMoreFitExaminer:
         RMEvent = None
         rawEvent = None
         for event_ in self.RMPEs:
-            for channel in event_.SiPM:
-                if (eventID == event_.eventID) and (channelNumber == channel.ch):
-                    RMEvent = channel
+            if eventID == event_.eventID:
+                for channel in event_.SiPM:
+                    if channelNumber == channel.ch:
+                        RMEvent = channel
 
-        for WF_ in self.rawWFs.getEvents():
-            if WF_.eventID == eventID:
-                for channelWF in WF_.chData:
-                    if channelWF.channel == channelNumber:
-                        rawEvent = channelWF
+        WF_ = self.rawWFs.getEvent(eventID)
+        for channelWF in WF_.chData:
+            if channelWF.channel == channelNumber:
+                rawEvent = channelWF
 
         return RMEvent, rawEvent
 
@@ -75,10 +75,11 @@ class RecoMoreFitExaminer:
         plt.tight_layout()
         plt.show()
 
-    def plotAllEvents(self):
+    def plotAllEvents(self, numPEThresh: int = 0):
         for event_ in self.RMPEs:
             for channel in event_.SiPM:
-                self.plotSingleEvent(eventID=event_.eventID, channelNumber=channel.ch)
+                if len(channel.pes) > numPEThresh:
+                    self.plotSingleEvent(eventID=event_.eventID, channelNumber=channel.ch)
 
     def plotAmps(self):
         plt.hist(self.amps, bins=300)
@@ -153,13 +154,13 @@ class RecoMoreFitExaminer:
 
 
 if __name__ == "__main__":
-    # recoMoreFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R193/R193PES.dat"
-    # rawFileName = "/Users/joshuaporter/OneDrive - University of Sussex/liquidOLab/data/WavecatcherRuns/Runs/R193/R193.bin"
+    # recoMoreFileName = "/Users/joshuaporter/Library/CloudStorage/OneDrive-UniversityofSussex/liquidOLab/dataSTOP_DO_NOT_WRITE_HERE/WavecatcherRuns/Runs/R193/R193PES.dat"
+    # rawFileName = "/Users/joshuaporter/Library/CloudStorage/OneDrive-UniversityofSussex/liquidOLab/dataSTOP_DO_NOT_WRITE_HERE/WavecatcherRuns/Runs/R193/R193.bin"
     recoMoreFileName = "/Users/joshuaporter/CLionProjects/RecoMore/DebugUtils/testData/RUN_940PES.dat"
     rawFileName = "/Users/joshuaporter/CLionProjects/RecoMore/DebugUtils/testData/RUN_940.bin"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
-    examiner.plotAllEvents()
+    examiner.plotAllEvents(4)
     examiner.plotSumAmps(PEThresh=0.008)
     examiner.timeAmpCorrelation()
     examiner.plotAmps()
