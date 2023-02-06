@@ -27,9 +27,9 @@ class WCData {
 public:
 	void addRow(const EventData &);
 	
-	std::vector<EventData> getEvents() { return events_; };
-	EventData getEvent(int eventNumber);
-	ChannelData getChannelWaveform(int eventNumber, int channelNumber);
+	inline std::vector<EventData> getEvents() { return events_; };
+	inline EventData getEvent(int eventNumber);
+	inline ChannelData getChannelWaveform(int eventNumber, int channelNumber);
 private:
 	std::vector<EventData> events_{};
 };
@@ -97,9 +97,9 @@ public:
 	void addRow(const EventFitData &);
 	void setRows(const std::vector<EventFitData> &);
 	
-	std::vector<EventFitData> getFitEvents() { return fitEvents_; };
-	EventFitData getEventFit(int eventNumber);
-	ChannelFitData getChannelFit(int eventNumber, int channelNumber);
+	inline std::vector<EventFitData> getFitEvents() { return fitEvents_; };
+	inline EventFitData getEventFit(int eventNumber);
+	inline ChannelFitData getChannelFit(int eventNumber, int channelNumber);
 private:
 	std::vector<EventFitData> fitEvents_{};
 };
