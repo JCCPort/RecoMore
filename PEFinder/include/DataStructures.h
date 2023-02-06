@@ -95,6 +95,7 @@ struct EventFitData{
 class FitData {
 public:
 	void addRow(const EventFitData &);
+	void setRows(const std::vector<EventFitData> &);
 	
 	std::vector<EventFitData> getFitEvents() { return fitEvents_; };
 	EventFitData getEventFit(int eventNumber);

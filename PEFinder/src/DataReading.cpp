@@ -289,6 +289,29 @@ readIdealWFs(unsigned int ch, int interpFactor, const std::string &idealWFDir, u
 	return waveform;
 }
 
+
+/**
+ * Wrapper around the binary and plaintext RecoMore file readers so that either can be read from the same function call.
+ * @param fileName Path to the RecoMore data file you want to read.
+ * @return RecoMore data events parsed into a FitData instance that contains a list of fit events.
+ */
+FitData ReadRecoMoreFile(const std::string &fileName){
+	// TODO(josh): Add error checking to if the data file is corrupted/invalid
+	std::string ending = fileName.substr(fileName.length() - 4);
+	FitData returnDat;
+	if(ending == ".dat"){
+		returnDat = ReadRecoMoreOutput(fileName);
+	}
+	else if(ending == ".bin"){
+		returnDat = ReadRecoMoreBinaryOutput(fileName);
+	}
+	else{
+		throw std::runtime_error("Provided RecoMore data file (" + fileName + ") is not one of the accepted formats .dat, .bin.");
+	}
+	std::cout << "RecoMore data file read" << std::endl;
+	return returnDat;
+}
+
 /**
  *
  * @param fileName Path to RecoMore output file to be read.
@@ -366,12 +389,14 @@ FitData ReadRecoMoreOutput(const std::string &fileName){
 	return events;
 }
 
-std::vector<EventFitData> ReadRecoMoreBinaryOutput(const std::string &fileName){
+FitData ReadRecoMoreBinaryOutput(const std::string &fileName){
 	std::vector<EventFitData> events;
 	events.reserve(20000);
 	std::ifstream ifs(fileName);
 	boost::archive::binary_iarchive ia(ifs);
 	
 	ia >> events;
-	return events;
+	FitData fitData;
+	fitData.setRows(events);
+	return fitData;
 }

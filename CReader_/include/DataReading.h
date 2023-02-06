@@ -11,8 +11,10 @@ WCData ReadWCDataFileBinary(const std::string &);
 
 std::vector<double> readIdealWFs(unsigned int, int, const std::string &, unsigned int);
 
+FitData ReadRecoMoreFile(const std::string &fileName);
+
 FitData ReadRecoMoreOutput(const std::string &fileName);
 
-std::vector<EventFitData> ReadRecoMoreBinaryOutput(const std::string &fileName);
+FitData ReadRecoMoreBinaryOutput(const std::string &);
 
 #endif //RECOMORE_DATAREADING_H

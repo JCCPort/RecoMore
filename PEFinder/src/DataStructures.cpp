@@ -50,6 +50,10 @@ ChannelFitData FitData::getChannelFit(int eventNumber, int channelNumber) {
 	}
 }
 
+void FitData::setRows(const std::vector<EventFitData> &setData) {
+	fitEvents_ = setData;
+}
+
 
 // TODO(josh): Implement this at some point to reduce the number of different ways the parameters are stored and moved.
 [[maybe_unused]] FitParams::FitParams(unsigned int numPEs, double baseline, std::vector<double> amplitudes, std::vector<double> times) {
