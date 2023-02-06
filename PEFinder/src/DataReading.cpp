@@ -7,6 +7,8 @@
 #include <iomanip>
 #include "../include/DataReading.h"
 #include "../include/Utils.h"
+#include "../../CReader_/include/DataStructures.h"
+#include "../../CReader_/include/DataReading.h"
 #include <boost/archive/binary_iarchive.hpp>
 
 
@@ -286,7 +288,7 @@ readIdealWFs(unsigned int ch, int interpFactor, const std::string &idealWFDir, u
  * @param fileName Path to RecoMore output file to be read.
  * @return Vector of events.
  */
-std::vector<EventFitData> ReadRecoMoreOutput(const std::string &fileName){
+FitData ReadRecoMoreOutput(const std::string &fileName){
 	std::regex eventHeaderRegex(R"(EVENT=(\d*), DATE=(\d*\.\d*\.\d*), TDCCorrTime=(\d*h\d*m\d*.\d*s))");
 	std::regex channelHeaderRegex(R"(Ch=(\d*), RedChiSq=(\d*.\d*), Baseline=([-+]?\d*.\d*))");
 	
