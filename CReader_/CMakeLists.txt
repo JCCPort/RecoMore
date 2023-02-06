@@ -13,13 +13,13 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     set(CMAKE_CXX_FLAGS "-O2 -fprofile-arcs")
 endif ()
 
-#EXECUTE_PROCESS(COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE)
-#set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE INTERNAL "" FORCE)
-#message("${ARCHITECUTRE}")
-#if (NOT "${ARCHITECTURE}" STREQUAL "arm64" AND CMAKE_BUILD_TYPE STREQUAL "Release")
-#    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
-#endif ()
+EXECUTE_PROCESS(COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE)
+set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE INTERNAL "" FORCE)
+message("${ARCHITECUTRE}")
+if (NOT "${ARCHITECTURE}" STREQUAL "arm64" AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+endif ()
 
 #### Finding BOOST
 
