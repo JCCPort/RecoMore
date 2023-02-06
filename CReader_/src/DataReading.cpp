@@ -48,7 +48,7 @@ namespace client {
 	namespace qi = boost::spirit::qi;
 	namespace ascii = boost::spirit::ascii;
 	namespace phoenix = boost::phoenix;
-
+	
 	template<typename Iterator>
 	bool parse_numbers(Iterator first, Iterator last, std::vector<float> &v) {
 		using qi::float_;
@@ -57,16 +57,16 @@ namespace client {
 		using phoenix::push_back;
 		using qi::eol;
 		bool r = phrase_parse(first, last,
-
+				
 				//  Begin grammar
 				              (
 				                      float_[push_back(phoenix::ref(v), _1)]
 						                      >> *(' ' >> float_[push_back(phoenix::ref(v), _1)])
 		                      ),
 				//  End grammar
-
+				
 				              eol);
-
+		
 		if (first != last) // fail if we did not get a full match
 			return false;
 		return r;
@@ -89,55 +89,55 @@ WCData ReadWCDataFileDat(const std::string &fileName) {
 	                     "TDC = (\\d*) == "
 	                     "TDC corrected time = (\\d*h\\d*m\\d*s,\\d*\\.\\d*\\.\\d*ns) == "
 	                     "Nb of channels = (\\d*) ===\r\n)");
-
+	
 	WCData      readData;
 	ChannelData wf;
-
+	
 	FILE *fp = fopen(fileName.c_str(), "r");
 	std::ifstream input_file(fileName.c_str(), std::ios::binary | std::ios::in);
 	if (fp == nullptr) {
 		throw std::runtime_error("WaveCatcher data file: " + fileName + " not found.");
 	}
-
+	
 	char *line = nullptr;
 	size_t len = 0;
-
+	
 	// Skipping lines of unneeded metadata.
 	getline(&line, &len, fp);
 	getline(&line, &len, fp);
 	getline(&line, &len, fp);
 	getline(&line, &len, fp);
 	getline(&line, &len, fp);
-
+	
 	std::cmatch eventMatch;
 	// This loop has should bring the variable `line` to the next line in the data file that gives the event number.
 	//  when it doesn't it means that the end of the file has been reached.
 	while (std::regex_search(&line[0], eventMatch, eventNumberRegex)) {
 		EventData event;
 		event.eventID = stoi(eventMatch[1].str());
-
+		
 		getline(&line, &len, fp);
-
+		
 		std::cmatch timeMatch;
 		std::regex_search(&line[0], timeMatch, timeRegex);
 		event.TDCCorrTime = timeMatch[6].str();
 		event.date = timeMatch[3].str();
-
+		
 		getline(&line, &len, fp);
-
+		
 		std::cmatch channelMatch;
 		// Loop over all the channels for a given event. Will stop being true if you've just parsed the last channel for
 		//  the event.
 		while (std::regex_search(&line[0], channelMatch, channelNumberRegex)) {
 			wf.channel = stoi(channelMatch[1].str());
 			getline(&line, &len, fp);
-
+			
 			std::vector<float> temp;
 			temp.reserve(1024);
 			std::string lineStr = std::string(line);
 			client::parse_numbers(lineStr.begin(), lineStr.end(), temp);
 			wf.waveform = temp;
-
+			
 			event.chData.push_back(wf);
 			getline(&line, &len, fp);
 		}
@@ -179,20 +179,20 @@ struct WCChannelDataNoMeasurement {
 WCData ReadWCDataFileBinary(const std::string &fileName) {
 	WCData      readData;
 	ChannelData wf;
-
+	
 	std::ifstream input_file(fileName.c_str(), std::ios::binary | std::ios::in);
 	if (!input_file) {
 		throw std::runtime_error("WaveCatcher data file: " + fileName + " not found.");
 	}
-
+	
 	std::string line;
-
+	
 	// Skipping lines of unneeded metadata.
 	getline(input_file, line, '\n');
 	getline(input_file, line, '\n');
 	getline(input_file, line, '\n');
 	getline(input_file, line, '\n');
-
+	
 	unsigned long long int previousEventTDC = 0;
 	double previousEventTime = 0;
 	unsigned long long int TDCOverflowCounter = 0;
@@ -204,28 +204,28 @@ WCData ReadWCDataFileBinary(const std::string &fileName) {
 		EventData event;
 		event.eventID = event_.eventNumber;
 		event.date = std::to_string(event_.year) + "." + std::to_string(event_.month) + "." + std::to_string(event_.day);
-
+		
 		if (event_.TDCSAMIndex < previousEventTDC)
 			TDCOverflowCounter++;
-
+		
 		double outputTime = (double)TDCOverflowCounter * TDCMax * TDC2ns + (double)event_.TDCSAMIndex * TDC2ns;
 		double outputDeltaTime = outputTime - previousEventTime;
 		previousEventTime = outputTime;
 		std::string subSec = to_string_with_precision(outputDeltaTime + (event_.millisecond / 1000.), 9);
-
+		
 		std::ostringstream ssh;
 		ssh << std::setw(2) << std::setfill('0') << std::to_string(event_.hour);
-
+		
 		std::ostringstream ssm;
 		ssm << std::setw(2) << std::setfill('0') << std::to_string(event_.minute);
-
+		
 		std::ostringstream sss;
 		sss << std::setw(2) << std::setfill('0') << std::to_string(event_.second);
-
+		
 		event.TDCCorrTime = ssh.str() + "h" + ssm.str() + "m" + sss.str() + "s"
 		                    + "," + subSec.substr(2, 3) + "." + subSec.substr(5, 3) + "." + subSec.substr(8, 3) + "ns";
-
-
+		
+		
 		for(int j = 0; j < event_.nChannelStored; j++){
 			WCChannelDataNoMeasurement waveform{};
 			input_file.read((char *) (&waveform), sizeof(WCChannelDataNoMeasurement));
@@ -256,37 +256,60 @@ std::vector<double>
 readIdealWFs(unsigned int ch, int interpFactor, const std::string &idealWFDir, unsigned int expectedSize) {
 	std::string idealWFPath = idealWFDir + "ch" + std::to_string(ch) + ".txt";
 	std::ifstream idealWFFile(idealWFPath, std::ifstream::in);
-
+	
 	if (!idealWFFile.is_open()) {
 		throw std::runtime_error("Ideal PE PDF: " + idealWFPath + " not found.");
 	}
-
+	
 	double idealWFTime;
 	double idealWFAmp;
 	double prevAmp;
-
+	
 	// Parse first line
 	idealWFFile >> idealWFTime >> idealWFAmp;
 	std::vector<double> waveform;
 	waveform.emplace_back(idealWFAmp);
 	prevAmp = idealWFAmp;
-
+	
 	// Parse next line
 	while (idealWFFile >> idealWFTime >> idealWFAmp) {
 		double delta_v = (idealWFAmp - prevAmp) / double(interpFactor);
-
+		
 		for (int step = 1; step < interpFactor; ++step)  // Add linearly interpolated points to ideal PDF
 			waveform.emplace_back(prevAmp + double(step) * delta_v);
-
+		
 		waveform.emplace_back(idealWFAmp);
 		prevAmp = idealWFAmp;
 	}
-
+	
 	if (waveform.size() != expectedSize) {
 		throw std::runtime_error("Unexpected number of samples in " + idealWFPath);
 	}
-
+	
 	return waveform;
+}
+
+
+/**
+ * Wrapper around the binary and plaintext RecoMore file readers so that either can be read from the same function call.
+ * @param fileName Path to the RecoMore data file you want to read.
+ * @return RecoMore data events parsed into a FitData instance that contains a list of fit events.
+ */
+FitData ReadRecoMoreFile(const std::string &fileName){
+	// TODO(josh): Add error checking to if the data file is corrupted/invalid
+	std::string ending = fileName.substr(fileName.length() - 4);
+	FitData returnDat;
+	if(ending == ".dat"){
+		returnDat = ReadRecoMoreOutput(fileName);
+	}
+	else if(ending == ".bin"){
+		returnDat = ReadRecoMoreBinaryOutput(fileName);
+	}
+	else{
+		throw std::runtime_error("Provided RecoMore data file (" + fileName + ") is not one of the accepted formats .dat, .bin.");
+	}
+	std::cout << "RecoMore data file read" << std::endl;
+	return returnDat;
 }
 
 /**
@@ -366,12 +389,14 @@ FitData ReadRecoMoreOutput(const std::string &fileName){
 	return events;
 }
 
-std::vector<EventFitData> ReadRecoMoreBinaryOutput(const std::string &fileName){
+FitData ReadRecoMoreBinaryOutput(const std::string &fileName){
 	std::vector<EventFitData> events;
 	events.reserve(20000);
 	std::ifstream ifs(fileName);
 	boost::archive::binary_iarchive ia(ifs);
 	
 	ia >> events;
-	return events;
+	FitData fitData;
+	fitData.setRows(events);
+	return fitData;
 }
