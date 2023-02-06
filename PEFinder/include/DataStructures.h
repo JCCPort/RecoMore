@@ -8,6 +8,8 @@
 #include <boost/serialization/vector.hpp>
 
 
+// Input types
+
 struct ChannelData {
 	unsigned short channel;
 	std::vector<float> waveform{};
@@ -24,8 +26,10 @@ typedef struct {
 class WCData {
 public:
 	void addRow(const EventData &);
-
+	
 	std::vector<EventData> getEvents() { return events_; };
+	EventData getEvent(int eventNumber);
+	ChannelData getChannelWaveform(int eventNumber, int channelNumber);
 private:
 	std::vector<EventData> events_{};
 };
@@ -45,11 +49,14 @@ struct PEData {
 	float amplitudeError;
 	float time;
 	float timeError;
-
+	
 	// For debugging purpose, initial estimates of parameters.
 	float foundAmplitude;
 	float foundTime;
 };
+
+
+// Output types
 
 struct ChannelFitData {
 	friend class boost::serialization::access;
@@ -85,16 +92,29 @@ struct EventFitData{
 };
 
 
+class FitData {
+public:
+	void addRow(const EventFitData &);
+	void setRows(const std::vector<EventFitData> &);
+	
+	std::vector<EventFitData> getFitEvents() { return fitEvents_; };
+	EventFitData getEventFit(int eventNumber);
+	ChannelFitData getChannelFit(int eventNumber, int channelNumber);
+private:
+	std::vector<EventFitData> fitEvents_{};
+};
+
+
 class [[maybe_unused]] FitParams {
 public:
 	[[maybe_unused]] FitParams(unsigned int, double, std::vector<double>, std::vector<double>);
-
+	
 	[[maybe_unused]] FitParams(double, const std::vector<PEData> &);
-
+	
 	[[maybe_unused]] std::vector<double *> makeFitterParams();
-
+	
 	[[maybe_unused]] std::vector<float> makeGuesserParams();
-
+	
 	unsigned int numPEs_;
 	std::vector<double> params;
 };

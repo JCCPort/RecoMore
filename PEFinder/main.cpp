@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
 	} else {
 	  file = std::make_shared<SyncFile>(outputFileName, text);
 	}
-	
+
 	Writer writer(file);
 
 	static std::atomic<unsigned long> count{0};
