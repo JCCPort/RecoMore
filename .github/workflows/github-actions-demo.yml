@@ -63,33 +63,33 @@ jobs:
           path: ceres-solver
           key: ceres-solver-cache
 
+      - if: steps.cache-build.outputs.cache-hit != 'true'
+        name: Setup Environment
+        run: echo 'CXXFLAGS=-flto' >> $GITHUB_ENV
 
       - if: steps.cache-build.outputs.cache-hit != 'true'
-        name: Ceres-solver
-        steps:
-        - name: Setup Environment
-          if: matrix.build_type == 'Release'
-          run: |
-            echo 'CXXFLAGS=-flto' >> $GITHUB_ENV
+        name: Clone ceres-solver
+        run: git clone https://ceres-solver.googlesource.com/ceres-solver
 
-        - name: Clone ceres-solver
-          run: git clone https://ceres-solver.googlesource.com/ceres-solver
+      - if: steps.cache-build.outputs.cache-hit != 'true'
+        name: Make build dir
+        working-directory: ceres-solver
+        run: mkdir build
 
-        - name: Make build dir
-          working-directory: ceres-solver
-          run: mkdir build
+      - if: steps.cache-build.outputs.cache-hit != 'true'
+        name: Configure
+        working-directory: ceres-solver/build
+        run: cmake ..
 
-        - name: Configure
-          working-directory: ceres-solver/build
-          run: cmake ..
+      - if: steps.cache-build.outputs.cache-hit != 'true'
+        name: Build
+        working-directory: ceres-solver/build
+        run: make -j4
 
-        - name: Build
-          working-directory: ceres-solver/build
-          run: make -j4
-
-        - name: Install
-          working-directory: ceres-solver/build
-          run: make install
+      - if: steps.cache-build.outputs.cache-hit != 'true'
+        name: Install
+        working-directory: ceres-solver/build
+        run: make install
 
       - name: Build Boost
         uses: egor-tensin/build-boost@v1.4
