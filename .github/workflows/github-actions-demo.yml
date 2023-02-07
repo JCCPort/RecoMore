@@ -34,7 +34,6 @@ jobs:
           apt update
           apt full-upgrade -y
 
-      - name: Install Dependencies
       - uses: actions/checkout@v2
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
