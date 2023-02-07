@@ -24,7 +24,6 @@ jobs:
         lib:
           - shared
         gpu:
-          - cuda
           - no-cuda
 
     steps:
