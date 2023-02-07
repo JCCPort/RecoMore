@@ -147,11 +147,11 @@ jobs:
         run: ls -laht && pwd
 
       - name: Build
-        working-directory: ceres-solver/build_Release
+        working-directory: ceres-solver/build
         run: make -j4
 
       - name: Install
-        working-directory: ceres-solver/build_Release
+        working-directory: ceres-solver/build
         run: make install
 
       - name: Build Boost
