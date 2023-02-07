@@ -29,21 +29,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install CMake
-        run: |
-          apt update
-          apt install wget -y
-          currdir=$(pwd)
-          mkdir ~/temp
-          cd ~/temp
-          wget https://cmake.org/files/v3.25/cmake-3.25.1.tar.gz
-          tar -xzvf cmake-3.25.1.tar.gz
-          cd cmake-3.25.1/
-          ./bootstrap
-          make -j4
-          make install
-          cd $currdir
-
       - name: Setup Dependencies
         run: |
           apt-get update
@@ -59,6 +44,21 @@ jobs:
             libmetis-dev \
             libsuitesparse-dev \
             ninja-build
+
+      - name: Install CMake
+        run: |
+          apt update
+          apt install wget -y
+          currdir=$(pwd)
+          mkdir ~/temp
+          cd ~/temp
+          wget https://cmake.org/files/v3.25/cmake-3.25.1.tar.gz
+          tar -xzvf cmake-3.25.1.tar.gz
+          cd cmake-3.25.1/
+          ./bootstrap
+          make -j4
+          make install
+          cd $currdir
 
       - name: Setup CUDA toolkit
         if: matrix.gpu == 'cuda'
