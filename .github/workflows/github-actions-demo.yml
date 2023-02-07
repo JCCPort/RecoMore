@@ -29,19 +29,24 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Check CMake
-        run: echo "$(apt-cache search cmake)"
+      - name: Install CMake
+        run:
+          currdir=$(pwd)
+          mkdir ~/temp
+          cd ~/temp
+          wget https://cmake.org/files/v$version/cmake-3.25.1.tar.gz
+          tar -xzvf cmake-3.25.1.tar.gz
+          cd cmake-3.25.1/
+          ./bootstrap
+          make -j4
+          sudo make install
 
       - name: Setup Dependencies
         run: |
           apt-get update
-          apt-get install software-properties-common -y
-          add-apt-repository ppa:george-edison55/cmake-3.x
-          apt-get update
           apt-get install -y \
             build-essential \
             ccache \
-            cmake=3.20 \
             libbenchmark-dev \
             libblas-dev \
             libeigen3-dev \
