@@ -1,7 +1,6 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE TestModule1
 
-//#define BOOST_TEST_MAIN  // in only one cpp file
 #include <boost/test/unit_test.hpp>
 
 #include <iostream>
@@ -57,15 +56,34 @@ public:
 
 
 bool SystemTest1::runOverTestData() {
+	// Input arguments
 	std::string inputFileName = "../TestData/R185.bin";
 	std::string outputFileName;
 	outputFileName = defaultOutputName(inputFileName);
 	auto pdfDir = "../TestData/pdf/";
-	skipChannels = {32, 36, 40, 44, 48, 52, 56, 60};
 	saveWaveforms = false;
 	WCData data = ReadWCDataFile(inputFileName);
 	int numThreads = 8;
 	int batchNumber = 8;
+	
+	// Global parameters
+	skipChannels = {32, 36, 40, 44, 48, 52, 56, 60};
+	pdfNSamples        = 105601;
+	pdfSamplingRate    = 0.003125;
+	pdfT0Sample        = 3201;
+	pdfResidualRMS     = 0.827/1000;
+	meanReducedChiSq   = 0;
+	samplingRate2Inv   = 1.0f / (0.01f * pdfSamplingRate);
+	pdfT0SampleConv    = pdfT0Sample;
+	WFSigThresh        = 0.005;
+	maxPEs             = 100;
+	ampDiff            = 0;
+	timeDiff           = 0;
+	baselineDiff       = 0;
+	sysProcPECount     = 0;
+	sysProcWFCount     = 0;
+	
+	// Processing
 	
 	std::shared_ptr<SyncFile> file;
 	file = std::make_shared<SyncFile>(outputFileName, text);
@@ -131,7 +149,7 @@ bool SystemTest1::comparisons(){
 	numEventsSameRan = true;
 	
 	// Loop over events
-	for(int i = 1; i < newData.getFitEvents().size(); i++){
+	for(int i = 1; i <= newData.getFitEvents().size(); i++){
 		// Loop over channels in event
 		EventFitData newEventData = newData.getEventFit(i);
 		EventFitData oldEventData = oldData.getEventFit(i);
@@ -194,8 +212,7 @@ BOOST_AUTO_TEST_SUITE(SystemTest)
 
 BOOST_AUTO_TEST_CASE(CheckFittingRan)
 {
-//	BOOST_CHECK(systemTest1.runOverTestData());
-	BOOST_CHECK(true);
+	BOOST_CHECK(systemTest1.runOverTestData());
 	std::cout << "Ran fitting over test data" << std::endl;
 	systemTest1.openNewRunFile();
 	systemTest1.openOldRunFile();
