@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Install CMake
-        run:
+        run: |
           currdir=$(pwd)
           mkdir ~/temp
           cd ~/temp
