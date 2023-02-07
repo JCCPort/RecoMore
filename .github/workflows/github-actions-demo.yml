@@ -132,15 +132,20 @@ jobs:
         working-directory: ceres-solver
         run: mkdir build
 
+#      - name: Configure
+#        working-directory: ceres-solver/build
+#        run: |
+#          cmake -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
+#                -DUSE_CUDA=${{matrix.gpu == 'cuda'}} \
+#                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+#                -DCMAKE_C_COMPILER_LAUNCHER=$(which ccache) \
+#                -DCMAKE_CXX_COMPILER_LAUNCHER=$(which ccache) \
+#                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install ..
+
       - name: Configure
         working-directory: ceres-solver/build
         run: |
-          cmake -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
-                -DUSE_CUDA=${{matrix.gpu == 'cuda'}} \
-                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
-                -DCMAKE_C_COMPILER_LAUNCHER=$(which ccache) \
-                -DCMAKE_CXX_COMPILER_LAUNCHER=$(which ccache) \
-                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install ..
+          cmake ..
 
       - name: wots dere 2
         working-directory: ceres-solver/build
