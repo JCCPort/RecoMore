@@ -124,16 +124,27 @@ jobs:
       - name: Clone ceres-solver
         run: git clone https://ceres-solver.googlesource.com/ceres-solver
 
-      - name: Configure
+      - name: wots dere
         working-directory: ceres-solver
+        run: ls -laht && pwd
+
+      - name: Make build dir
+        working-directory: ceres-solver
+        run: mkdir build
+
+      - name: Configure
+        working-directory: ceres-solver/build
         run: |
-          cmake -S . -B build_${{matrix.build_type}} \
-                -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
+          cmake -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
                 -DUSE_CUDA=${{matrix.gpu == 'cuda'}} \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
                 -DCMAKE_C_COMPILER_LAUNCHER=$(which ccache) \
                 -DCMAKE_CXX_COMPILER_LAUNCHER=$(which ccache) \
-                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install
+                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install ..
+
+      - name: wots dere 2
+        working-directory: ceres-solver/build
+        run: ls -laht && pwd
 
       - name: Build
         working-directory: ceres-solver/build_Release
