@@ -1,8 +1,7 @@
 name: Linux Ceres install
+description: Installs Ceres
 
-on: [push, pull_request]
-
-jobs:
+runs:
   build:
     name: ${{matrix.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.gpu}}
     runs-on: ubuntu-latest
@@ -30,6 +29,31 @@ jobs:
           - no-cuda
 
     steps:
+      - name: ${{matrix.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.gpu}}
+        runs-on: ubuntu-latest
+        container: ${{matrix.os}}
+        defaults:
+          run:
+            shell: bash -e -o pipefail {0}
+        env:
+          CCACHE_DIR: ${{github.workspace}}/ccache
+          CMAKE_GENERATOR: Ninja
+          DEBIAN_FRONTEND: noninteractive
+        strategy:
+          fail-fast: true
+          matrix:
+            os:
+              - ubuntu:20.04
+              - ubuntu:22.04
+            build_type:
+              - Release
+            lib:
+              - shared
+              - static
+            gpu:
+              - cuda
+              - no-cuda
+
       - uses: actions/checkout@v3
 
       - name: Setup Dependencies
