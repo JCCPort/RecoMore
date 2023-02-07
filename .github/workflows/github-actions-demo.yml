@@ -2,19 +2,9 @@ name: GitHub Actions Demo
 run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 on: [push]
 jobs:
-  Build Boost:
-    id: boost
-    uses: egor-tensin/build-boost@v1
-    with:
-      version: 1.80.0
-      libraries: filesystem program_options system
-      platform: x64
-      configuration: Release
-  Show paths:
-    run: |
-      printf 'Boost has been unpacked to: %s\n' '${{ steps.boost.outputs.root }}'
-      printf 'Libraries can be found here: %s\n' '${{ steps.boost.outputs.librarydir }}'
-    shell: bash
+  name: Build Boost
+  uses: egor-tensin/build-boost@v1.4
+
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
     steps:
