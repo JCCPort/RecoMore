@@ -31,8 +31,9 @@ jobs:
 
       - name: Setup Dependencies
         run: |
-          apt-get update
-          apt-get install -y \
+          apt update
+          apt full-upgrade
+          apt install -y \
             build-essential \
             ccache \
             libbenchmark-dev \
@@ -45,35 +46,36 @@ jobs:
             libsuitesparse-dev \
             ninja-build \
             libssl-dev \
-            git
+            git \
+            cmake
 
-      - name: Cache CMake
-        id: cache-cmake
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-cmake
-        with:
-          path: ~/cmake-3.25.1
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+#      - name: Cache CMake
+#        id: cache-cmake
+#        uses: actions/cache@v3
+#        env:
+#          cache-name: cache-cmake
+#        with:
+#          path: ~/cmake-3.25.1
+#          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+#          restore-keys: |
+#            ${{ runner.os }}-build-${{ env.cache-name }}-
+#            ${{ runner.os }}-build-
+#            ${{ runner.os }}-
 
-      - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
-        name: Install CMake
-        run: |
-          apt update
-          apt install wget -y
-          currdir=$(pwd)
-          cd ~
-          wget https://cmake.org/files/v3.25/cmake-3.25.1.tar.gz
-          tar -xzvf cmake-3.25.1.tar.gz
-          cd cmake-3.25.1/
-          ./bootstrap
-          make -j4
-          make install
-          cd $currdir
+#      - if: ${{ steps.cache-cmake.outputs.cache-hit != 'true' }}
+#        name: Install CMake
+#        run: |
+#          apt update
+#          apt install wget -y
+#          currdir=$(pwd)
+#          cd ~
+#          wget https://cmake.org/files/v3.25/cmake-3.25.1.tar.gz
+#          tar -xzvf cmake-3.25.1.tar.gz
+#          cd cmake-3.25.1/
+#          ./bootstrap
+#          make -j4
+#          make install
+#          cd $currdir
 
 #      - if: ${{ steps.cache-npm.outputs.cache-hit == 'true' }}
 #        name: Restore cached CMake
@@ -111,6 +113,7 @@ jobs:
         run: |
           git clone https://ceres-solver.googlesource.com/ceres-solver
           cd ceres-solver
+          pwd
           mkdir build
           cd build
 
