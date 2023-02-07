@@ -122,16 +122,10 @@ jobs:
           echo 'CXXFLAGS=-flto' >> $GITHUB_ENV
 
       - name: Clone ceres-solver
-        run: |
-          git clone https://ceres-solver.googlesource.com/ceres-solver
-          
-      - name: Make ceres-solver build dir
-        working-directory: ceres-solver
-        run: mkdir build
-
+        run: git clone https://ceres-solver.googlesource.com/ceres-solver
 
       - name: Configure
-        working-directory: ceres-solver/build
+        working-directory: ceres-solver
         run: |
           cmake -S .. -B build_${{matrix.build_type}} \
                 -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
@@ -142,10 +136,11 @@ jobs:
                 -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install
 
       - name: Build
-        working-directory: ceres-solver/build
+        working-directory: ceres-solver/build_Release
         run: make -j4
 
       - name: Install
+        working-directory: ceres-solver/build_Release
         run: make install
 
       - name: Build Boost
