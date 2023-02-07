@@ -1,5 +1,6 @@
 name: Linux Ceres install
 description: Installs Ceres
+
 runs:
   using: composite
   steps:
@@ -28,6 +29,8 @@ runs:
               - cuda
               - no-cuda
 
+      - uses: actions/checkout@v3.3.0
+
       - name: Setup Dependencies
         run: |
           apt-get update
@@ -55,7 +58,7 @@ runs:
 
       - name: Cache Build
         id: cache-build
-        uses: actions/cache@v3
+        uses: actions/checkout@v3.3.0
         with:
           path: ${{env.CCACHE_DIR}}
           key: ${{matrix.os}}-ccache-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.gpu}}-${{github.run_id}}
