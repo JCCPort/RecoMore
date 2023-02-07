@@ -31,6 +31,8 @@ jobs:
 
       - name: Install CMake
         run: |
+          sudo apt update
+          sudo apt install wget
           currdir=$(pwd)
           mkdir ~/temp
           cd ~/temp
