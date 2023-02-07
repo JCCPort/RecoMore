@@ -11,6 +11,7 @@ EventData WCData::getEvent(int eventNumber) {
 			return event;
 		}
 	}
+	throw std::runtime_error("Event " + std::to_string(eventNumber) + " not found.");
 }
 
 ChannelData WCData::getChannelWaveform(int eventNumber, int channelNumber) {
@@ -23,15 +24,12 @@ ChannelData WCData::getChannelWaveform(int eventNumber, int channelNumber) {
 			}
 		}
 	}
+	throw std::runtime_error("Event " + std::to_string(eventNumber) + ", Channel " + std::to_string(channelNumber) + " not found.");
 }
 
 
 void FitData::addRow(const EventFitData &eventFit) {
 	fitEvents_.emplace_back(eventFit);
-}
-
-void FitData::setRows(const std::vector<EventFitData> &setData) {
-	fitEvents_ = setData;
 }
 
 EventFitData FitData::getEventFit(int eventNumber) {
@@ -40,6 +38,7 @@ EventFitData FitData::getEventFit(int eventNumber) {
 			return event;
 		}
 	}
+	throw std::runtime_error("Event " + std::to_string(eventNumber) + " not found.");
 }
 
 ChannelFitData FitData::getChannelFit(int eventNumber, int channelNumber) {
@@ -52,6 +51,11 @@ ChannelFitData FitData::getChannelFit(int eventNumber, int channelNumber) {
 			}
 		}
 	}
+	throw std::runtime_error("Event " + std::to_string(eventNumber) + ", Channel " + std::to_string(channelNumber) + " not found.");
+}
+
+void FitData::setRows(const std::vector<EventFitData> &setData) {
+	fitEvents_ = setData;
 }
 
 

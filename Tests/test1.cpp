@@ -7,14 +7,8 @@
 #include <atomic>
 #include <thread>
 #include "../PEFinder/include/Utils.h"
-#include "../PEFinder/include/DataReading.h"
-#include "../PEFinder/include/DataStructures.h"
 #include "../PEFinder/include/PEFit.h"
-#include "../PEFinder/Globals.h"
-#include "../PEFinder/include/DataWriting.h"
-
 #include "../PEFinder/include/ThreadPool.h"
-#include "../PEFinder/include/argparse.h"
 
 
 
@@ -26,7 +20,7 @@ public:
 	
 	bool comparisons();
 	
-	SystemTest1(){}
+	SystemTest1() = default;
 	
 private:
 	FitData newData;
@@ -35,7 +29,6 @@ private:
 	double timeSimilarity = 1e-6;
 	double ampSimilarity = 1e-6;
 	double redChiSqSimilarity = 1e-3;
-	int numPESSimilarity = 5;
 	
 public:
 	bool numEventsSame = true;
@@ -84,7 +77,6 @@ bool SystemTest1::runOverTestData() {
 	sysProcWFCount     = 0;
 	
 	// Processing
-	
 	std::shared_ptr<SyncFile> file;
 	file = std::make_shared<SyncFile>(outputFileName, text);
 	
