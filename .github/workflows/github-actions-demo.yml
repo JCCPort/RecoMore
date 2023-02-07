@@ -12,9 +12,9 @@ jobs:
 #          libraries: thread serialization test
 #          platform: x64
 #          configuration: Release
+      - run: actions/checkout
       - name: Install Ceres-solver
         uses: ./.github/unittest-action
-      - run: actions/checkout
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
