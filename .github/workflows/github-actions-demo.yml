@@ -44,7 +44,8 @@ jobs:
             libmetis-dev \
             libsuitesparse-dev \
             ninja-build \
-            libssl-dev
+            libssl-dev \
+            git
 
       - name: Cache CMake
         id: cache-cmake
@@ -116,7 +117,7 @@ jobs:
 
       - name: Configure
         run: |
-          cmake -S . -B build_${{matrix.build_type}} \
+          cmake -S .. -B build_${{matrix.build_type}} \
                 -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
                 -DUSE_CUDA=${{matrix.gpu == 'cuda'}} \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
