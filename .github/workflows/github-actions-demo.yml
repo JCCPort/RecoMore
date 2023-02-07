@@ -53,7 +53,7 @@ jobs:
         env:
           cache-name: cache-cmake
         with:
-          path: ~/temp/cmake-3.25.1
+          path: ~/cmake-3.25.1
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
@@ -66,8 +66,7 @@ jobs:
           apt update
           apt install wget -y
           currdir=$(pwd)
-          mkdir ~/temp
-          cd ~/temp
+          cd ~
           wget https://cmake.org/files/v3.25/cmake-3.25.1.tar.gz
           tar -xzvf cmake-3.25.1.tar.gz
           cd cmake-3.25.1/
@@ -76,16 +75,16 @@ jobs:
           make install
           cd $currdir
 
-      - if: ${{ steps.cache-npm.outputs.cache-hit == 'true' }}
-        name: Restore cached CMake
-        uses: ylemkimon/cache-restore@v2
-        with:
-          path: ~/temp/cmake-3.25.1
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+#      - if: ${{ steps.cache-npm.outputs.cache-hit == 'true' }}
+#        name: Restore cached CMake
+#        uses: ylemkimon/cache-restore@v2
+#        with:
+#          path: ~/cmake-3.25.1
+#          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+#          restore-keys: |
+#            ${{ runner.os }}-build-${{ env.cache-name }}-
+#            ${{ runner.os }}-build-
+#            ${{ runner.os }}-
 
       - name: Setup CUDA toolkit
         if: matrix.gpu == 'cuda'
@@ -110,7 +109,7 @@ jobs:
 
       - name: Clone ceres-solver
         run: |
-          git clone git@github.com:ceres-solver/ceres-solver.git
+          git clone https://ceres-solver.googlesource.com/ceres-solver
           cd ceres-solver
           mkdir build
           cd build
