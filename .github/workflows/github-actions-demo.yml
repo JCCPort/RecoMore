@@ -18,7 +18,7 @@ jobs:
       fail-fast: true
       matrix:
         os:
-          - ubuntu:20.04
+          - ubuntu:22.04
         build_type:
           - Release
         lib:
@@ -28,6 +28,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Check CMake
+        run: apt list -a cmake
 
       - name: Setup Dependencies
         run: |
