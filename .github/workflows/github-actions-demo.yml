@@ -12,7 +12,6 @@ jobs:
         shell: bash -e -o pipefail {0}
     env:
       CCACHE_DIR: ${{github.workspace}}/ccache
-      CMAKE_GENERATOR: Ninja
       DEBIAN_FRONTEND: noninteractive
     strategy:
       fail-fast: true
