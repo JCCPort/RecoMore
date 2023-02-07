@@ -17,7 +17,7 @@ jobs:
 
         on: [push]
 
-        jobs:
+        run:
           build:
             name: ${{matrix.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.gpu}}
             runs-on: ubuntu-latest
