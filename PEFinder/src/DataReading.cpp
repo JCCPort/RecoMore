@@ -324,9 +324,9 @@ FitData ReadRecoMoreTextOutput(const std::string &fileName){
 	FitData events;
 	
 	FILE *fp = fopen(fileName.c_str(), "r");
-	std::ifstream input_file(fileName.c_str(), std::ios::binary | std::ios::in);
+//	std::ifstream input_file(fileName.c_str(), std::ios::binary | std::ios::in);
 	if (fp == nullptr) {
-		throw std::runtime_error("WaveCatcher data file: " + fileName + " not found.");
+		throw std::runtime_error("RecoMore data file: " + fileName + " not found.");
 	}
 	
 	char *line = nullptr;
@@ -384,6 +384,7 @@ FitData ReadRecoMoreTextOutput(const std::string &fileName){
 		getline(&line, &len, fp);
 	}
 	fclose(fp);
+//	input_file.close();
 	if (line)
 		free(line);
 	return events;

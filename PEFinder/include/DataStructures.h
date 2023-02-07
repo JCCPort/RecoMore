@@ -15,21 +15,38 @@ struct ChannelData {
 	std::vector<float> waveform{};
 };
 
-typedef struct {
+struct EventData{
+	ChannelData getChannel(int channelNumber){
+		for(auto & channelWF : chData){
+			if(channelWF.channel == channelNumber){
+				return channelWF;
+			}
+		}
+		throw std::runtime_error("Channel " + std::to_string(channelNumber) + " not found in event " + std::to_string(eventID) + ".");
+	}
+	
+	std::vector<unsigned short> getChannels(){
+		std::vector<unsigned short> channels;
+		for(const auto& channel: chData){
+			channels.push_back(channel.channel);
+		}
+		return channels;
+	}
+	
 	unsigned int             eventID;
 	std::string              TDCCorrTime;
 	std::string              date;
 	std::vector<ChannelData> chData;
-} EventData;
+};
 
 
 class WCData {
 public:
 	void addRow(const EventData &);
 	
-	inline std::vector<EventData> getEvents() { return events_; };
-	inline EventData getEvent(int eventNumber);
-	inline ChannelData getChannelWaveform(int eventNumber, int channelNumber);
+	 std::vector<EventData> getEvents() { return events_; };
+	 EventData getEvent(int eventNumber);
+	 ChannelData getChannelWaveform(int eventNumber, int channelNumber);
 private:
 	std::vector<EventData> events_{};
 };
@@ -85,6 +102,24 @@ struct EventFitData{
 		ar & date;
 		ar & SiPM;
 	}
+	
+	ChannelFitData getChannel(int channelNumber){
+		for(auto & channelWF : SiPM){
+			if(channelWF.ch == channelNumber){
+				return channelWF;
+			}
+		}
+		throw std::runtime_error("Channel " + std::to_string(channelNumber) + " not found in event " + std::to_string(eventID) + ".");
+	}
+	
+	std::vector<unsigned short> getChannels(){
+		std::vector<unsigned short> channels;
+		for(const auto& channel: SiPM){
+			channels.push_back(channel.ch);
+		}
+		return channels;
+	}
+	
 	unsigned int eventID{};
 	std::string TDCCorrTime;
 	std::string date;
@@ -97,9 +132,9 @@ public:
 	void addRow(const EventFitData &);
 	void setRows(const std::vector<EventFitData> &);
 	
-	inline std::vector<EventFitData> getFitEvents() { return fitEvents_; };
-	inline EventFitData getEventFit(int eventNumber);
-	inline ChannelFitData getChannelFit(int eventNumber, int channelNumber);
+	std::vector<EventFitData> getFitEvents() { return fitEvents_; };
+	EventFitData getEventFit(int eventNumber);
+	ChannelFitData getChannelFit(int eventNumber, int channelNumber);
 private:
 	std::vector<EventFitData> fitEvents_{};
 };
