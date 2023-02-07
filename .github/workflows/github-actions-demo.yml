@@ -14,9 +14,6 @@ jobs:
           configuration: Release
 
       - name: Install ceres-solver
-
-        on: [push]
-
         run:
           build:
             name: ${{matrix.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.gpu}}
