@@ -5,13 +5,13 @@ jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
     steps:
-#      - name: Build Boost
-#        uses: egor-tensin/build-boost@v1.4
-#        with:
-#          version: 1.80.0
-#          libraries: thread serialization test
-#          platform: x64
-#          configuration: Release
+      - name: Build Boost
+        uses: egor-tensin/build-boost@v1.4
+        with:
+          version: 1.80.0
+          libraries: thread serialization test
+          platform: x64
+          configuration: Release
 #      - uses: actions/checkout@v3.3.0
       - name: Install Ceres-solver
         uses: ./.github/unittest-action

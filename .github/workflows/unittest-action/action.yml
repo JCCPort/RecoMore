@@ -1,35 +1,36 @@
-name: Linux Ceres install
-description: Installs Ceres
+name: Linux
 
-runs:
-  using: composite
-  steps:
-      - name: ${{matrix.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.gpu}}
-        runs-on: ubuntu-latest
-        container: ${{matrix.os}}
-        defaults:
-          run:
-            shell: bash -e -o pipefail {0}
-        env:
-          CCACHE_DIR: ${{github.workspace}}/ccache
-          CMAKE_GENERATOR: Ninja
-          DEBIAN_FRONTEND: noninteractive
-        strategy:
-          fail-fast: true
-          matrix:
-            os:
-              - ubuntu:20.04
-              - ubuntu:22.04
-            build_type:
-              - Release
-            lib:
-              - shared
-              - static
-            gpu:
-              - cuda
-              - no-cuda
+on: [push, pull_request]
 
-      - uses: actions/checkout@v3.3.0
+jobs:
+  build:
+    name: ${{matrix.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.gpu}}
+    runs-on: ubuntu-latest
+    container: ${{matrix.os}}
+    defaults:
+      run:
+        shell: bash -e -o pipefail {0}
+    env:
+      CCACHE_DIR: ${{github.workspace}}/ccache
+      CMAKE_GENERATOR: Ninja
+      DEBIAN_FRONTEND: noninteractive
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - ubuntu:20.04
+          - ubuntu:22.04
+        build_type:
+          - Release
+        lib:
+          - shared
+          - static
+        gpu:
+          - cuda
+          - no-cuda
+
+    steps:
+      - uses: actions/checkout@v3
 
       - name: Setup Dependencies
         run: |
@@ -58,7 +59,7 @@ runs:
 
       - name: Cache Build
         id: cache-build
-        uses: actions/checkout@v3.3.0
+        uses: actions/cache@v3
         with:
           path: ${{env.CCACHE_DIR}}
           key: ${{matrix.os}}-ccache-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.gpu}}-${{github.run_id}}
@@ -97,3 +98,11 @@ runs:
           cmake --build build_${{matrix.build_type}}/ \
                 --config ${{matrix.build_type}} \
                 --target install
+
+      - name: Build Boost
+        uses: egor-tensin/build-boost@v1.4
+        with:
+          version: 1.80.0
+          libraries: thread serialization test
+          platform: x64
+          configuration: Release
