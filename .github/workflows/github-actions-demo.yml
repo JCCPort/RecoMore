@@ -29,37 +29,37 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Update apt
-        run: |
-          apt update
-          apt full-upgrade -y
-
-      - uses: actions/checkout@v2
-      - uses: awalsh128/cache-apt-pkgs-action@latest
-        with:
-          packages: curl build-essential ccache libbenchmark-dev libblas-dev libeigen3-dev libgflags-dev libgoogle-glog-dev liblapack-dev libmetis-dev libsuitesparse-dev ninja-build libssl-dev git cmake
-          version: 1.1
-
-
-#      - name: Setup Dependencies
+#      - name: Update apt
 #        run: |
 #          apt update
 #          apt full-upgrade -y
-#          apt install -y \
-#            build-essential \
-#            ccache \
-#            libbenchmark-dev \
-#            libblas-dev \
-#            libeigen3-dev \
-#            libgflags-dev \
-#            libgoogle-glog-dev \
-#            liblapack-dev \
-#            libmetis-dev \
-#            libsuitesparse-dev \
-#            ninja-build \
-#            libssl-dev \
-#            git \
-#            cmake
+#
+#      - uses: actions/checkout@v2
+#      - uses: awalsh128/cache-apt-pkgs-action@latest
+#        with:
+#          packages: curl build-essential ccache libbenchmark-dev libblas-dev libeigen3-dev libgflags-dev libgoogle-glog-dev liblapack-dev libmetis-dev libsuitesparse-dev ninja-build libssl-dev git cmake
+#          version: 1.1
+
+
+      - name: Setup Dependencies
+        run: |
+          apt update
+          apt full-upgrade -y
+          apt install -y \
+            build-essential \
+            ccache \
+            libbenchmark-dev \
+            libblas-dev \
+            libeigen3-dev \
+            libgflags-dev \
+            libgoogle-glog-dev \
+            liblapack-dev \
+            libmetis-dev \
+            libsuitesparse-dev \
+            ninja-build \
+            libssl-dev \
+            git \
+            cmake
 
 #      - name: Cache CMake
 #        id: cache-cmake
