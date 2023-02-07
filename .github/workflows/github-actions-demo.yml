@@ -35,7 +35,7 @@ jobs:
           apt-get install -y \
             build-essential \
             ccache \
-            cmake \
+            cmake=3.20 \
             libbenchmark-dev \
             libblas-dev \
             libeigen3-dev \
