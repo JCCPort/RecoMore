@@ -43,7 +43,8 @@ jobs:
             liblapack-dev \
             libmetis-dev \
             libsuitesparse-dev \
-            ninja-build
+            ninja-build \
+            libssl-dev
 
       - name: Install CMake
         run: |
