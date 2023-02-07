@@ -114,12 +114,12 @@ jobs:
           git clone https://ceres-solver.googlesource.com/ceres-solver
           
       - name: Make ceres-solver build dir
-        working-directory: ./ceres-solver
+        working-directory: ceres-solver
         run: mkdir build
 
 
       - name: Configure
-        working-directory: ./build
+        working-directory: ceres-solver/build
         run: |
           cmake -S .. -B build_${{matrix.build_type}} \
                 -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
