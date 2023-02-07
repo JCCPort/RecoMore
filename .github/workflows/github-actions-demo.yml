@@ -12,7 +12,7 @@ jobs:
 #          libraries: thread serialization test
 #          platform: x64
 #          configuration: Release
-      - run: actions/checkout
+      - uses: actions/checkout@v3.3.0
       - name: Install Ceres-solver
         uses: ./.github/unittest-action
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
