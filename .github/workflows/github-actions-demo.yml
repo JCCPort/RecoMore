@@ -100,9 +100,10 @@ jobs:
           dpkg -i packages-microsoft-prod.deb
           apt-get update
           apt-get install -y powershell python-pip
+          ls -lahs /usr/bin/
           PATH=“$PATH:/usr/local/bin/python”
           python -m ensurepip
-          ls -lahs /usr/bin/
+          
 
       - uses: actions/checkout@v3
 
