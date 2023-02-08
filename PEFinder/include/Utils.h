@@ -16,7 +16,7 @@
 #include <sstream>
 
 struct comparePETime {
-	inline bool operator()(const PEData &PE1, const PEData &PE2) {
+	inline bool operator()(const Photoelectron &PE1, const Photoelectron &PE2) {
 		return (PE1.time < PE2.time);
 	}
 };

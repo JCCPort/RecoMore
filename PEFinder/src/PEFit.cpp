@@ -71,7 +71,7 @@ float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double>
 
 void updateGuessCorrector(const std::vector<double>& amps, const std::vector<double>& times,
                           const std::vector<double>& initialAmps, const std::vector<double>& initialTimes,
-                          float baseline, float initBaseline, const std::vector<PEData>& pesFound){
+                          float baseline, float initBaseline, const std::vector<Photoelectron>& pesFound){
 	for (int k   = 0; k < pesFound.size(); k++) {
 		sysProcPECount++;
 		ampDiff  = ampDiff + (((float)amps[k] - (float)initialAmps[k]) - ampDiff) / (float)sysProcPECount;
@@ -81,7 +81,7 @@ void updateGuessCorrector(const std::vector<double>& amps, const std::vector<dou
 };
 
 
-bool getNextPEGuess(DigitiserChannel residualWF, PEData *guessPE){
+bool getNextPEGuess(DigitiserChannel residualWF, Photoelectron *guessPE){
 	// Get initial guesses for the next PE
 	const auto         minPosIt   = std::min_element(residualWF.waveform.begin(), residualWF.waveform.end());
 	const unsigned int minTimePos = std::distance(residualWF.waveform.begin(), minPosIt);
@@ -98,17 +98,17 @@ bool getNextPEGuess(DigitiserChannel residualWF, PEData *guessPE){
 
 void
 fitPE(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file, std::mutex &m) {
-	std::vector<ChannelFitData> chFits;
+	std::vector<FitChannel> chFits;
 	
-	for (const auto &WFData: event->chData) { // Looping through all channels for a given event
+	for (const auto &WFData: event->channels) { // Looping through all channels for a given event
 		auto residualWF = WFData; // This will be the variable that is modified to be the residual distribution after each iteration
 		
-		ChannelFitData     chFit{};
+		FitChannel         chFit{};
 		const unsigned int ch = WFData.channel;
 		if (std::count(skipChannels.begin(), skipChannels.end(), ch)) {
 			continue;
 		}
-		chFit.ch = ch;
+		chFit.channel = ch;
 		
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
 		const std::vector<double> tmp        = (*idealWaveforms)[ch];
@@ -119,11 +119,11 @@ fitPE(const DigitiserEvent *event, const std::vector<std::vector<double>> *ideal
 		chFit.baseline = initBaseline;
 
 		// Start loop that will break when no more PEs are present
-		std::vector<PEData> pesFound;
-		unsigned int        numPEsFound = 0;
+		std::vector<Photoelectron> pesFound;
+		unsigned int               numPEsFound = 0;
 		
 		// This is getting estimate PEs that will then be passed as initial guesses to the minimiser.
-		PEData guessPE{};
+		Photoelectron guessPE{};
 
 		// Initial baseline removal.
 		for (float &k: residualWF.waveform) {
@@ -278,15 +278,15 @@ fitPE(const DigitiserEvent *event, const std::vector<std::vector<double>> *ideal
 			time = time / samplingRate2Inv;
 		}
 		
-		std::vector<PEData> FitPEs;
+		std::vector<Photoelectron> FitPEs;
 		for (int            k = 0; k < pesFound.size(); k++) {
-			PEData pe{};
+			Photoelectron pe{};
 			pe.amplitude = float(amplitudes[k]);
 			pe.time      = float(times[k]);
 			FitPEs.push_back(pe);
 		}
-		chFit.pes             = FitPEs;
-		chFit.baseline        = float(baseline);
+		chFit.PEs      = FitPEs;
+		chFit.baseline = float(baseline);
 		
 		
 		std::vector<float> finalParams;
@@ -327,7 +327,7 @@ fitPE(const DigitiserEvent *event, const std::vector<std::vector<double>> *ideal
 		delete idealPDFInterpolator;
 	}
 	
-	EventFitData evFitDat{event->eventID, event->TDCCorrTime, event->date, chFits};
+	FitEvent evFitDat{event->eventID, event->correctedTime, event->date, chFits};
 	
 	Writer writer(std::move(file));
 	writer.writeEventInfo(evFitDat);

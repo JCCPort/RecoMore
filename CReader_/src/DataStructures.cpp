@@ -2,11 +2,11 @@
 #include "../include/DataStructures.h"
 
 void DigitiserRun::addEvent(const DigitiserEvent &) {
-	events_.emplace_back(wf);
+	events.emplace_back(wf);
 }
 
 DigitiserEvent DigitiserRun::getEvent(int eventNumber) {
-	for(auto & event : events_){
+	for(auto & event : events){
 		if(event.eventID == eventNumber){
 			return event;
 		}
@@ -14,10 +14,10 @@ DigitiserEvent DigitiserRun::getEvent(int eventNumber) {
 	throw std::runtime_error("Event " + std::to_string(eventNumber) + " not found.");
 }
 
-DigitiserChannel DigitiserRun::getChannelWaveform(int eventNumber, int channelNumber) {
-	for(auto & event : events_){
+DigitiserChannel DigitiserRun::getEventChannel(int eventNumber, int channelNumber) {
+	for(auto & event : events){
 		if(event.eventID == eventNumber){
-			for(auto & channelWF : event.chData){
+			for(auto & channelWF : event.channels){
 				if(channelWF.channel == channelNumber){
 					return channelWF;
 				}
@@ -28,12 +28,12 @@ DigitiserChannel DigitiserRun::getChannelWaveform(int eventNumber, int channelNu
 }
 
 
-void FitData::addRow(const EventFitData &eventFit) {
-	fitEvents_.emplace_back(eventFit);
+void FitRun::addEvent(const FitEvent &) {
+	events.emplace_back(eventFit);
 }
 
-EventFitData FitData::getEventFit(int eventNumber) {
-	for(auto & event : fitEvents_){
+FitEvent FitRun::getEvent(int eventNumber) {
+	for(auto & event : events){
 		if(event.eventID == eventNumber){
 			return event;
 		}
@@ -41,11 +41,11 @@ EventFitData FitData::getEventFit(int eventNumber) {
 	throw std::runtime_error("Event " + std::to_string(eventNumber) + " not found.");
 }
 
-ChannelFitData FitData::getChannelFit(int eventNumber, int channelNumber) {
-	for(auto & event : fitEvents_){
+FitChannel FitRun::getEventChannel(int eventNumber, int channelNumber) {
+	for(auto & event : events){
 		if(event.eventID == eventNumber){
-			for(auto & channelWF : event.SiPM){
-				if(channelWF.ch == channelNumber){
+			for(auto & channelWF : event.channels){
+				if(channelWF.channel == channelNumber){
 					return channelWF;
 				}
 			}
@@ -54,8 +54,8 @@ ChannelFitData FitData::getChannelFit(int eventNumber, int channelNumber) {
 	throw std::runtime_error("Event " + std::to_string(eventNumber) + ", Channel " + std::to_string(channelNumber) + " not found.");
 }
 
-void FitData::setRows(const std::vector<EventFitData> &setData) {
-	fitEvents_ = setData;
+void FitRun::setEvents(const std::vector<FitEvent> &setData) {
+	events = setData;
 }
 
 
@@ -73,7 +73,7 @@ void FitData::setRows(const std::vector<EventFitData> &setData) {
 }
 
 
-[[maybe_unused]] FitParams::FitParams(double baseline, const std::vector<PEData> &PEs) {
+[[maybe_unused]] FitParams::FitParams(double baseline, const std::vector<Photoelectron> &PEs) {
 	numPEs_ = PEs.size();
 	params.push_back(baseline);
 	for (auto &pe: PEs) {

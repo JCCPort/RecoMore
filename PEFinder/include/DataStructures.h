@@ -16,8 +16,8 @@ struct DigitiserChannel {
 };
 
 struct DigitiserEvent{
-	DigitiserChannel getDigitiserChannel(unsigned int channelNumber){
-		for(auto & channelWF : chData){
+	DigitiserChannel getChannel(unsigned int channelNumber){
+		for(auto & channelWF : channels){
 			if(channelWF.channel == channelNumber){
 				return channelWF;
 			}
@@ -25,18 +25,18 @@ struct DigitiserEvent{
 		throw std::runtime_error("Channel " + std::to_string(channelNumber) + " not found in event " + std::to_string(eventID) + ".");
 	}
 	
-	std::vector<unsigned int> getChannels(){
-		std::vector<unsigned int> channels;
-		for(const auto& channel: chData){
-			channels.push_back(channel.channel);
+	std::vector<unsigned int> getChannelIDs(){
+		std::vector<unsigned int> channels_;
+		for(const auto& channel: channels){
+			channels_.push_back(channel.channel);
 		}
-		return channels;
+		return channels_;
 	}
 	
-	unsigned int                  eventID;
-	std::string                   TDCCorrTime;
+	unsigned int                  eventID{};
+	std::string                   correctedTime;
 	std::string                   date;
-	std::vector<DigitiserChannel> chData;
+	std::vector<DigitiserChannel> channels;
 };
 
 
@@ -44,15 +44,15 @@ class DigitiserRun {
 public:
 	void addEvent(const DigitiserEvent &);
 	
-	 std::vector<DigitiserEvent> getEvents() { return events_; };
+	 std::vector<DigitiserEvent> getEvents() { return events; };
 	 DigitiserEvent getEvent(int eventNumber);
-	 DigitiserChannel getChannelWaveform(int eventNumber, int channelNumber);
+	 DigitiserChannel getEventChannel(int eventNumber, int channelNumber);
 private:
-	std::vector<DigitiserEvent> events_{};
+	std::vector<DigitiserEvent> events{};
 };
 
 
-struct PEData {
+struct Photoelectron {
 	friend class boost::serialization::access;
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int version)
@@ -68,75 +68,75 @@ struct PEData {
 	float timeError;
 	
 	// For debugging purpose, initial estimates of parameters.
-	float foundAmplitude;
-	float foundTime;
+	float initialAmplitude;
+	float initialTime;
 };
 
 
 // Output types
 
-struct ChannelFitData {
+struct FitChannel {
 	friend class boost::serialization::access;
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int version)
 	{
-		ar & ch;
+		ar & channel;
 		ar & redChiSq;
 		ar & baseline;
-		ar & pes;
+		ar & PEs;
 	}
-	unsigned short ch;
-	float          redChiSq;
-	float          baseline;
-	std::vector<PEData> pes;
+	unsigned int               channel;
+	float                      redChiSq;
+	float                      baseline;
+	std::vector<Photoelectron> PEs;
 };
 
 
-struct EventFitData{
+struct FitEvent{
 	friend class boost::serialization::access;
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int version)
 	{
 		ar & eventID;
-		ar & TDCCorrTime;
+		ar & correctedTime;
 		ar & date;
-		ar & SiPM;
+		ar & channels;
 	}
 	
-	ChannelFitData getChannel(int channelNumber){
-		for(auto & channelWF : SiPM){
-			if(channelWF.ch == channelNumber){
+	FitChannel getChannel(int channelNumber){
+		for(auto & channelWF : channels){
+			if(channelWF.channel == channelNumber){
 				return channelWF;
 			}
 		}
 		throw std::runtime_error("Channel " + std::to_string(channelNumber) + " not found in event " + std::to_string(eventID) + ".");
 	}
 	
-	std::vector<unsigned short> getChannels(){
-		std::vector<unsigned short> channels;
-		for(const auto& channel: SiPM){
-			channels.push_back(channel.ch);
+	std::vector<unsigned int> getChannelIDs(){
+		std::vector<unsigned int> channels_;
+		for(const auto& channel: channels){
+			channels_.push_back(channel.channel);
 		}
-		return channels;
+		return channels_;
 	}
 	
-	unsigned int eventID{};
-	std::string TDCCorrTime;
-	std::string date;
-	std::vector<ChannelFitData> SiPM;
+	unsigned int            eventID{};
+	std::string             correctedTime;
+	std::string             date;
+	std::vector<FitChannel> channels;
 };
 
 
-class FitData {
+class FitRun {
 public:
-	void addRow(const EventFitData &);
-	void setRows(const std::vector<EventFitData> &);
+	void addEvent(const FitEvent &);
+	void setEvents(const std::vector<FitEvent> &);
 	
-	std::vector<EventFitData> getFitEvents() { return fitEvents_; };
-	EventFitData getEventFit(int eventNumber);
-	ChannelFitData getChannelFit(int eventNumber, int channelNumber);
+	std::vector<FitEvent> getEvents() { return events; };
+	FitEvent getEvent(int eventNumber);
+	FitChannel getEventChannel(int eventNumber, int channelNumber);
 private:
-	std::vector<EventFitData> fitEvents_{};
+	std::vector<FitEvent> events{};
 };
 
 
@@ -144,7 +144,7 @@ class [[maybe_unused]] FitParams {
 public:
 	[[maybe_unused]] FitParams(unsigned int, double, std::vector<double>, std::vector<double>);
 	
-	[[maybe_unused]] FitParams(double, const std::vector<PEData> &);
+	[[maybe_unused]] FitParams(double, const std::vector<Photoelectron> &);
 	
 	[[maybe_unused]] std::vector<double *> makeFitterParams();
 	

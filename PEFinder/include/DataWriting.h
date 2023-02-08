@@ -31,7 +31,7 @@ public:
 		}
 	}
 	
-	void binaryWrite(const EventFitData &evData) {
+	void binaryWrite(const FitEvent &evData) {
 		std::lock_guard<std::mutex> lock(writerMutex_);
 		binaryWriteCache_.push_back(evData);
 	}
@@ -44,11 +44,11 @@ public:
 			cachedStates_ = 0;
 		} else if(writeMode_ == binary){
 			for(int i = 0; i < binaryWriteCache_.size(); i++){ // TODO(josh): Decide on a better way to handle this abomination.
-				for(int j = 0; j < binaryWriteCache_[i].SiPM.size(); j++){
-					for(int k = 0; k < binaryWriteCache_[i].SiPM[j].pes.size(); k++){
-						binaryWriteCache_[i].SiPM[j].pes[k].time = binaryWriteCache_[i].SiPM[j].pes[k].time * 100;
-						binaryWriteCache_[i].SiPM[j].pes[k].timeError = binaryWriteCache_[i].SiPM[j].pes[k].timeError * 100;
-						binaryWriteCache_[i].SiPM[j].pes[k].foundTime = binaryWriteCache_[i].SiPM[j].pes[k].timeError * 100;
+				for(int j = 0; j < binaryWriteCache_[i].channels.size(); j++){
+					for(int k = 0; k < binaryWriteCache_[i].channels[j].PEs.size(); k++){
+						binaryWriteCache_[i].channels[j].PEs[k].time      = binaryWriteCache_[i].channels[j].PEs[k].time * 100;
+						binaryWriteCache_[i].channels[j].PEs[k].timeError   = binaryWriteCache_[i].channels[j].PEs[k].timeError * 100;
+						binaryWriteCache_[i].channels[j].PEs[k].initialTime = binaryWriteCache_[i].channels[j].PEs[k].timeError * 100;
 					}
 				}
 			}
@@ -74,7 +74,7 @@ private:
 	unsigned int cachedStates_ = 0;
 	std::string writeCache_;
 	
-	std::vector<EventFitData> binaryWriteCache_;
+	std::vector<FitEvent> binaryWriteCache_;
 	
 	std::ofstream myFile_;
 	std::mutex writerMutex_;
@@ -85,11 +85,11 @@ class Writer {
 public:
 	explicit Writer(std::shared_ptr<SyncFile> sf) : _sf(std::move(sf)) {writeMode_ = _sf->getWriteMode();}
 
-	static std::string writeWaveformInfo(const ChannelFitData &);
+	static std::string writeWaveformInfo(const FitChannel &);
 
-	static std::string writeFitPE(PEData);
+	static std::string writeFitPE(Photoelectron);
 
-	void writeEventInfo(const EventFitData &);
+	void writeEventInfo(const FitEvent &);
 	
 private:
 	std::shared_ptr<SyncFile> _sf;

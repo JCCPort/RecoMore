@@ -23,8 +23,8 @@ public:
 	SystemTest1() = default;
 	
 private:
-	FitData newData;
-	FitData oldData;
+	FitRun newData;
+	FitRun oldData;
 	
 	double timeSimilarity = 1e-6;
 	double ampSimilarity = 1e-6;
@@ -133,21 +133,21 @@ bool SystemTest1::runOverTestData() {
 
 bool SystemTest1::comparisons(){
 	// Check number of events is the same
-	if(newData.getFitEvents().size() != oldData.getFitEvents().size()){
+	if(newData.getEvents().size() != oldData.getEvents().size()){
 		numEventsSame = false;
-		std::cout << newData.getFitEvents().size() << "\n" << oldData.getFitEvents().size() << std::endl;
+		std::cout << newData.getEvents().size() << "\n" << oldData.getEvents().size() << std::endl;
 		return false;
 	}
 	numEventsSameRan = true;
 	
 	// Loop over events
-	for(int i = 1; i <= newData.getFitEvents().size(); i++){
+	for(int i = 1; i <= newData.getEvents().size(); i++){
 		// Loop over channels in event
-		EventFitData newEventData = newData.getEventFit(i);
-		EventFitData oldEventData = oldData.getEventFit(i);
-		for(int j = 0; j < newData.getFitEvents()[i].SiPM.size(); j++){
-			std::vector<unsigned short> newEventChannels = newEventData.getChannels();
-			std::vector<unsigned short> oldEventChannels = oldEventData.getChannels();
+		FitEvent newEventData = newData.getEvent(i);
+		FitEvent oldEventData = oldData.getEvent(i);
+		for(int j = 0; j < newData.getEvents()[i].channels.size(); j++){
+			std::vector<unsigned short> newEventChannels = newEventData.getChannelIDs();
+			std::vector<unsigned short> oldEventChannels = oldEventData.getChannelIDs();
 			if(not((std::count(newEventChannels.begin(), newEventChannels.end(), j)) and
 					std::count(oldEventChannels.begin(), oldEventChannels.end(), j))) {
 				continue;
@@ -157,10 +157,10 @@ bool SystemTest1::comparisons(){
 			auto oldChannelData = oldEventData.getChannel(j);
 			
 			// Check number of PEs in channel fit is the same
-			numPESInEventSame = numPESInEventSame and (newChannelData.pes.size() == oldChannelData.pes.size());
-			if((newChannelData.pes.size() != oldChannelData.pes.size())){
-				std::cout << "Mis-match in number of PEs for event " << newData.getFitEvents()[i].eventID << ", channel " << newChannelData.ch << std::endl;
-				std::cout << newChannelData.pes.size() << "\t" << oldChannelData.pes.size() << std::endl;
+			numPESInEventSame = numPESInEventSame and (newChannelData.PEs.size() == oldChannelData.PEs.size());
+			if((newChannelData.PEs.size() != oldChannelData.PEs.size())){
+				std::cout << "Mis-match in number of PEs for event " << newData.getEvents()[i].eventID << ", channel " << newChannelData.channel << std::endl;
+				std::cout << newChannelData.PEs.size() << "\t" << oldChannelData.PEs.size() << std::endl;
 				return false;
 			}
 			numPESInEventSameRan = true;
@@ -168,7 +168,7 @@ bool SystemTest1::comparisons(){
 			// Check reduced ChiSqs are the same
 			redChiSqSame = redChiSqSame and (std::abs(newChannelData.redChiSq - oldChannelData.redChiSq) <= redChiSqSimilarity);
 			if(std::abs(newChannelData.redChiSq - oldChannelData.redChiSq) > redChiSqSimilarity){
-				std::cout << "Mis-match in redChiSq for event " << newData.getFitEvents()[i].eventID << ", channel " << newChannelData.ch << std::endl;
+				std::cout << "Mis-match in redChiSq for event " << newData.getEvents()[i].eventID << ", channel " << newChannelData.channel << std::endl;
 				std::cout << newChannelData.redChiSq << "\t" << oldChannelData.redChiSq << std::endl;
 				return false;
 			}
@@ -176,19 +176,19 @@ bool SystemTest1::comparisons(){
 
 			
 			// Checking if fit values for each PE is the same
-			for(int k = 0; k < newChannelData.pes.size(); k++){
-				timesSame = timesSame and (std::abs(newChannelData.pes[k].time - oldChannelData.pes[k].time) <= timeSimilarity);
-				if(std::abs(newChannelData.pes[k].time - oldChannelData.pes[k].time) > timeSimilarity){
-					std::cout << "Mis-match in time for event " << newData.getFitEvents()[i].eventID << ", channel " << newChannelData.ch << std::endl;
-					std::cout << newChannelData.pes[k].time << "\t" << oldChannelData.pes[k].time << std::endl;
+			for(int k = 0; k < newChannelData.PEs.size(); k++){
+				timesSame = timesSame and (std::abs(newChannelData.PEs[k].time - oldChannelData.PEs[k].time) <= timeSimilarity);
+				if(std::abs(newChannelData.PEs[k].time - oldChannelData.PEs[k].time) > timeSimilarity){
+					std::cout << "Mis-match in time for event " << newData.getEvents()[i].eventID << ", channel " << newChannelData.channel << std::endl;
+					std::cout << newChannelData.PEs[k].time << "\t" << oldChannelData.PEs[k].time << std::endl;
 					return false;
 				}
 				timesSameRan = true;
 				
-				ampsSame = ampsSame and (std::abs(newChannelData.pes[k].amplitude - oldChannelData.pes[k].amplitude) <= ampSimilarity);
-				if(std::abs(newChannelData.pes[k].amplitude - oldChannelData.pes[k].amplitude) > ampSimilarity){
-					std::cout << "Mis-match in amplitude for event " << newData.getFitEvents()[i].eventID << ", channel " << newChannelData.ch << std::endl;
-					std::cout << newChannelData.pes[k].amplitude << "\t" << oldChannelData.pes[k].amplitude << std::endl;
+				ampsSame = ampsSame and (std::abs(newChannelData.PEs[k].amplitude - oldChannelData.PEs[k].amplitude) <= ampSimilarity);
+				if(std::abs(newChannelData.PEs[k].amplitude - oldChannelData.PEs[k].amplitude) > ampSimilarity){
+					std::cout << "Mis-match in amplitude for event " << newData.getEvents()[i].eventID << ", channel " << newChannelData.channel << std::endl;
+					std::cout << newChannelData.PEs[k].amplitude << "\t" << oldChannelData.PEs[k].amplitude << std::endl;
 					return false;
 				}
 				ampsSameRan = true;

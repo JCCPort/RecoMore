@@ -19,8 +19,8 @@ bool fitBatchPEs(const std::vector<DigitiserEvent> &events, std::atomic<unsigned
 
 void updateGuessCorrector(const std::vector<double>& amps, const std::vector<double>& times,
 						  const std::vector<double>& initialAmps, const std::vector<double>& initialTimes,
-						  float baseline, float initialBaseline, const std::vector<PEData>& pesFound);
+						  float baseline, float initialBaseline, const std::vector<Photoelectron>& pesFound);
 
-bool getNextPEGuess(DigitiserChannel residualWF, PEData *guessPE);
+bool getNextPEGuess(DigitiserChannel residualWF, Photoelectron *guessPE);
 
 #endif //RECOMORE_PEFIT_H
