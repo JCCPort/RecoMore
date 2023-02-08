@@ -112,7 +112,7 @@ bool SystemTest1::runOverTestData() {
 			}
 		}
 		
-		ThreadPool pool(numThreads);
+		BS::thread_pool pool(numThreads);
 		
 		unsigned int eventPos = 0;
 		for(int i = 0; i < batchNumber; i++){
@@ -146,8 +146,8 @@ bool SystemTest1::comparisons(){
 		FitEvent newEventData = newData.getEvent(i);
 		FitEvent oldEventData = oldData.getEvent(i);
 		for(int j = 0; j < newData.getEvents()[i].channels.size(); j++){
-			std::vector<unsigned short> newEventChannels = newEventData.getChannelIDs();
-			std::vector<unsigned short> oldEventChannels = oldEventData.getChannelIDs();
+			std::vector<unsigned int> newEventChannels = newEventData.getChannelIDs();
+			std::vector<unsigned int> oldEventChannels = oldEventData.getChannelIDs();
 			if(not((std::count(newEventChannels.begin(), newEventChannels.end(), j)) and
 					std::count(oldEventChannels.begin(), oldEventChannels.end(), j))) {
 				continue;

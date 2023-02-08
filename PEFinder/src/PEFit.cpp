@@ -80,7 +80,7 @@ inline void updateGuessCorrector(const std::vector<double>& amps, const std::vec
 		timeDiff = timeDiff + (((float)times[k] - (float)initialTimes[k]) - timeDiff) / (float)sysProcPECount;
 	}
 	baselineDiff = baselineDiff + (((float)baseline - initBaseline) - baselineDiff) / (float)sysProcPECount;
-};
+}
 
 
 inline bool getNextPEGuess(DigitiserChannel residualWF, Photoelectron *guessPE){
@@ -96,7 +96,7 @@ inline bool getNextPEGuess(DigitiserChannel residualWF, Photoelectron *guessPE){
 	guessPE->amplitude = -residualWF.waveform[minTimePos];
 	guessPE->time      = float(minTimePos) * pdfSamplingRate;
 	return true;
-};
+}
 
 void
 fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> outputFile, std::mutex &lock) {
