@@ -108,6 +108,7 @@ jobs:
           libraries: thread serialization test
           platform: x64
           configuration: Release
+          directory: boost
 
       - name: Make RecoMore build dir
         run: mkdir RecoMore-build
