@@ -150,8 +150,9 @@ public:
 	
 	[[maybe_unused]] std::vector<float> makeGuesserParams();
 	
-	unsigned int numPEs_;
-	std::vector<double> params;
+	unsigned int        numPEs_;
+	double              baseline_;
+	std::vector<double> PEParams_;
 };
 
 #endif //RECOMORE_DATASTRUCTURES_H

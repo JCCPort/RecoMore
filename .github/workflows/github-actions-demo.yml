@@ -37,7 +37,7 @@ jobs:
           add-apt-repository ppa:apt-fast/stable
           apt -y install apt-fast
           
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
           packages: build-essential ccache libbenchmark-dev libblas-dev libeigen3-dev libgflags-dev libgoogle-glog-dev liblapack-dev libmetis-dev libsuitesparse-dev ninja-build libssl-dev git cmake apt-transport-https software-properties-common wget
@@ -84,15 +84,13 @@ jobs:
           dpkg -i packages-microsoft-prod.deb
           apt update
           apt install -y powershell python3-pip
-          ls -lash /usr/bin/
           PATH=“$PATH:/usr/bin/python3”
           pip install cmake-common
           
-#      - name: Make boost dir
-#        run: |
-#          mkdir boost
-#          ls -lash .
-#          pwd
+      - name: Print dir
+        run: |
+          ls -lash .
+          pwd
 
       - name: Cache boost build
         id: cache-boost-build
@@ -114,6 +112,16 @@ jobs:
           platform: x64
           configuration: Release
           directory: '${{ runner.workspace }}/boost'
+
+      - name: Print dir 2
+        run: |
+          ls -lash '${{ runner.workspace }}/boost'
+          pwd
+
+      - name: Print dir 3
+        run: |
+          ls -lash boost
+          pwd
 
       - name: Make RecoMore build dir
         run: mkdir RecoMore-build
