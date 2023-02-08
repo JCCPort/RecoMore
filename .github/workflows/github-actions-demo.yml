@@ -101,6 +101,7 @@ jobs:
           apt-get update
           apt-get install -y powershell python-pip
           python -m ensurepip
+          PATH=“$PATH:/usr/local/bin/python”
 
 
       - uses: actions/checkout@v3
