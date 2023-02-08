@@ -33,7 +33,7 @@ jobs:
           apt update
           apt full-upgrade -y
           apt install -y sudo
-          apt install software-properties-common
+          apt install -y software-properties-common
           add-apt-repository ppa:saiarcot895/myppa
           apt -y install apt-fast
           
