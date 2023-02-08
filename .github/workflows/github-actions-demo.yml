@@ -46,7 +46,8 @@ jobs:
             ninja-build \
             libssl-dev \
             git \
-            cmake
+            cmake \
+            powershell
 
       - name: Setup CUDA toolkit
         if: matrix.gpu == 'cuda'
