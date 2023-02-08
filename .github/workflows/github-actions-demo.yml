@@ -98,7 +98,7 @@ jobs:
         id: cache-boost-build
         uses: actions/cache@v3
         with:
-          path: ${{ runner.workspace }}/boost_*.tar.gz'
+          path: '${{ runner.workspace }}/boost'
           key: boost-1.80-cache
 
       - if: steps. cache-boost-build.outputs.cache-hit != 'true'
@@ -113,6 +113,7 @@ jobs:
           libraries: thread serialization test
           platform: x64
           configuration: Release
+          directory: '${{ runner.workspace }}/boost'
 
       - name: Make RecoMore build dir
         run: mkdir RecoMore-build
