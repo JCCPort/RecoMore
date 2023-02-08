@@ -14,7 +14,7 @@ struct NPEPDFFunctor {
 			: waveformTimes_(std::move(waveformTimes)), waveformAmplitudes_(std::move(waveformAmplitudes)), PDFInterpolator_(PDFInterpolator), numPES_(numPES) {};
 	
 	template<typename T>
-	bool operator()(T const *const *params, T *__restrict__ residual) const {
+	inline bool operator()(T const *const *params, T *__restrict__ residual) const {
 		for (int j = 0; j < waveformTimes_.size(); j++) {
 			T f;
 			T X_(waveformTimes_[j]);
@@ -37,7 +37,7 @@ private:
 };
 
 
-float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double> *idealWaveform) {
+inline float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double> *idealWaveform) {
 	// TODO(josh): Replace p with an instance of fit parameters type
 	
 	// This way of passing x as a list then choosing the 0th index is from ROOT's syntax for fitting where you can fit
@@ -71,7 +71,7 @@ float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double>
 }
 
 
-void updateGuessCorrector(const std::vector<double>& amps, const std::vector<double>& times,
+inline void updateGuessCorrector(const std::vector<double>& amps, const std::vector<double>& times,
                           const std::vector<double>& initialAmps, const std::vector<double>& initialTimes,
                           float baseline, float initBaseline, const std::vector<Photoelectron>& pesFound){
 	for (int k   = 0; k < pesFound.size(); k++) {
@@ -83,7 +83,7 @@ void updateGuessCorrector(const std::vector<double>& amps, const std::vector<dou
 };
 
 
-bool getNextPEGuess(DigitiserChannel residualWF, Photoelectron *guessPE){
+inline bool getNextPEGuess(DigitiserChannel residualWF, Photoelectron *guessPE){
 	// Get initial guesses for the next PE
 	const auto         minPosIt   = std::min_element(residualWF.waveform.begin(), residualWF.waveform.end());
 	const unsigned int minTimePos = std::distance(residualWF.waveform.begin(), minPosIt);
@@ -184,6 +184,10 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 				break;
 			}
 		} // End of PE find loop
+		
+		if(numPEsFound == 0){
+			return;
+		}
 		
 		ceres::Problem problem{};
 		
