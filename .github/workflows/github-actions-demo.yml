@@ -93,7 +93,7 @@ jobs:
         id: cache-boost-build
         uses: actions/cache@v3
         with:
-          path: boost_1_80_0
+          path: boost
           key: boost-cache
 
       - if: steps. cache-boost-build.outputs.cache-hit != 'true'
