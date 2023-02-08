@@ -69,6 +69,33 @@ float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double>
 }
 
 
+void updateGuessCorrector(const std::vector<double>& amps, const std::vector<double>& times,
+                          const std::vector<double>& initialAmps, const std::vector<double>& initialTimes,
+                          float baseline, float initBaseline, const std::vector<PEData>& pesFound){
+	for (int k   = 0; k < pesFound.size(); k++) {
+		sysProcPECount++;
+		ampDiff  = ampDiff + (((float)amps[k] - (float)initialAmps[k]) - ampDiff) / (float)sysProcPECount;
+		timeDiff = timeDiff + (((float)times[k] - (float)initialTimes[k]) - timeDiff) / (float)sysProcPECount;
+	}
+	baselineDiff = baselineDiff + (((float)baseline - initBaseline) - baselineDiff) / (float)sysProcPECount;
+};
+
+
+bool getNextPEGuess(ChannelData residualWF, PEData *guessPE){
+	// Get initial guesses for the next PE
+	const auto         minPosIt   = std::min_element(residualWF.waveform.begin(), residualWF.waveform.end());
+	const unsigned int minTimePos = std::distance(residualWF.waveform.begin(), minPosIt);
+	
+	// If lowest point in waveform isn't below threshold there are no more PEs
+	if (-residualWF.waveform[minTimePos] < WFSigThresh) {
+		return false;
+	}
+	
+	guessPE->amplitude = -residualWF.waveform[minTimePos];
+	guessPE->time      = float(minTimePos) * pdfSamplingRate;
+	return true;
+};
+
 void
 fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file, std::mutex &m) {
 	std::vector<ChannelFitData> chFits;
@@ -131,22 +158,11 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			}
 			
 			// Compute residual
-			std::vector<float> fitVecForPlot; // Debug line
 			for (unsigned int  k = 0; k < residualWF.waveform.size(); ++k) {
 				// TODO(josh): Should it be k or k + 0.5?
 				const float fitVal = NPEPDFFunc((float)k * pdfSamplingRate, params, chIdealWF);
 				residualWF.waveform[k] = residualWF.waveform[k] - fitVal + initBaseline;
-				if (saveWaveforms) { fitVecForPlot.emplace_back(fitVal); } // Debug line
 			}
-			
-			
-			/** Debugging code - writing fits to CSV for plotting **/
-			if (saveWaveforms) {
-				writeVector("rawWaveform_" + std::to_string(waveformCount) + ".csv", WFData.waveform);
-				writeVector("fit_" + std::to_string(waveformCount) + ".csv", fitVecForPlot);
-				writeVector("residual_" + std::to_string(waveformCount) + ".csv", residualWF.waveform);
-			}
-			/** ================================================= **/
 
 			// Keep correcting baseline as new PEs are found.
 			if(!pesFound.empty()){
@@ -156,17 +172,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 				}
 			}
 			
-			// Get initial guesses for the next PE
-			const auto         minPosIt   = std::min_element(residualWF.waveform.begin(), residualWF.waveform.end());
-			const unsigned int minTimePos = std::distance(residualWF.waveform.begin(), minPosIt);
-			
-			// If lowest point in waveform isn't below threshold there are no more PEs
-			if (-residualWF.waveform[minTimePos] < WFSigThresh) {
-				break;
-			}
-			
-			guessPE.amplitude = -residualWF.waveform[minTimePos];
-			guessPE.time      = float(minTimePos) * pdfSamplingRate;
+			if(!getNextPEGuess(residualWF, &guessPE)){break;}
 			
 			numPEsFound += 1;
 			pesFound.push_back(guessPE);
@@ -309,28 +315,10 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		reducedChiSqs.emplace_back(redChiSq);
 		m.unlock();
 		
-		/** Debugging code - writing fits to CSV for plotting **/
-		if (saveWaveforms) {
-			std::vector<float> fullFitVecForPlot;
-			for (unsigned int  k = 0; k < WFData.waveform.size(); k++) {
-				const auto posVal = NPEPDFFunc((float) k * pdfSamplingRate, finalParams, chIdealWF);
-				fullFitVecForPlot.emplace_back(posVal);
-			}
-			writeVector("fullFit_" + std::to_string(waveformCount) + ".csv", fullFitVecForPlot);
-			m.lock();
-			waveformCount++;
-			m.unlock();
-		}
-		
 		chFits.push_back(chFit);
 		
 		// Update correction values for initial guesses
-		for (int k   = 0; k < pesFound.size(); k++) {
-			sysProcPECount++;
-			ampDiff  = ampDiff + (((float)amplitudes[k] - (float)initialAmplitudes[k]) - ampDiff) / (float)sysProcPECount;
-			timeDiff = timeDiff + (((float)times[k] - (float)initialTimes[k]) - timeDiff) / (float)sysProcPECount;
-		}
-		baselineDiff = baselineDiff + (((float)baseline - initBaseline) - baselineDiff) / (float)sysProcPECount;
+		updateGuessCorrector(amplitudes, times, initialAmplitudes, initialTimes, baseline, initBaseline, pesFound);
 		
 		for (int i = 0; i < int((params.size() - 1) / 2); i++){
 			delete x2[i];
