@@ -88,18 +88,18 @@ jobs:
           PATH=“$PATH:/usr/bin/python3”
           pip install cmake-common
           
-      - name: Make boost dir
-        run: |
-          mkdir boost
-          ls -lash .
-          pwd
+#      - name: Make boost dir
+#        run: |
+#          mkdir boost
+#          ls -lash .
+#          pwd
 
       - name: Cache boost build
         id: cache-boost-build
         uses: actions/cache@v3
         with:
-          path: boost
-          key: boost-cache
+          path: ${{ runner.workspace }}/boost_*.tar.gz'
+          key: boost-1.80-cache
 
       - if: steps. cache-boost-build.outputs.cache-hit != 'true'
         uses: actions/checkout@v3
