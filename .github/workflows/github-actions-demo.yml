@@ -88,6 +88,8 @@ jobs:
           PATH=“$PATH:/usr/bin/python3”
           pip install cmake-common
           
+      - name: Make boost dir
+        run: mkdir boost
 
       - name: Cache boost build
         id: cache-boost-build
