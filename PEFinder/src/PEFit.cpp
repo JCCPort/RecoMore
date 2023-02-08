@@ -97,7 +97,7 @@ bool getNextPEGuess(DigitiserChannel residualWF, Photoelectron *guessPE){
 };
 
 void
-fitPE(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> outputFile, std::mutex &lock) {
+fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> outputFile, std::mutex &lock) {
 	std::vector<FitChannel> chFits;
 	
 	for (const auto &channel: event->channels) { // Looping through all channels for a given event
@@ -337,18 +337,18 @@ fitPE(const DigitiserEvent *event, const std::vector<std::vector<double>> *ideal
  *
  * @param events
  * @param count
- * @param m
+ * @param lock
  * @param idealWaveforms
  * @param file
  * @return
  */
-bool fitBatchPEs(const std::vector<DigitiserEvent> &events, std::atomic<unsigned long> &count, std::mutex &m,
-                 const std::vector<std::vector<double>> *idealWaveforms, const std::shared_ptr<SyncFile> &file) {
+bool batchFitEvents(const std::vector<DigitiserEvent> &events, std::atomic<unsigned long> &count, std::mutex &lock,
+                    const std::vector<std::vector<double>> *idealWaveforms, const std::shared_ptr<SyncFile> &file) {
 	for (const auto &event: events) {
-		m.lock();
+		lock.lock();
 		++count;
-		m.unlock();
-		fitPE(&event, idealWaveforms, file, m);
+		lock.unlock();
+		fitEvent(&event, idealWaveforms, file, lock);
 	}
 	return true;
 }

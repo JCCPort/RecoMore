@@ -102,10 +102,12 @@ jobs:
           apt install -y powershell python3-pip
           ls -lash /usr/bin/
           PATH=“$PATH:/usr/bin/python3”
+          pip install cmake-common
 
       - uses: actions/checkout@v3
 
       - name: Build Boost
+        id: boost
         uses: egor-tensin/build-boost@v1.4
         with:
           version: 1.80.0

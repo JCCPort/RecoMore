@@ -97,7 +97,7 @@ bool SystemTest1::runOverTestData() {
 	                           data.getEvents().size());
 	
 	if (numThreads == 1) {
-		fitBatchPEs(data.getEvents(), count, m, &idealWaveforms, file);
+		batchFitEvents(data.getEvents(), count, m, &idealWaveforms, file);
 	} else {
 		// Determining how many events each thread should run over.
 		unsigned int threadRepeatCount[batchNumber];
@@ -117,7 +117,7 @@ bool SystemTest1::runOverTestData() {
 		unsigned int eventPos = 0;
 		for(int i = 0; i < batchNumber; i++){
 			std::vector passData = slice(data.getEvents(), eventPos, eventPos + threadRepeatCount[i] - 1);
-			pool.push_task(fitBatchPEs, passData, std::reference_wrapper(count), std::reference_wrapper(m), &idealWaveforms,
+			pool.push_task(batchFitEvents, passData, std::reference_wrapper(count), std::reference_wrapper(m), &idealWaveforms,
 			               file);
 			eventPos += threadRepeatCount[i];
 		}
