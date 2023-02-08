@@ -101,6 +101,7 @@ jobs:
           apt-get update
           apt-get install -y powershell
 
+      - uses: actions/checkout@v3
 
       - name: Build Boost
         uses: egor-tensin/build-boost@v1.4
