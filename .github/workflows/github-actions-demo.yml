@@ -34,7 +34,7 @@ jobs:
           apt full-upgrade -y
           apt install -y sudo
           apt install -y software-properties-common
-          add-apt-repository ppa:saiarcot895/myppa
+          add-apt-repository ppa:apt-fast/stable
           apt -y install apt-fast
           
       - uses: actions/checkout@v2
