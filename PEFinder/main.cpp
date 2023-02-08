@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
 	unsigned int batchNumber = program.get<int>("--num_batches");
 	skipChannels = program.get<std::vector<int>>("--skip_channels");
 	saveWaveforms = program.get<bool>("--save_waveforms");
-	WCData data = ReadWCDataFile(inputFileName);
+	DigitiserRun data = ReadWCDataFile(inputFileName);
  
 	std::shared_ptr<SyncFile> file;
 	bool textOutput = program.get<bool>("--txt-output");

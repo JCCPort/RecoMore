@@ -3,11 +3,11 @@
 
 #include "DataStructures.h"
 
-WCData ReadWCDataFile(const std::string &);
+DigitiserRun ReadWCDataFile(const std::string &);
 
-WCData ReadWCDataFileDat(const std::string &);
+DigitiserRun ReadWCDataFileDat(const std::string &);
 
-WCData ReadWCDataFileBinary(const std::string &);
+DigitiserRun ReadWCDataFileBinary(const std::string &);
 
 std::vector<double> readIdealWFs(unsigned int, int, const std::string &, unsigned int);
 

@@ -24,10 +24,10 @@ std::string to_string_with_precision(const T aValue, const int n) {
  * @param fileName Path to the data file you want to run RecoMore over.
  * @return Raw data events parsed into a WCData instance that contains a list of events to be split across multiple threads.
  */
-WCData ReadWCDataFile(const std::string &fileName){
+DigitiserRun ReadWCDataFile(const std::string &fileName){
 	// TODO(josh): Add error checking to if the data file is corrupted/invalid
-	std::string ending = fileName.substr(fileName.length() - 4);
-	WCData returnDat;
+	std::string  ending = fileName.substr(fileName.length() - 4);
+	DigitiserRun returnDat;
 	if(ending == ".dat"){
 		returnDat = ReadWCDataFileDat(fileName);
 	}
@@ -79,7 +79,7 @@ namespace client {
  * @param fileName Path to the raw data file to run RecoMore over.
  * @return Raw data events parsed into a WCData instance that contains a list of events to be split across multiple threads.
  */
-WCData ReadWCDataFileDat(const std::string &fileName) {
+DigitiserRun ReadWCDataFileDat(const std::string &fileName) {
 	// Defining regular expression searches to be used for getting event and channel numbers.
 	std::regex eventNumberRegex("=== EVENT (\\d*) ===\\r");
 	std::regex channelNumberRegex(R"(=== CH: (\d*) EVENTID: (\d*) FCR: (\d*) ===\r)");
@@ -90,8 +90,8 @@ WCData ReadWCDataFileDat(const std::string &fileName) {
 	                     "TDC corrected time = (\\d*h\\d*m\\d*s,\\d*\\.\\d*\\.\\d*ns) == "
 	                     "Nb of channels = (\\d*) ===\r\n)");
 	
-	WCData      readData;
-	ChannelData wf;
+	DigitiserRun     readData;
+	DigitiserChannel wf;
 	
 	FILE *fp = fopen(fileName.c_str(), "r");
 	std::ifstream input_file(fileName.c_str(), std::ios::binary | std::ios::in);
@@ -113,7 +113,7 @@ WCData ReadWCDataFileDat(const std::string &fileName) {
 	// This loop has should bring the variable `line` to the next line in the data file that gives the event number.
 	//  when it doesn't it means that the end of the file has been reached.
 	while (std::regex_search(&line[0], eventMatch, eventNumberRegex)) {
-		EventData event;
+		DigitiserEvent event;
 		event.eventID = stoi(eventMatch[1].str());
 		
 		getline(&line, &len, fp);
@@ -141,7 +141,7 @@ WCData ReadWCDataFileDat(const std::string &fileName) {
 			event.chData.push_back(wf);
 			getline(&line, &len, fp);
 		}
-		readData.addRow(event);
+		readData.addEvent(event);
 	}
 	fclose(fp);
 	if (line)
@@ -176,9 +176,9 @@ struct WCChannelDataNoMeasurement {
  * @param fileName Path to the raw data file to run RecoMore over.
  * @return Raw data events parsed into a WCData instance that contains a list of events to be split across multiple threads.
  */
-WCData ReadWCDataFileBinary(const std::string &fileName) {
-	WCData      readData;
-	ChannelData wf;
+DigitiserRun ReadWCDataFileBinary(const std::string &fileName) {
+	DigitiserRun     readData;
+	DigitiserChannel wf;
 	
 	std::ifstream input_file(fileName.c_str(), std::ios::binary | std::ios::in);
 	if (!input_file) {
@@ -201,7 +201,7 @@ WCData ReadWCDataFileBinary(const std::string &fileName) {
 	const float ADC2mV = (2500. / 4096.);
 	WCBinaryEventData event_{};
 	while (input_file.read((char *) (&event_), sizeof(event_))) {
-		EventData event;
+		DigitiserEvent event;
 		event.eventID = event_.eventNumber;
 		event.date = std::to_string(event_.year) + "." + std::to_string(event_.month) + "." + std::to_string(event_.day);
 		
@@ -237,7 +237,7 @@ WCData ReadWCDataFileBinary(const std::string &fileName) {
 			wf.waveform = temp;
 			event.chData.push_back(wf);
 		}
-		readData.addRow(event);
+		readData.addEvent(event);
 	}
 	return readData;
 }

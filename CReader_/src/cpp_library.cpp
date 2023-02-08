@@ -35,26 +35,26 @@ PYBIND11_MODULE(CReader, m) {
 			.def_readwrite("date", &EventFitData::date)
 			.def_readwrite("SiPM", &EventFitData::SiPM);
 	
-	py::class_<ChannelData>(m, "ChannelData", py::dynamic_attr())
+	py::class_<DigitiserChannel>(m, "ChannelData", py::dynamic_attr())
 			.def(py::init<const unsigned short&, const std::vector<float>&>())
-			.def_readwrite("channel", &ChannelData::channel)
-			.def_readwrite("waveform", &ChannelData::waveform);
+			.def_readwrite("channel", &DigitiserChannel::channel)
+			.def_readwrite("waveform", &DigitiserChannel::waveform);
 	
-	py::class_<EventData>(m, "EventData", py::dynamic_attr())
-			.def(py::init<const unsigned int&, const std::string&, const std::string&, const std::vector<ChannelData>>())
-			.def_readwrite("eventID", &EventData::eventID)
-			.def_readwrite("TDCCorrTime", &EventData::TDCCorrTime)
-			.def_readwrite("date", &EventData::date)
-			.def_readwrite("chData", &EventData::chData);
+	py::class_<DigitiserEvent>(m, "EventData", py::dynamic_attr())
+			.def(py::init<const unsigned int&, const std::string&, const std::string&, const std::vector<DigitiserChannel>>())
+			.def_readwrite("eventID", &DigitiserEvent::eventID)
+			.def_readwrite("TDCCorrTime", &DigitiserEvent::TDCCorrTime)
+			.def_readwrite("date", &DigitiserEvent::date)
+			.def_readwrite("chData", &DigitiserEvent::chData);
 	
-	py::class_<WCData>(m, "WCData")
-			.def("addRow", &WCData::addRow, "Add entry row to WCData")
-			.def("getEvents", &WCData::getEvents, "Get all events")
-			.def("getEvent", &WCData::getEvent, "Get event by event number")
-			.def("getChannelWaveform", &WCData::getChannelWaveform, "Get channel waveform by event and channel number");
+	py::class_<DigitiserRun>(m, "WCData")
+			.def("addEvent", &DigitiserRun::addEvent, "Add entry row to WCData")
+			.def("getEvents", &DigitiserRun::getEvents, "Get all events")
+			.def("getEvent", &DigitiserRun::getEvent, "Get event by event number")
+			.def("getChannelWaveform", &DigitiserRun::getChannelWaveform, "Get channel waveform by event and channel number");
 	
 	py::class_<FitData>(m, "FitData")
-			.def("addRow", &FitData::addRow, "Add entry row to FitData")
+			.def("addEvent", &FitData::addRow, "Add entry row to FitData")
 			.def("setRows", &FitData::setRows, "Set whole event fit vector at once.")
 			.def("getFitEvents", &FitData::getFitEvents, "Get all fit events")
 			.def("getEventFit", &FitData::getEventFit, "Get event fit by event number")

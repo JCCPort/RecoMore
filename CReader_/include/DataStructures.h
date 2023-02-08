@@ -10,13 +10,13 @@
 
 // Input types
 
-struct ChannelData {
+struct DigitiserChannel {
 	unsigned short channel;
 	std::vector<float> waveform{};
 };
 
-struct EventData{
-	ChannelData getChannel(int channelNumber){
+struct DigitiserEvent{
+	DigitiserChannel getDigitiserChannel(int channelNumber){
 		for(auto & channelWF : chData){
 			if(channelWF.channel == channelNumber){
 				return channelWF;
@@ -35,20 +35,20 @@ struct EventData{
 	
 	unsigned int             eventID;
 	std::string              TDCCorrTime;
-	std::string              date;
-	std::vector<ChannelData> chData;
+	std::string                   date;
+	std::vector<DigitiserChannel> chData;
 };
 
 
-class WCData {
+class DigitiserRun {
 public:
-	void addRow(const EventData &);
+	void addEvent(const DigitiserEvent &);
 	
-	 std::vector<EventData> getEvents() { return events_; };
-	 EventData getEvent(int eventNumber);
-	 ChannelData getChannelWaveform(int eventNumber, int channelNumber);
+	 std::vector<DigitiserEvent> getEvents() { return events_; };
+	 DigitiserEvent getEvent(int eventNumber);
+	 DigitiserChannel getChannelWaveform(int eventNumber, int channelNumber);
 private:
-	std::vector<EventData> events_{};
+	std::vector<DigitiserEvent> events_{};
 };
 
 

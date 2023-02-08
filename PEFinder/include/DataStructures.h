@@ -10,13 +10,13 @@
 
 // Input types
 
-struct ChannelData {
-	unsigned short channel;
+struct DigitiserChannel {
+	unsigned int channel;
 	std::vector<float> waveform{};
 };
 
-struct EventData{
-	ChannelData getChannel(int channelNumber){
+struct DigitiserEvent{
+	DigitiserChannel getDigitiserChannel(unsigned int channelNumber){
 		for(auto & channelWF : chData){
 			if(channelWF.channel == channelNumber){
 				return channelWF;
@@ -25,30 +25,30 @@ struct EventData{
 		throw std::runtime_error("Channel " + std::to_string(channelNumber) + " not found in event " + std::to_string(eventID) + ".");
 	}
 	
-	std::vector<unsigned short> getChannels(){
-		std::vector<unsigned short> channels;
+	std::vector<unsigned int> getChannels(){
+		std::vector<unsigned int> channels;
 		for(const auto& channel: chData){
 			channels.push_back(channel.channel);
 		}
 		return channels;
 	}
 	
-	unsigned int             eventID;
-	std::string              TDCCorrTime;
-	std::string              date;
-	std::vector<ChannelData> chData;
+	unsigned int                  eventID;
+	std::string                   TDCCorrTime;
+	std::string                   date;
+	std::vector<DigitiserChannel> chData;
 };
 
 
-class WCData {
+class DigitiserRun {
 public:
-	void addRow(const EventData &);
+	void addEvent(const DigitiserEvent &);
 	
-	 std::vector<EventData> getEvents() { return events_; };
-	 EventData getEvent(int eventNumber);
-	 ChannelData getChannelWaveform(int eventNumber, int channelNumber);
+	 std::vector<DigitiserEvent> getEvents() { return events_; };
+	 DigitiserEvent getEvent(int eventNumber);
+	 DigitiserChannel getChannelWaveform(int eventNumber, int channelNumber);
 private:
-	std::vector<EventData> events_{};
+	std::vector<DigitiserEvent> events_{};
 };
 
 

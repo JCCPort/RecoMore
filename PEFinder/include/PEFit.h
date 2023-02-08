@@ -12,15 +12,15 @@
 float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double> *idealWaveform);
 
 void
-fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file, std::mutex &m);
+fitPE(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file, std::mutex &m);
 
-bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long> &count, std::mutex &m,
+bool fitBatchPEs(const std::vector<DigitiserEvent> &events, std::atomic<unsigned long> &count, std::mutex &m,
                  const std::vector<std::vector<double>> *idealWaveforms, const std::shared_ptr<SyncFile> &file);
 
 void updateGuessCorrector(const std::vector<double>& amps, const std::vector<double>& times,
 						  const std::vector<double>& initialAmps, const std::vector<double>& initialTimes,
 						  float baseline, float initialBaseline, const std::vector<PEData>& pesFound);
 
-bool getNextPEGuess(ChannelData residualWF, PEData *guessPE);
+bool getNextPEGuess(DigitiserChannel residualWF, PEData *guessPE);
 
 #endif //RECOMORE_PEFIT_H

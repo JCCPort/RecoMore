@@ -81,7 +81,7 @@ void updateGuessCorrector(const std::vector<double>& amps, const std::vector<dou
 };
 
 
-bool getNextPEGuess(ChannelData residualWF, PEData *guessPE){
+bool getNextPEGuess(DigitiserChannel residualWF, PEData *guessPE){
 	// Get initial guesses for the next PE
 	const auto         minPosIt   = std::min_element(residualWF.waveform.begin(), residualWF.waveform.end());
 	const unsigned int minTimePos = std::distance(residualWF.waveform.begin(), minPosIt);
@@ -97,7 +97,7 @@ bool getNextPEGuess(ChannelData residualWF, PEData *guessPE){
 };
 
 void
-fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file, std::mutex &m) {
+fitPE(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file, std::mutex &m) {
 	std::vector<ChannelFitData> chFits;
 	
 	for (const auto &WFData: event->chData) { // Looping through all channels for a given event
@@ -342,7 +342,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
  * @param file
  * @return
  */
-bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long> &count, std::mutex &m,
+bool fitBatchPEs(const std::vector<DigitiserEvent> &events, std::atomic<unsigned long> &count, std::mutex &m,
                  const std::vector<std::vector<double>> *idealWaveforms, const std::shared_ptr<SyncFile> &file) {
 	for (const auto &event: events) {
 		m.lock();

@@ -1,11 +1,11 @@
 #include <stdexcept>
 #include "../include/DataStructures.h"
 
-void WCData::addRow(const EventData &wf) {
+void DigitiserRun::addEvent(const DigitiserEvent &wf) {
 	events_.emplace_back(wf);
 }
 
-EventData WCData::getEvent(int eventNumber) {
+DigitiserEvent DigitiserRun::getEvent(int eventNumber) {
 	for(auto & event : events_){
 		if(event.eventID == eventNumber){
 			return event;
@@ -14,7 +14,7 @@ EventData WCData::getEvent(int eventNumber) {
 	throw std::runtime_error("Event " + std::to_string(eventNumber) + " not found.");
 }
 
-ChannelData WCData::getChannelWaveform(int eventNumber, int channelNumber) {
+DigitiserChannel DigitiserRun::getChannelWaveform(int eventNumber, int channelNumber) {
 	for(auto & event : events_){
 		if(event.eventID == eventNumber){
 			for(auto & channelWF : event.chData){
