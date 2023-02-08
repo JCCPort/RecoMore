@@ -89,7 +89,10 @@ jobs:
           pip install cmake-common
           
       - name: Make boost dir
-        run: mkdir boost
+        run: |
+          mkdir boost
+          ls -lash .
+          pwd
 
       - name: Cache boost build
         id: cache-boost-build

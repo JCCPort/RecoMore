@@ -38,6 +38,8 @@ private:
 
 
 float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double> *idealWaveform) {
+	// TODO(josh): Replace p with an instance of fit parameters type
+	
 	// This way of passing x as a list then choosing the 0th index is from ROOT's syntax for fitting where you can fit
 	//  with an arbitrary number of dimensions (N input values -> single output, an N dimensional function)
 	
