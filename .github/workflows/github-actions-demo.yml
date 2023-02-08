@@ -114,3 +114,13 @@ jobs:
           libraries: thread serialization test
           platform: x64
           configuration: Release
+
+      - name: Make RecoMore build dir
+        run: mkdir RecoMore-build
+
+      - name: Build RecoMore
+        working-directory: RecoMore-build
+        id: recomore
+        run: |
+          cmake ..
+          make -j4
