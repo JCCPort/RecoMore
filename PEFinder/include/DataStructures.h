@@ -146,9 +146,11 @@ public:
 	
 	[[maybe_unused]] FitParams(double, const std::vector<Photoelectron> &);
 	
-	[[maybe_unused]] std::vector<double *> makeFitterParams();
+	[[maybe_unused]] void makeFitterParams(std::vector<double *>);
 	
 	[[maybe_unused]] std::vector<float> makeGuesserParams();
+	
+	[[maybe_unused]] int getNumParams() const;
 	
 	unsigned int        numPEs_;
 	double              baseline_;

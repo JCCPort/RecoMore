@@ -76,21 +76,19 @@ void FitRun::setEvents(const std::vector<FitEvent> &setData) {
 [[maybe_unused]] FitParams::FitParams(double baseline, const std::vector<Photoelectron> &PEs) {
 	numPEs_ = PEs.size();
 	baseline_ = baseline;
-	for (auto &pe: PEs) {
+	for (const auto pe: PEs) {
 		PEParams_.push_back(pe.amplitude);
 		PEParams_.push_back(pe.time);
 	}
 }
 
 
-[[maybe_unused]] std::vector<double *> FitParams::makeFitterParams() {
-	std::vector<double *> temp_;
+[[maybe_unused]] void FitParams::makeFitterParams(std::vector<double *> temp_) {
 	temp_.reserve(PEParams_.size());
 	temp_.push_back(&baseline_);
 	for (auto &param: PEParams_) {
 		temp_.push_back(&param);
 	}
-	return temp_;
 }
 
 [[maybe_unused]] std::vector<float> FitParams::makeGuesserParams() {
@@ -100,4 +98,8 @@ void FitRun::setEvents(const std::vector<FitEvent> &setData) {
 		temp_.push_back((float)param);
 	}
 	return temp_;
+}
+
+int FitParams::getNumParams() const {
+	return (int)PEParams_.size() + 2;
 }
