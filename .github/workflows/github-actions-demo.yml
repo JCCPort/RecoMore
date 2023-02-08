@@ -48,7 +48,8 @@ jobs:
             git \
             cmake \
             apt-transport-https \
-            software-properties-common
+            software-properties-common \
+            wget
 
       - name: Setup CUDA toolkit
         if: matrix.gpu == 'cuda'
