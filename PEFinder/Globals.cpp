@@ -11,9 +11,9 @@ float               samplingRate2Inv   = 1.0f / (0.01f * pdfSamplingRate);
 float               pdfT0SampleConv    = pdfT0Sample;
 double              WFSigThresh        = 0.005;
 int                 maxPEs             = 100;
-float               ampDiff            = 0;
-float               timeDiff           = 0;
-float               baselineDiff       = 0;
+double              ampDiff            = 0;
+double              timeDiff           = 0;
+double              baselineDiff       = 0;
 int                 sysProcPECount     = 0;
 int                 sysProcWFCount     = 0;
 

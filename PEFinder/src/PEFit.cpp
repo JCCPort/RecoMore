@@ -72,14 +72,14 @@ inline float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<
 
 
 inline void updateGuessCorrector(const std::vector<double>& amps, const std::vector<double>& times,
-                          const std::vector<double>& initialAmps, const std::vector<double>& initialTimes,
-                          float baseline, float initBaseline, const std::vector<Photoelectron>& pesFound){
+                                 const std::vector<double>& initialAmps, const std::vector<double>& initialTimes,
+                                 double baseline, double initBaseline, const std::vector<Photoelectron>& pesFound){
 	for (int k   = 0; k < pesFound.size(); k++) {
 		sysProcPECount++;
-		ampDiff  = ampDiff + (((float)amps[k] - (float)initialAmps[k]) - ampDiff) / (float)sysProcPECount;
-		timeDiff = timeDiff + (((float)times[k] - (float)initialTimes[k]) - timeDiff) / (float)sysProcPECount;
+		ampDiff  = ampDiff + ((amps[k] - initialAmps[k]) - ampDiff) / sysProcPECount;
+		timeDiff = timeDiff + ((times[k] - initialTimes[k]) - timeDiff) / sysProcPECount;
 	}
-	baselineDiff = baselineDiff + (((float)baseline - initBaseline) - baselineDiff) / (float)sysProcPECount;
+	baselineDiff = baselineDiff + ((baseline - initBaseline) - baselineDiff) / sysProcPECount;
 }
 
 
