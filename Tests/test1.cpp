@@ -147,9 +147,11 @@ bool SystemTest1::comparisons(){
 		// Loop over channels in event
 		FitEvent newEventData = newData.getEvent(i);
 		FitEvent oldEventData = oldData.getEvent(i);
-		for(int j = 0; j < newData.getEvent(i).channels.size(); j++){
-			std::vector<unsigned int> newEventChannels = newEventData.getChannelIDs();
-			std::vector<unsigned int> oldEventChannels = oldEventData.getChannelIDs();
+		
+		std::vector<unsigned int> newEventChannels = newEventData.getChannelIDs();
+		std::vector<unsigned int> oldEventChannels = oldEventData.getChannelIDs();
+		for(unsigned int j : newEventChannels){
+			
 			if(not((std::count(newEventChannels.begin(), newEventChannels.end(), j)) and
 					std::count(oldEventChannels.begin(), oldEventChannels.end(), j))) {
 				continue;
@@ -161,7 +163,7 @@ bool SystemTest1::comparisons(){
 			// Check number of PEs in channel fit is the same
 			numPESInEventSame = numPESInEventSame and (newChannelData.PEs.size() == oldChannelData.PEs.size());
 			if((newChannelData.PEs.size() != oldChannelData.PEs.size())){
-				std::cout << "Mis-match in number of PEs for event " << newData.getEvents()[i].ID << ", channel " << newChannelData.ID << std::endl;
+				std::cout << "Mis-match in number of PEs for event " << newEventData.ID << ", channel " << newChannelData.ID << std::endl;
 				std::cout << newChannelData.PEs.size() << "\t" << oldChannelData.PEs.size() << std::endl;
 				return false;
 			}
@@ -170,7 +172,7 @@ bool SystemTest1::comparisons(){
 			// Check reduced ChiSqs are the same
 			redChiSqSame = redChiSqSame and (std::abs(newChannelData.reducedChiSq - oldChannelData.reducedChiSq) <= redChiSqSimilarity);
 			if(std::abs(newChannelData.reducedChiSq - oldChannelData.reducedChiSq) > redChiSqSimilarity){
-				std::cout << "Mis-match in redChiSq for event " << newData.getEvents()[i].ID << ", channel " << newChannelData.ID << std::endl;
+				std::cout << "Mis-match in redChiSq for event " << newEventData.ID << ", channel " << newChannelData.ID << std::endl;
 				std::cout << newChannelData.reducedChiSq << "\t" << oldChannelData.reducedChiSq << std::endl;
 				return false;
 			}
@@ -179,18 +181,20 @@ bool SystemTest1::comparisons(){
 			
 			// Checking if fit values for each PE is the same
 			for(int k = 0; k < newChannelData.PEs.size(); k++){
-				timesSame = timesSame and (std::abs(newChannelData.PEs[k].time - oldChannelData.PEs[k].time) <= timeSimilarity);
-				if(std::abs(newChannelData.PEs[k].time - oldChannelData.PEs[k].time) > timeSimilarity){
-					std::cout << "Mis-match in time for event " << newData.getEvents()[i].ID << ", channel " << newChannelData.ID << std::endl;
-					std::cout << newChannelData.PEs[k].time << "\t" << oldChannelData.PEs[k].time << std::endl;
+				auto newPE = newChannelData.PEs[k];
+				auto oldPE = oldChannelData.PEs[k];
+				timesSame = timesSame and (std::abs(newPE.time - oldPE.time) <= timeSimilarity);
+				if(std::abs(newPE.time - oldPE.time) > timeSimilarity){
+					std::cout << "Mis-match in time for event " << newEventData.ID << ", channel " << newChannelData.ID << std::endl;
+					std::cout << newPE.time << "\t" << oldPE.time << std::endl;
 					return false;
 				}
 				timesSameRan = true;
 				
-				ampsSame = ampsSame and (std::abs(newChannelData.PEs[k].amplitude - oldChannelData.PEs[k].amplitude) <= ampSimilarity);
-				if(std::abs(newChannelData.PEs[k].amplitude - oldChannelData.PEs[k].amplitude) > ampSimilarity){
-					std::cout << "Mis-match in amplitude for event " << newData.getEvents()[i].ID << ", channel " << newChannelData.ID << std::endl;
-					std::cout << newChannelData.PEs[k].amplitude << "\t" << oldChannelData.PEs[k].amplitude << std::endl;
+				ampsSame = ampsSame and (std::abs(newPE.amplitude - oldPE.amplitude) <= ampSimilarity);
+				if(std::abs(newPE.amplitude - oldPE.amplitude) > ampSimilarity){
+					std::cout << "Mis-match in amplitude for event " << newEventData.ID << ", channel " << newChannelData.ID << std::endl;
+					std::cout << newPE.amplitude << "\t" << oldPE.amplitude << std::endl;
 					return false;
 				}
 				ampsSameRan = true;

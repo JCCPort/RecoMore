@@ -103,7 +103,7 @@ struct FitEvent{
 		ar & channels;
 	}
 	
-	FitChannel getChannel(int channelNumber){
+	FitChannel getChannel(unsigned int channelNumber){
 		for(auto & channelWF : channels){
 			if(channelWF.ID == channelNumber){
 				return channelWF;

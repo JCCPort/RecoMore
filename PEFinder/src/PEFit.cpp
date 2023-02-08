@@ -252,19 +252,19 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		std::vector<double *> parameterBlocks;
 		double                x1[] = {*params[0]};
 		parameterBlocks.push_back(x1);
-		auto **x2 = new double *[pesFound.size()];
-		for (int i = 1; i <= int((params.size() - 1) / 2); i++) {
-			x2[i-1]    = new double[2];
-			x2[i-1][0] = *params[2 * i - 1];
-			x2[i-1][1] = *params[2 * i];
-			parameterBlocks.push_back(x2[i - 1]);
+		double x2[pesFound.size()][2];
+		
+		for (int i = 0; i < pesFound.size(); i++) {
+			x2[i][0] = *params[(2 * i)];
+			x2[i][1] = *params[(2 * i) + 1];
+			parameterBlocks.push_back(x2[i]);
 		}
 
 		auto lossFunction(new ceres::ArctanLoss(WFSigThresh));
 		
 		problem.AddResidualBlock(costFunction, lossFunction, parameterBlocks);
 		
-		for (int i = 1; i < int((params.size() - 1) / 2); i++) {
+		for (int i = 0; i < pesFound.size(); i++) {
 			problem.SetParameterLowerBound(parameterBlocks[i], 0, 0);
 		}
 		
@@ -326,10 +326,6 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		// Update correction values for initial guesses
 		updateGuessCorrector(amplitudes, times, initialAmplitudes, initialTimes, baseline, initBaseline, pesFound);
 		
-		for (int i = 0; i < int((params.size() - 1) / 2); i++){
-			delete x2[i];
-		}
-		delete[] x2;
 		delete idealPDFInterpolator;
 	}
 	
