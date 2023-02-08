@@ -32,10 +32,10 @@ std::string Writer::writeFitPE(Photoelectron PEVar) {
 std::string Writer::writeWaveformInfo(const FitChannel &wfDat) {
 	std::string writeString;
 	writeString += "Ch=";
-	writeString += std::to_string(wfDat.channel);
+	writeString += std::to_string(wfDat.ID);
 	writeString += ", ";
 	writeString += "RedChiSq=";
-	writeString += std::to_string(wfDat.redChiSq);
+	writeString += std::to_string(wfDat.reducedChiSq);
 	writeString += ", ";
 	writeString += "Baseline=";
 	writeString += std::to_string(wfDat.baseline);
@@ -55,7 +55,7 @@ void Writer::writeEventInfo(const FitEvent &evData) {
 	if(writeMode_ == text){
 		std::string writeString;
 		writeString += "EVENT=";
-		writeString += std::to_string(evData.eventID);
+		writeString += std::to_string(evData.ID);
 		writeString += ", ";
 		writeString += "DATE=";
 		writeString += evData.date;

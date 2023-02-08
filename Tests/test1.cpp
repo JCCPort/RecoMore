@@ -159,17 +159,17 @@ bool SystemTest1::comparisons(){
 			// Check number of PEs in channel fit is the same
 			numPESInEventSame = numPESInEventSame and (newChannelData.PEs.size() == oldChannelData.PEs.size());
 			if((newChannelData.PEs.size() != oldChannelData.PEs.size())){
-				std::cout << "Mis-match in number of PEs for event " << newData.getEvents()[i].eventID << ", channel " << newChannelData.channel << std::endl;
+				std::cout << "Mis-match in number of PEs for event " << newData.getEvents()[i].ID << ", channel " << newChannelData.ID << std::endl;
 				std::cout << newChannelData.PEs.size() << "\t" << oldChannelData.PEs.size() << std::endl;
 				return false;
 			}
 			numPESInEventSameRan = true;
 			
 			// Check reduced ChiSqs are the same
-			redChiSqSame = redChiSqSame and (std::abs(newChannelData.redChiSq - oldChannelData.redChiSq) <= redChiSqSimilarity);
-			if(std::abs(newChannelData.redChiSq - oldChannelData.redChiSq) > redChiSqSimilarity){
-				std::cout << "Mis-match in redChiSq for event " << newData.getEvents()[i].eventID << ", channel " << newChannelData.channel << std::endl;
-				std::cout << newChannelData.redChiSq << "\t" << oldChannelData.redChiSq << std::endl;
+			redChiSqSame = redChiSqSame and (std::abs(newChannelData.reducedChiSq - oldChannelData.reducedChiSq) <= redChiSqSimilarity);
+			if(std::abs(newChannelData.reducedChiSq - oldChannelData.reducedChiSq) > redChiSqSimilarity){
+				std::cout << "Mis-match in redChiSq for event " << newData.getEvents()[i].ID << ", channel " << newChannelData.ID << std::endl;
+				std::cout << newChannelData.reducedChiSq << "\t" << oldChannelData.reducedChiSq << std::endl;
 				return false;
 			}
 			redChiSqSameRan = true;
@@ -179,7 +179,7 @@ bool SystemTest1::comparisons(){
 			for(int k = 0; k < newChannelData.PEs.size(); k++){
 				timesSame = timesSame and (std::abs(newChannelData.PEs[k].time - oldChannelData.PEs[k].time) <= timeSimilarity);
 				if(std::abs(newChannelData.PEs[k].time - oldChannelData.PEs[k].time) > timeSimilarity){
-					std::cout << "Mis-match in time for event " << newData.getEvents()[i].eventID << ", channel " << newChannelData.channel << std::endl;
+					std::cout << "Mis-match in time for event " << newData.getEvents()[i].ID << ", channel " << newChannelData.ID << std::endl;
 					std::cout << newChannelData.PEs[k].time << "\t" << oldChannelData.PEs[k].time << std::endl;
 					return false;
 				}
@@ -187,7 +187,7 @@ bool SystemTest1::comparisons(){
 				
 				ampsSame = ampsSame and (std::abs(newChannelData.PEs[k].amplitude - oldChannelData.PEs[k].amplitude) <= ampSimilarity);
 				if(std::abs(newChannelData.PEs[k].amplitude - oldChannelData.PEs[k].amplitude) > ampSimilarity){
-					std::cout << "Mis-match in amplitude for event " << newData.getEvents()[i].eventID << ", channel " << newChannelData.channel << std::endl;
+					std::cout << "Mis-match in amplitude for event " << newData.getEvents()[i].ID << ", channel " << newChannelData.ID << std::endl;
 					std::cout << newChannelData.PEs[k].amplitude << "\t" << oldChannelData.PEs[k].amplitude << std::endl;
 					return false;
 				}

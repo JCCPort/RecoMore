@@ -114,7 +114,7 @@ DigitiserRun ReadWCDataFileDat(const std::string &fileName) {
 	//  when it doesn't it means that the end of the file has been reached.
 	while (std::regex_search(&line[0], eventMatch, eventNumberRegex)) {
 		DigitiserEvent event;
-		event.eventID = stoi(eventMatch[1].str());
+		event.ID = stoi(eventMatch[1].str());
 		
 		getline(&line, &len, fp);
 		
@@ -129,7 +129,7 @@ DigitiserRun ReadWCDataFileDat(const std::string &fileName) {
 		// Loop over all the channels for a given event. Will stop being true if you've just parsed the last channel for
 		//  the event.
 		while (std::regex_search(&line[0], channelMatch, channelNumberRegex)) {
-			wf.channel = stoi(channelMatch[1].str());
+			wf.ID = stoi(channelMatch[1].str());
 			getline(&line, &len, fp);
 			
 			std::vector<float> temp;
@@ -202,7 +202,7 @@ DigitiserRun ReadWCDataFileBinary(const std::string &fileName) {
 	WCBinaryEventData event_{};
 	while (input_file.read((char *) (&event_), sizeof(event_))) {
 		DigitiserEvent event;
-		event.eventID = event_.eventNumber;
+		event.ID   = event_.eventNumber;
 		event.date = std::to_string(event_.year) + "." + std::to_string(event_.month) + "." + std::to_string(event_.day);
 		
 		if (event_.TDCSAMIndex < previousEventTDC)
@@ -229,7 +229,7 @@ DigitiserRun ReadWCDataFileBinary(const std::string &fileName) {
 		for(int j = 0; j < event_.nChannelStored; j++){
 			WCChannelDataNoMeasurement waveform{};
 			input_file.read((char *) (&waveform), sizeof(WCChannelDataNoMeasurement));
-			wf.channel = waveform.channel;
+			wf.ID = waveform.channel;
 			std::vector<float> temp;
 			for(short i : waveform.waveform){
 				temp.push_back(ADC2mV * (float)i / 10000);  // There was a factor of 10 originally in recozor, it became 10000 because we're using V not mV
@@ -339,8 +339,8 @@ FitRun ReadRecoMoreTextOutput(const std::string &fileName){
 	//  when it doesn't it means that the end of the file has been reached.
 	while (std::regex_search(&line[0], eventMatch, eventHeaderRegex)) {
 		FitEvent eventData;
-		eventData.eventID = std::stoi(eventMatch[1].str());
-		eventData.date          = eventMatch[2].str();
+		eventData.ID   = std::stoi(eventMatch[1].str());
+		eventData.date = eventMatch[2].str();
 		eventData.correctedTime = eventMatch[3].str();
 		
 		getline(&line, &len, fp);
@@ -351,9 +351,9 @@ FitRun ReadRecoMoreTextOutput(const std::string &fileName){
 		//  the event.
 		while (std::regex_search(&line[0], channelMatch, channelHeaderRegex)) {
 			FitChannel channelData;
-			channelData.channel  = std::stoi(channelMatch[1]);
-			channelData.redChiSq = std::stof(channelMatch[2]);
-			channelData.baseline = std::stof(channelMatch[3]);
+			channelData.ID           = std::stoi(channelMatch[1]);
+			channelData.reducedChiSq = std::stof(channelMatch[2]);
+			channelData.baseline     = std::stof(channelMatch[3]);
 			
 			getline(&line, &len, fp);
 			

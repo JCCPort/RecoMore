@@ -23,26 +23,26 @@ PYBIND11_MODULE(CReader, m) {
 	
 	py::class_<FitChannel>(m, "ChannelFitData", py::dynamic_attr())
 			.def(py::init<const unsigned short&, const float&, const float&, const std::vector<Photoelectron>&>())
-			.def_readwrite("ch", &FitChannel::channel)
-			.def_readwrite("redChiSq", &FitChannel::redChiSq)
+			.def_readwrite("ch", &FitChannel::ID)
+			.def_readwrite("redChiSq", &FitChannel::reducedChiSq)
 			.def_readwrite("baseline", &FitChannel::baseline)
 			.def_readwrite("pes", &FitChannel::PEs);
 	
 	py::class_<FitEvent>(m, "EventFitData", py::dynamic_attr())
 			.def(py::init<const unsigned int&, const std::string&, const std::string&, const std::vector<FitChannel>>())
-			.def_readwrite("eventID", &FitEvent::eventID)
+			.def_readwrite("eventID", &FitEvent::ID)
 			.def_readwrite("TDCCorrTime", &FitEvent::correctedTime)
 			.def_readwrite("date", &FitEvent::date)
 			.def_readwrite("SiPM", &FitEvent::channels);
 	
 	py::class_<DigitiserChannel>(m, "ChannelData", py::dynamic_attr())
 			.def(py::init<const unsigned short&, const std::vector<float>&>())
-			.def_readwrite("channel", &DigitiserChannel::channel)
+			.def_readwrite("channel", &DigitiserChannel::ID)
 			.def_readwrite("waveform", &DigitiserChannel::waveform);
 	
 	py::class_<DigitiserEvent>(m, "EventData", py::dynamic_attr())
 			.def(py::init<const unsigned int&, const std::string&, const std::string&, const std::vector<DigitiserChannel>>())
-			.def_readwrite("eventID", &DigitiserEvent::eventID)
+			.def_readwrite("eventID", &DigitiserEvent::ID)
 			.def_readwrite("TDCCorrTime", &DigitiserEvent::correctedTime)
 			.def_readwrite("date", &DigitiserEvent::date)
 			.def_readwrite("chData", &DigitiserEvent::channels);

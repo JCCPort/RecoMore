@@ -11,30 +11,30 @@
 // Input types
 
 struct DigitiserChannel {
-	unsigned int channel;
+	unsigned int       ID;
 	std::vector<float> waveform{};
 };
 
 struct DigitiserEvent{
 	DigitiserChannel getChannel(unsigned int channelNumber){
-		for(auto & channelWF : channels){
-			if(channelWF.channel == channelNumber){
-				return channelWF;
+		for(auto & channel : channels){
+			if(channel.ID == channelNumber){
+				return channel;
 			}
 		}
-		throw std::runtime_error("Channel " + std::to_string(channelNumber) + " not found in event " + std::to_string(eventID) + ".");
+		throw std::runtime_error("Channel " + std::to_string(channelNumber) + " not found in event " + std::to_string(ID) + ".");
 	}
 	
 	std::vector<unsigned int> getChannelIDs(){
 		std::vector<unsigned int> channels_;
 		for(const auto& channel: channels){
-			channels_.push_back(channel.channel);
+			channels_.push_back(channel.ID);
 		}
 		return channels_;
 	}
 	
-	unsigned int                  eventID{};
-	std::string                   correctedTime;
+	unsigned int ID{};
+	std::string  correctedTime;
 	std::string                   date;
 	std::vector<DigitiserChannel> channels;
 };
@@ -80,14 +80,14 @@ struct FitChannel {
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int version)
 	{
-		ar & channel;
-		ar & redChiSq;
+		ar & ID;
+		ar & reducedChiSq;
 		ar & baseline;
 		ar & PEs;
 	}
-	unsigned int               channel;
-	float                      redChiSq;
-	float                      baseline;
+	unsigned int ID;
+	float        reducedChiSq;
+	float        baseline;
 	std::vector<Photoelectron> PEs;
 };
 
@@ -97,7 +97,7 @@ struct FitEvent{
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int version)
 	{
-		ar & eventID;
+		ar & ID;
 		ar & correctedTime;
 		ar & date;
 		ar & channels;
@@ -105,23 +105,23 @@ struct FitEvent{
 	
 	FitChannel getChannel(int channelNumber){
 		for(auto & channelWF : channels){
-			if(channelWF.channel == channelNumber){
+			if(channelWF.ID == channelNumber){
 				return channelWF;
 			}
 		}
-		throw std::runtime_error("Channel " + std::to_string(channelNumber) + " not found in event " + std::to_string(eventID) + ".");
+		throw std::runtime_error("Channel " + std::to_string(channelNumber) + " not found in event " + std::to_string(ID) + ".");
 	}
 	
 	std::vector<unsigned int> getChannelIDs(){
 		std::vector<unsigned int> channels_;
 		for(const auto& channel: channels){
-			channels_.push_back(channel.channel);
+			channels_.push_back(channel.ID);
 		}
 		return channels_;
 	}
 	
-	unsigned int            eventID{};
-	std::string             correctedTime;
+	unsigned int ID{};
+	std::string  correctedTime;
 	std::string             date;
 	std::vector<FitChannel> channels;
 };

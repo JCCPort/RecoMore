@@ -12,7 +12,7 @@
 float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double> *idealWaveform);
 
 void
-fitPE(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file, std::mutex &m);
+fitPE(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> outputFile, std::mutex &lock);
 
 bool fitBatchPEs(const std::vector<DigitiserEvent> &events, std::atomic<unsigned long> &count, std::mutex &m,
                  const std::vector<std::vector<double>> *idealWaveforms, const std::shared_ptr<SyncFile> &file);

@@ -7,7 +7,7 @@ void DigitiserRun::addEvent(const DigitiserEvent &wf) {
 
 DigitiserEvent DigitiserRun::getEvent(int eventNumber) {
 	for(auto & event : events){
-		if(event.eventID == eventNumber){
+		if(event.ID == eventNumber){
 			return event;
 		}
 	}
@@ -16,9 +16,9 @@ DigitiserEvent DigitiserRun::getEvent(int eventNumber) {
 
 DigitiserChannel DigitiserRun::getEventChannel(int eventNumber, int channelNumber) {
 	for(auto & event : events){
-		if(event.eventID == eventNumber){
+		if(event.ID == eventNumber){
 			for(auto & channelWF : event.channels){
-				if(channelWF.channel == channelNumber){
+				if(channelWF.ID == channelNumber){
 					return channelWF;
 				}
 			}
@@ -34,7 +34,7 @@ void FitRun::addEvent(const FitEvent &eventFit) {
 
 FitEvent FitRun::getEvent(int eventNumber) {
 	for(auto & event : events){
-		if(event.eventID == eventNumber){
+		if(event.ID == eventNumber){
 			return event;
 		}
 	}
@@ -43,9 +43,9 @@ FitEvent FitRun::getEvent(int eventNumber) {
 
 FitChannel FitRun::getEventChannel(int eventNumber, int channelNumber) {
 	for(auto & event : events){
-		if(event.eventID == eventNumber){
+		if(event.ID == eventNumber){
 			for(auto & channelWF : event.channels){
-				if(channelWF.channel == channelNumber){
+				if(channelWF.ID == channelNumber){
 					return channelWF;
 				}
 			}

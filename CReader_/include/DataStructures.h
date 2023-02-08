@@ -11,18 +11,18 @@
 // Input types
 
 struct DigitiserChannel {
-	unsigned short channel;
+	unsigned short     ID;
 	std::vector<float> waveform{};
 };
 
 struct DigitiserEvent{
 	DigitiserChannel getDigitiserChannel(int channelNumber){
 		for(auto & channelWF : channels){
-			if(channelWF.channel == channelNumber){
+			if(channelWF.ID == channelNumber){
 				return channelWF;
 			}
 		}
-		throw std::runtime_error("Channel " + std::to_string(channelNumber) + " not found in event " + std::to_string(eventID) + ".");
+		throw std::runtime_error("Channel " + std::to_string(channelNumber) + " not found in event " + std::to_string(ID) + ".");
 	}
 	
 	std::vector<unsigned short> getChannelIDs(){
@@ -33,7 +33,7 @@ struct DigitiserEvent{
 		return channels;
 	}
 	
-	unsigned int eventID;
+	unsigned int ID;
 	std::string  correctedTime;
 	std::string                   date;
 	std::vector<DigitiserChannel> channels;
@@ -80,14 +80,14 @@ struct FitChannel {
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int version)
 	{
-		ar & channel;
-		ar & redChiSq;
+		ar & ID;
+		ar & reducedChiSq;
 		ar & baseline;
 		ar & PEs;
 	}
-	unsigned short channel;
-	float          redChiSq;
-	float                      baseline;
+	unsigned short ID;
+	float          reducedChiSq;
+	float          baseline;
 	std::vector<Photoelectron> PEs;
 };
 
@@ -97,7 +97,7 @@ struct FitEvent{
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int version)
 	{
-		ar & eventID;
+		ar & ID;
 		ar & correctedTime;
 		ar & date;
 		ar & channels;
@@ -105,11 +105,11 @@ struct FitEvent{
 	
 	FitChannel getChannel(int channelNumber){
 		for(auto & channelWF : channels){
-			if(channelWF.channel == channelNumber){
+			if(channelWF.ID == channelNumber){
 				return channelWF;
 			}
 		}
-		throw std::runtime_error("Channel " + std::to_string(channelNumber) + " not found in event " + std::to_string(eventID) + ".");
+		throw std::runtime_error("Channel " + std::to_string(channelNumber) + " not found in event " + std::to_string(ID) + ".");
 	}
 	
 	std::vector<unsigned short> getChannelIDs(){
@@ -120,7 +120,7 @@ struct FitEvent{
 		return channels;
 	}
 	
-	unsigned int eventID{};
+	unsigned int ID{};
 	std::string  correctedTime;
 	std::string  date;
 	std::vector<FitChannel> channels;

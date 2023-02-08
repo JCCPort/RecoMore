@@ -9,29 +9,29 @@
 
 
 struct NPEPDFFunctor {
-	NPEPDFFunctor(std::vector<float> x, std::vector<float> y,
+	NPEPDFFunctor(std::vector<float> waveformTimes, std::vector<float> waveformAmplitudes,
 	              ceres::CubicInterpolator<ceres::Grid1D<float, true>> *PDFInterpolator, unsigned int numPES)
-			: x_(std::move(x)), y_(std::move(y)), PDFInterpolator_(PDFInterpolator), numPES_(numPES) {};
+			: waveformTimes_(std::move(waveformTimes)), waveformAmplitudes_(std::move(waveformAmplitudes)), PDFInterpolator_(PDFInterpolator), numPES_(numPES) {};
 	
 	template<typename T>
 	bool operator()(T const *const *params, T *__restrict__ residual) const {
-		for (int j = 0; j < x_.size(); j++) {
+		for (int j = 0; j < waveformTimes_.size(); j++) {
 			T f;
-			T X_(x_[j]);
+			T X_(waveformTimes_[j]);
 			residual[j] = params[0][0];
 			for (unsigned int i = 0; i < numPES_; ++i) {
 				auto peParams = params[i];
 				PDFInterpolator_->Evaluate((X_ - peParams[0]), &f);
 				residual[j] += (peParams[1] * f);
 			}
-			residual[j] -= y_[j];
+			residual[j] -= waveformAmplitudes_[j];
 		}
 		return true;
 	}
 
 private:
-	const std::vector<float>                        x_;
-	const std::vector<float>                        y_;
+	const std::vector<float>                        waveformTimes_;
+	const std::vector<float>                        waveformAmplitudes_;
 	ceres::CubicInterpolator<ceres::Grid1D<float> > *PDFInterpolator_;
 	const unsigned int                              numPES_;
 };
@@ -97,25 +97,25 @@ bool getNextPEGuess(DigitiserChannel residualWF, Photoelectron *guessPE){
 };
 
 void
-fitPE(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file, std::mutex &m) {
+fitPE(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> outputFile, std::mutex &lock) {
 	std::vector<FitChannel> chFits;
 	
-	for (const auto &WFData: event->channels) { // Looping through all channels for a given event
-		auto residualWF = WFData; // This will be the variable that is modified to be the residual distribution after each iteration
+	for (const auto &channel: event->channels) { // Looping through all channels for a given event
+		auto residualWF = channel; // This will be the variable that is modified to be the residual distribution after each iteration
 		
 		FitChannel         chFit{};
-		const unsigned int ch = WFData.channel;
+		const unsigned int ch = channel.ID;
 		if (std::count(skipChannels.begin(), skipChannels.end(), ch)) {
 			continue;
 		}
-		chFit.channel = ch;
+		chFit.ID = ch;
 		
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
 		const std::vector<double> tmp        = (*idealWaveforms)[ch];
 		const std::vector<double> *chIdealWF = &tmp;
 		
 		// Baseline calculation
-		float initBaseline = averageVector(WFData.waveform, 2);
+		float initBaseline = averageVector(channel.waveform, 2);
 		chFit.baseline = initBaseline;
 
 		// Start loop that will break when no more PEs are present
@@ -149,7 +149,7 @@ fitPE(const DigitiserEvent *event, const std::vector<std::vector<double>> *ideal
 				// TODO(josh): Improve the adjustment by averaging the shift based off of a few bins around the PE time
 				const unsigned int peTimeBinPos   = std::floor(pesFound[i].time / pdfSamplingRate);
 				const float        fitVal         = NPEPDFFunc(pesFound[i].time, params, chIdealWF);
-				const float        extraAmplitude = fitVal - WFData.waveform[peTimeBinPos];
+				const float        extraAmplitude = fitVal - channel.waveform[peTimeBinPos];
 				const float        newAmplitude   = pesFound[i].amplitude + extraAmplitude;
 				if (newAmplitude > WFSigThresh) { // TODO(josh): We need to consider the situations that this would ever be true
 					params[2 + (2 * i)] = newAmplitude;
@@ -176,7 +176,7 @@ fitPE(const DigitiserEvent *event, const std::vector<std::vector<double>> *ideal
 			
 			numPEsFound += 1;
 			pesFound.push_back(guessPE);
-			residualWF = WFData;
+			residualWF = channel;
 			
 			if (numPEsFound > maxPEs) {  // To handle the possibility of the algorithm being overly keen.
 				break;
@@ -223,19 +223,19 @@ fitPE(const DigitiserEvent *event, const std::vector<std::vector<double>> *ideal
 		
 		// Creating the x values that the solver will use
 		std::vector<float> xValues;
-		for (unsigned int  j = 0; j < WFData.waveform.size(); j++) {
+		for (unsigned int  j = 0; j < channel.waveform.size(); j++) {
 			xValues.push_back(((float)j * 100.0f) + pdfT0SampleConv);  // Multiplying index to match position on ideal PDF
 		}
 		
 		// Set up the only cost function (also known as residual). This uses
 		// auto-differentiation to obtain the derivative (Jacobian).
 		auto functor = new NPEPDFFunctor(xValues,
-		                                 WFData.waveform,
+		                                 channel.waveform,
 		                                 idealPDFInterpolator,
 		                                 pesFound.size());
 		auto costFunction = new ceres::DynamicAutoDiffCostFunction<NPEPDFFunctor>(functor);
 		
-		costFunction->SetNumResiduals((int) WFData.waveform.size());
+		costFunction->SetNumResiduals((int) channel.waveform.size());
 		
 		costFunction->AddParameterBlock(1); // Baseline param
 		for ([[maybe_unused]]const auto &pe: pesFound) {
@@ -298,22 +298,22 @@ fitPE(const DigitiserEvent *event, const std::vector<std::vector<double>> *ideal
 		}
 
 		float            chiSq    = 0;
-		for (unsigned int j        = 0; j < WFData.waveform.size(); j++) {
-			const float observed = WFData.waveform[j];
+		for (unsigned int j        = 0; j < channel.waveform.size(); j++) {
+			const float observed = channel.waveform[j];
 			const float expected = NPEPDFFunc((float) j * pdfSamplingRate, finalParams, chIdealWF);
 			chiSq += (float)std::pow(observed - expected, 2) / (pdfResidualRMS / 1000);
 			//TODO(josh): Need to calculate the residual RMS on a per waveform basis?
 		}
-		float            redChiSq = chiSq / ((float) WFData.waveform.size() - ((float) finalParams.size() - 1));
+		float            redChiSq = chiSq / ((float) channel.waveform.size() - ((float) finalParams.size() - 1));
 		
 		sysProcWFCount++;
 		meanReducedChiSq = meanReducedChiSq + (redChiSq - meanReducedChiSq) / sysProcWFCount;
 		
-		chFit.redChiSq = redChiSq;
+		chFit.reducedChiSq = redChiSq;
 		
-		m.lock();
+		lock.lock();
 		reducedChiSqs.emplace_back(redChiSq);
-		m.unlock();
+		lock.unlock();
 		
 		chFits.push_back(chFit);
 		
@@ -327,9 +327,9 @@ fitPE(const DigitiserEvent *event, const std::vector<std::vector<double>> *ideal
 		delete idealPDFInterpolator;
 	}
 	
-	FitEvent evFitDat{event->eventID, event->correctedTime, event->date, chFits};
+	FitEvent evFitDat{event->ID, event->correctedTime, event->date, chFits};
 	
-	Writer writer(std::move(file));
+	Writer writer(std::move(outputFile));
 	writer.writeEventInfo(evFitDat);
 }
 
