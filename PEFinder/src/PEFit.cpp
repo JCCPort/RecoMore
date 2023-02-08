@@ -110,7 +110,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			std::vector<float> params;
 			params.push_back((float) pesFound.size());
 			params.push_back(initBaseline);
-			for (auto pe: pesFound) {
+			for (const auto &pe: pesFound) {
 				params.push_back(pe.amplitude);
 				params.push_back(pe.time);
 			}
@@ -223,15 +223,16 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		
 		// Set up the only cost function (also known as residual). This uses
 		// auto-differentiation to obtain the derivative (Jacobian).
-		auto costFunction = new ceres::DynamicAutoDiffCostFunction<NPEPDFFunctor>(new NPEPDFFunctor(xValues,
-		                                                                                            WFData.waveform,
-		                                                                                            idealPDFInterpolator,
-		                                                                                            pesFound.size()));
+		auto functor = new NPEPDFFunctor(xValues,
+		                                 WFData.waveform,
+		                                 idealPDFInterpolator,
+		                                 pesFound.size());
+		auto costFunction = new ceres::DynamicAutoDiffCostFunction<NPEPDFFunctor>(functor);
 		
 		costFunction->SetNumResiduals((int) WFData.waveform.size());
 		
 		costFunction->AddParameterBlock(1); // Baseline param
-		for ([[maybe_unused]] auto pe: pesFound) {
+		for ([[maybe_unused]]const auto &pe: pesFound) {
 			costFunction->AddParameterBlock(2); // Params for one PE
 		}
 
@@ -285,7 +286,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		std::vector<float> finalParams;
 		finalParams.push_back((float) FitPEs.size());
 		finalParams.push_back((float) baseline);
-		for (auto PE: FitPEs) {
+		for (const auto &PE: FitPEs) {
 			finalParams.push_back((float) PE.amplitude);
 			finalParams.push_back((float) PE.time);
 		}
