@@ -45,8 +45,8 @@ public:
 	void addEvent(const DigitiserEvent &);
 	
 	 std::vector<DigitiserEvent> getEvents() { return events; };
-	 DigitiserEvent getEvent(int eventNumber);
-	 DigitiserChannel getEventChannel(int eventNumber, int channelNumber);
+	 DigitiserEvent getEvent(unsigned int eventNumber);
+	 DigitiserChannel getEventChannel(unsigned int eventNumber, unsigned int channelNumber);
 private:
 	std::vector<DigitiserEvent> events{};
 };
@@ -133,8 +133,8 @@ public:
 	void setEvents(const std::vector<FitEvent> &);
 	
 	std::vector<FitEvent> getEvents() { return events; };
-	FitEvent getEvent(int eventNumber);
-	FitChannel getEventChannel(int eventNumber, int channelNumber);
+	FitEvent getEvent(unsigned int eventNumber);
+	FitChannel getEventChannel(unsigned int eventNumber, unsigned int channelNumber);
 private:
 	std::vector<FitEvent> events{};
 };

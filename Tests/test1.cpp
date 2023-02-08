@@ -141,11 +141,13 @@ bool SystemTest1::comparisons(){
 	numEventsSameRan = true;
 	
 	// Loop over events
-	for(int i = 1; i <= newData.getEvents().size(); i++){
+	std::vector<unsigned int> newEventIDs = newData.getEventIDs();
+	
+	for(unsigned int i : newEventIDs){
 		// Loop over channels in event
 		FitEvent newEventData = newData.getEvent(i);
 		FitEvent oldEventData = oldData.getEvent(i);
-		for(int j = 0; j < newData.getEvents()[i].channels.size(); j++){
+		for(int j = 0; j < newData.getEvent(i).channels.size(); j++){
 			std::vector<unsigned int> newEventChannels = newEventData.getChannelIDs();
 			std::vector<unsigned int> oldEventChannels = oldEventData.getChannelIDs();
 			if(not((std::count(newEventChannels.begin(), newEventChannels.end(), j)) and
@@ -206,8 +208,16 @@ BOOST_AUTO_TEST_CASE(CheckFittingRan)
 {
 	BOOST_CHECK(systemTest1.runOverTestData());
 	std::cout << "Ran fitting over test data" << std::endl;
+}
+
+BOOST_AUTO_TEST_CASE(RunFilesOpened)
+{
 	systemTest1.openNewRunFile();
 	systemTest1.openOldRunFile();
+}
+
+BOOST_AUTO_TEST_CASE(ComparisonsRan)
+{
 	systemTest1.comparisons();
 }
 

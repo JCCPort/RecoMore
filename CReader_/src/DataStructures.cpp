@@ -5,7 +5,7 @@ void DigitiserRun::addEvent(const DigitiserEvent &) {
 	events.emplace_back(wf);
 }
 
-DigitiserEvent DigitiserRun::getEvent(int eventNumber) {
+DigitiserEvent DigitiserRun::getEvent(unsigned int eventNumber) {
 	for(auto & event : events){
 		if(event.ID == eventNumber){
 			return event;
@@ -14,7 +14,7 @@ DigitiserEvent DigitiserRun::getEvent(int eventNumber) {
 	throw std::runtime_error("Event " + std::to_string(eventNumber) + " not found.");
 }
 
-DigitiserChannel DigitiserRun::getEventChannel(int eventNumber, int channelNumber) {
+DigitiserChannel DigitiserRun::getEventChannel(unsigned int eventNumber, unsigned int channelNumber) {
 	for(auto & event : events){
 		if(event.ID == eventNumber){
 			for(auto & channelWF : event.channels){
@@ -32,7 +32,7 @@ void FitRun::addEvent(const FitEvent &) {
 	events.emplace_back(eventFit);
 }
 
-FitEvent FitRun::getEvent(int eventNumber) {
+FitEvent FitRun::getEvent(unsigned int eventNumber) {
 	for(auto & event : events){
 		if(event.ID == eventNumber){
 			return event;
@@ -41,7 +41,7 @@ FitEvent FitRun::getEvent(int eventNumber) {
 	throw std::runtime_error("Event " + std::to_string(eventNumber) + " not found.");
 }
 
-FitChannel FitRun::getEventChannel(int eventNumber, int channelNumber) {
+FitChannel FitRun::getEventChannel(unsigned int eventNumber, unsigned int channelNumber) {
 	for(auto & event : events){
 		if(event.ID == eventNumber){
 			for(auto & channelWF : event.channels){
