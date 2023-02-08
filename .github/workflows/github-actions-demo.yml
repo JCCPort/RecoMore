@@ -50,46 +50,44 @@ jobs:
             apt-transport-https \
             software-properties-common \
             wget
+          
+      - uses: actions/checkout@v2
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: build-essential ccache libbenchmark-dev libblas-dev libeigen3-dev libgflags-dev libgoogle-glog-dev liblapack-dev libmetis-dev libsuitesparse-dev ninja-build libssl-dev git cmake apt-transport-https software-properties-common wget
+          version: 1.0
 
-      - name: Setup CUDA toolkit
-        if: matrix.gpu == 'cuda'
-        run: |
-          apt-get install -y \
-            nvidia-cuda-dev \
-            nvidia-cuda-toolkit
-
-
-      - name: Cache Build
-        id: cache-build
+      - name: Cache Ceres-solver build
+        id:  cache-ceres-build
         uses: actions/cache@v3
         with:
           path: ceres-solver
           key: ceres-solver-cache
 
-      - if: steps.cache-build.outputs.cache-hit != 'true'
+      - if: steps. cache-ceres-build.outputs.cache-hit != 'true'
         name: Setup Environment
         run: echo 'CXXFLAGS=-flto' >> $GITHUB_ENV
 
-      - if: steps.cache-build.outputs.cache-hit != 'true'
+      - if: steps. cache-ceres-build.outputs.cache-hit != 'true'
         name: Clone ceres-solver
         run: git clone https://ceres-solver.googlesource.com/ceres-solver
 
-      - if: steps.cache-build.outputs.cache-hit != 'true'
+      - if: steps. cache-ceres-build.outputs.cache-hit != 'true'
         name: Make build dir
         working-directory: ceres-solver
         run: mkdir build
 
-      - if: steps.cache-build.outputs.cache-hit != 'true'
+      - if: steps. cache-ceres-build.outputs.cache-hit != 'true'
         name: Configure
         working-directory: ceres-solver/build
         run: cmake ..
 
-      - if: steps.cache-build.outputs.cache-hit != 'true'
+      - if: steps. cache-ceres-build.outputs.cache-hit != 'true'
         name: Build
         working-directory: ceres-solver/build
         run: make -j4
 
-      - if: steps.cache-build.outputs.cache-hit != 'true'
+      - if: steps. cache-ceres-build.outputs.cache-hit != 'true'
         name: Install
         working-directory: ceres-solver/build
         run: make install
@@ -103,10 +101,20 @@ jobs:
           ls -lash /usr/bin/
           PATH=“$PATH:/usr/bin/python3”
           pip install cmake-common
+          
 
-      - uses: actions/checkout@v3
+      - name: Cache boost build
+        id: cache-boost-build
+        uses: actions/cache@v3
+        with:
+          path: boost_1_80_0
+          key: boost-cache
 
-      - name: Build Boost
+      - if: steps. cache-boost-build.outputs.cache-hit != 'true'
+        uses: actions/checkout@v3
+
+      - if: steps. cache-boost-build.outputs.cache-hit != 'true'
+        name: Build Boost
         id: boost
         uses: egor-tensin/build-boost@v1.4
         with:
@@ -118,9 +126,9 @@ jobs:
       - name: Make RecoMore build dir
         run: mkdir RecoMore-build
 
-      - name: Build RecoMore
-        working-directory: RecoMore-build
-        id: recomore
-        run: |
-          cmake ..
-          make -j4
+#      - name: Build RecoMore
+#        working-directory: RecoMore-build
+#        id: recomore
+#        run: |
+#          cmake ..
+#          make -j4
