@@ -18,9 +18,9 @@ bool batchFitEvents(const std::vector<DigitiserEvent> &events, std::atomic<unsig
                     const std::vector<std::vector<double>> *idealWaveforms, const std::shared_ptr<SyncFile> &file);
 
 void updateGuessCorrector(const std::vector<double>& amps, const std::vector<double>& times,
-						  const std::vector<double>& initialAmps, const std::vector<double>& initialTimes,
-						  float baseline, float initialBaseline, const std::vector<Photoelectron>& pesFound);
+                                 const std::vector<double>& initialAmps, const std::vector<double>& initialTimes,
+                                 double baseline, double initBaseline, const std::vector<Photoelectron>& pesFound);
 
-bool getNextPEGuess(DigitiserChannel residualWF, Photoelectron *guessPE);
+bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE);
 
 #endif //RECOMORE_PEFIT_H

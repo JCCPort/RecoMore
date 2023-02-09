@@ -14,7 +14,7 @@ struct NPEPDFFunctor {
 			: waveformTimes_(std::move(waveformTimes)), waveformAmplitudes_(std::move(waveformAmplitudes)), PDFInterpolator_(PDFInterpolator), numPES_(numPES) {};
 	
 	template<typename T>
-	bool operator()(T const *const *params, T *__restrict__ residual) const {
+	inline bool operator()(T const *const *params, T *__restrict__ residual) const {
 		for (int j = 0; j < waveformTimes_.size(); j++) {
 			T f;
 			T X_(waveformTimes_[j]);
@@ -37,7 +37,7 @@ private:
 };
 
 
-float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double> *idealWaveform) {
+inline float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double> *idealWaveform) {
 	// TODO(josh): Replace p with an instance of fit parameters type
 	
 	// This way of passing x as a list then choosing the 0th index is from ROOT's syntax for fitting where you can fit
@@ -71,32 +71,32 @@ float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double>
 }
 
 
-void updateGuessCorrector(const std::vector<double>& amps, const std::vector<double>& times,
-                          const std::vector<double>& initialAmps, const std::vector<double>& initialTimes,
-                          float baseline, float initBaseline, const std::vector<Photoelectron>& pesFound){
+inline void updateGuessCorrector(const std::vector<double>& amps, const std::vector<double>& times,
+                                 const std::vector<double>& initialAmps, const std::vector<double>& initialTimes,
+                                 double baseline, double initBaseline, const std::vector<Photoelectron>& pesFound){
 	for (int k   = 0; k < pesFound.size(); k++) {
 		sysProcPECount++;
-		ampDiff  = ampDiff + (((float)amps[k] - (float)initialAmps[k]) - ampDiff) / (float)sysProcPECount;
-		timeDiff = timeDiff + (((float)times[k] - (float)initialTimes[k]) - timeDiff) / (float)sysProcPECount;
+		ampDiff  = ampDiff + ((amps[k] - initialAmps[k]) - ampDiff) / sysProcPECount;
+		timeDiff = timeDiff + ((times[k] - initialTimes[k]) - timeDiff) / sysProcPECount;
 	}
-	baselineDiff = baselineDiff + (((float)baseline - initBaseline) - baselineDiff) / (float)sysProcPECount;
-};
+	baselineDiff = baselineDiff + ((baseline - initBaseline) - baselineDiff) / sysProcPECount;
+}
 
 
-bool getNextPEGuess(DigitiserChannel residualWF, Photoelectron *guessPE){
+inline bool getNextPEGuess(DigitiserChannel* residualWF, Photoelectron *guessPE){
 	// Get initial guesses for the next PE
-	const auto         minPosIt   = std::min_element(residualWF.waveform.begin(), residualWF.waveform.end());
-	const unsigned int minTimePos = std::distance(residualWF.waveform.begin(), minPosIt);
+	const auto         minPosIt   = std::min_element(residualWF->waveform.begin(), residualWF->waveform.end());
+	const unsigned int minTimePos = std::distance(residualWF->waveform.begin(), minPosIt);
 	
 	// If lowest point in waveform isn't below threshold there are no more PEs
-	if (-residualWF.waveform[minTimePos] < WFSigThresh) {
+	if (-residualWF->waveform[minTimePos] < WFSigThresh) {
 		return false;
 	}
 	
-	guessPE->amplitude = -residualWF.waveform[minTimePos];
+	guessPE->amplitude = -residualWF->waveform[minTimePos];
 	guessPE->time      = float(minTimePos) * pdfSamplingRate;
 	return true;
-};
+}
 
 void
 fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> outputFile, std::mutex &lock) {
@@ -174,7 +174,9 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 				}
 			}
 			
-			if(!getNextPEGuess(residualWF, &guessPE)){break;}
+			if(!getNextPEGuess(&residualWF, &guessPE)){
+				break;
+			}
 			
 			numPEsFound += 1;
 			pesFound.push_back(guessPE);
@@ -184,6 +186,10 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 				break;
 			}
 		} // End of PE find loop
+		
+		if(numPEsFound == 0){
+			continue;
+		}
 		
 		ceres::Problem problem{};
 		
@@ -216,11 +222,11 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		// Creating vector of references to parameter values that the fitter will use and modify. Note this means that
 		// the references are the initial values before the fit and the final values after the fit.
 		double                baseline = initBaseline;
-		std::vector<double *> params   = {};
-		params.push_back(&baseline);
+		std::vector<double> params   = {};
+		params.push_back(baseline);
 		for (int i = 0; i < pesFound.size(); i++) {
-			params.push_back(&amplitudes[i]);
-			params.push_back(&times[i]);
+			params.push_back(amplitudes[i]);
+			params.push_back(times[i]);
 		}
 		
 		// Creating the x values that the solver will use
@@ -246,21 +252,21 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 
 		// Formatting parameters to allow grouping of params for one PE
 		std::vector<double *> parameterBlocks;
-		double                x1[] = {*params[0]};
+		double                x1[] = {params[0]};
 		parameterBlocks.push_back(x1);
-		auto **x2 = new double *[pesFound.size()];
-		for (int i = 1; i <= int((params.size() - 1) / 2); i++) {
-			x2[i-1]    = new double[2];
-			x2[i-1][0] = *params[2 * i - 1];
-			x2[i-1][1] = *params[2 * i];
-			parameterBlocks.push_back(x2[i - 1]);
+		double x2[pesFound.size()][2];
+		
+		for (int i = 0; i < pesFound.size(); i++) {
+			x2[i][0] = params[(2 * i) + 1];
+			x2[i][1] = params[(2 * i) + 2];
+			parameterBlocks.push_back(x2[i]);
 		}
 
 		auto lossFunction(new ceres::ArctanLoss(WFSigThresh));
 		
 		problem.AddResidualBlock(costFunction, lossFunction, parameterBlocks);
 		
-		for (int i = 1; i < int((params.size() - 1) / 2); i++) {
+		for (int i = 1; i < pesFound.size() + 1; i++) {
 			problem.SetParameterLowerBound(parameterBlocks[i], 0, 0);
 		}
 		
@@ -322,10 +328,6 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		// Update correction values for initial guesses
 		updateGuessCorrector(amplitudes, times, initialAmplitudes, initialTimes, baseline, initBaseline, pesFound);
 		
-		for (int i = 0; i < int((params.size() - 1) / 2); i++){
-			delete x2[i];
-		}
-		delete[] x2;
 		delete idealPDFInterpolator;
 	}
 	

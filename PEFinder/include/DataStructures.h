@@ -45,8 +45,8 @@ public:
 	void addEvent(const DigitiserEvent &);
 	
 	 std::vector<DigitiserEvent> getEvents() { return events; };
-	 DigitiserEvent getEvent(int eventNumber);
-	 DigitiserChannel getEventChannel(int eventNumber, int channelNumber);
+	 DigitiserEvent getEvent(unsigned int eventNumber);
+	 DigitiserChannel getEventChannel(unsigned int eventNumber, unsigned int channelNumber);
 private:
 	std::vector<DigitiserEvent> events{};
 };
@@ -103,7 +103,7 @@ struct FitEvent{
 		ar & channels;
 	}
 	
-	FitChannel getChannel(int channelNumber){
+	FitChannel getChannel(unsigned int channelNumber){
 		for(auto & channelWF : channels){
 			if(channelWF.ID == channelNumber){
 				return channelWF;
@@ -133,8 +133,9 @@ public:
 	void setEvents(const std::vector<FitEvent> &);
 	
 	std::vector<FitEvent> getEvents() { return events; };
-	FitEvent getEvent(int eventNumber);
-	FitChannel getEventChannel(int eventNumber, int channelNumber);
+	FitEvent getEvent(unsigned int eventNumber);
+	FitChannel getEventChannel(unsigned int eventNumber, unsigned int channelNumber);
+	std::vector<unsigned int> getEventIDs();
 private:
 	std::vector<FitEvent> events{};
 };
@@ -146,12 +147,15 @@ public:
 	
 	[[maybe_unused]] FitParams(double, const std::vector<Photoelectron> &);
 	
-	[[maybe_unused]] std::vector<double *> makeFitterParams();
+	[[maybe_unused]] void makeFitterParams(std::vector<double *>);
 	
 	[[maybe_unused]] std::vector<float> makeGuesserParams();
 	
-	unsigned int numPEs_;
-	std::vector<double> params;
+	[[maybe_unused]] int getNumParams() const;
+	
+	unsigned int        numPEs_;
+	double              baseline_;
+	std::vector<double> PEParams_;
 };
 
 #endif //RECOMORE_DATASTRUCTURES_H

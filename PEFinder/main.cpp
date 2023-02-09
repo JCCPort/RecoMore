@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
 			}
 		}
 
-		ThreadPool pool(numThreads);
+		BS::thread_pool pool(numThreads);
 
 		unsigned int eventPos = 0;
 		for(int i = 0; i < batchNumber; i++){
