@@ -114,7 +114,10 @@ jobs:
 
       - if: steps.cache-boost-build.outputs.cache-hit != 'true'
         name: Make boost dir
-        run: mkdir boost
+        run: |
+          mkdir boost
+          pwd
+          ls -lash .
 
 
       - if: steps.cache-boost-build.outputs.cache-hit != 'true'
@@ -130,6 +133,9 @@ jobs:
           platform: x64
           configuration: Release
           directory: boost
+        run: |
+          pwd
+          ls -lash .
 
       - name: Print dir 2
         run: |
