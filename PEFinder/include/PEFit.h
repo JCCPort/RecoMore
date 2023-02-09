@@ -23,4 +23,6 @@ void updateGuessCorrector(const std::vector<double>& amps, const std::vector<dou
 
 bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE);
 
+void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vector<float> *params, std::vector<float> waveform, const std::vector<double> *);
+
 #endif //RECOMORE_PEFIT_H

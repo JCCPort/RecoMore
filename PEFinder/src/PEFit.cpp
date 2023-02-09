@@ -98,6 +98,22 @@ inline bool getNextPEGuess(DigitiserChannel* residualWF, Photoelectron *guessPE)
 	return true;
 }
 
+
+inline void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vector<float> *params, std::vector<float> waveform, const std::vector<double> *chIdealWF){
+	for (int i = 0; i < pesFound->size(); i++) {
+		// TODO(josh): Improve the adjustment by averaging the shift based off of a few bins around the PE time
+		const unsigned int peTimeBinPos   = std::floor(pesFound->at(i).time / pdfSamplingRate);
+		const float        fitVal         = NPEPDFFunc(pesFound->at(i).time, *params, chIdealWF);
+		const float        extraAmplitude = fitVal - waveform[peTimeBinPos];
+		const float        newAmplitude   = pesFound->at(i).amplitude + extraAmplitude;
+		if (newAmplitude > WFSigThresh) { // TODO(josh): We need to consider the situations that this would ever be true
+			params->at(2 + (2 * i)) = newAmplitude;
+			pesFound->at(i).amplitude = newAmplitude;
+		}
+	}
+}
+
+
 void
 fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> outputFile, std::mutex &lock) {
 	std::vector<FitChannel> chFits;
@@ -147,17 +163,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			// Amplitude adjustment: if the latest PE found is before other one(s),
 			//  its tail is going to add some amplitude to the following one. Compares
 			//  real and fit amplitude at the time bin corresponding to the PE time.
-			for (int i = 0; i < pesFound.size(); i++) {
-				// TODO(josh): Improve the adjustment by averaging the shift based off of a few bins around the PE time
-				const unsigned int peTimeBinPos   = std::floor(pesFound[i].time / pdfSamplingRate);
-				const float        fitVal         = NPEPDFFunc(pesFound[i].time, params, chIdealWF);
-				const float        extraAmplitude = fitVal - channel.waveform[peTimeBinPos];
-				const float        newAmplitude   = pesFound[i].amplitude + extraAmplitude;
-				if (newAmplitude > WFSigThresh) { // TODO(josh): We need to consider the situations that this would ever be true
-					params[2 + (2 * i)] = newAmplitude;
-					pesFound[i].amplitude = newAmplitude;
-				}
-			}
+			amplitudeCorrection(&pesFound, &params, channel.waveform, chIdealWF);
 			
 			// Compute residual
 			for (unsigned int  k = 0; k < residualWF.waveform.size(); ++k) {
