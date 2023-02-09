@@ -133,9 +133,6 @@ jobs:
           platform: x64
           configuration: Release
           directory: boost
-        run: |
-          pwd
-          ls -lash .
 
       - name: Print dir 2
         run: |
