@@ -83,17 +83,17 @@ inline void updateGuessCorrector(const std::vector<double>& amps, const std::vec
 }
 
 
-inline bool getNextPEGuess(DigitiserChannel residualWF, Photoelectron *guessPE){
+inline bool getNextPEGuess(DigitiserChannel* residualWF, Photoelectron *guessPE){
 	// Get initial guesses for the next PE
-	const auto         minPosIt   = std::min_element(residualWF.waveform.begin(), residualWF.waveform.end());
-	const unsigned int minTimePos = std::distance(residualWF.waveform.begin(), minPosIt);
+	const auto         minPosIt   = std::min_element(residualWF->waveform.begin(), residualWF->waveform.end());
+	const unsigned int minTimePos = std::distance(residualWF->waveform.begin(), minPosIt);
 	
 	// If lowest point in waveform isn't below threshold there are no more PEs
-	if (-residualWF.waveform[minTimePos] < WFSigThresh) {
+	if (-residualWF->waveform[minTimePos] < WFSigThresh) {
 		return false;
 	}
 	
-	guessPE->amplitude = -residualWF.waveform[minTimePos];
+	guessPE->amplitude = -residualWF->waveform[minTimePos];
 	guessPE->time      = float(minTimePos) * pdfSamplingRate;
 	return true;
 }
@@ -174,7 +174,9 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 				}
 			}
 			
-			if(!getNextPEGuess(residualWF, &guessPE)){break;}
+			if(!getNextPEGuess(&residualWF, &guessPE)){
+				break;
+			}
 			
 			numPEsFound += 1;
 			pesFound.push_back(guessPE);
@@ -186,7 +188,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		} // End of PE find loop
 		
 		if(numPEsFound == 0){
-			return;
+			continue;
 		}
 		
 		ceres::Problem problem{};
