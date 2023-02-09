@@ -21,6 +21,6 @@ void updateGuessCorrector(const std::vector<double>& amps, const std::vector<dou
                                  const std::vector<double>& initialAmps, const std::vector<double>& initialTimes,
                                  double baseline, double initBaseline, const std::vector<Photoelectron>& pesFound);
 
-bool getNextPEGuess(DigitiserChannel residualWF, Photoelectron *guessPE);
+bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE);
 
 #endif //RECOMORE_PEFIT_H

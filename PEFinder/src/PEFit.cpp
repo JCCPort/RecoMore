@@ -257,8 +257,8 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		double x2[pesFound.size()][2];
 		
 		for (int i = 0; i < pesFound.size(); i++) {
-			x2[i][0] = params[(2 * i)];
-			x2[i][1] = params[(2 * i) + 1];
+			x2[i][0] = params[(2 * i) + 1];
+			x2[i][1] = params[(2 * i) + 2];
 			parameterBlocks.push_back(x2[i]);
 		}
 
@@ -266,7 +266,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		
 		problem.AddResidualBlock(costFunction, lossFunction, parameterBlocks);
 		
-		for (int i = 0; i < pesFound.size(); i++) {
+		for (int i = 1; i < pesFound.size() + 1; i++) {
 			problem.SetParameterLowerBound(parameterBlocks[i], 0, 0);
 		}
 		
