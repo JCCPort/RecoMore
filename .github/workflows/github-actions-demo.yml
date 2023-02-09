@@ -92,9 +92,8 @@ jobs:
         id: cache-boost-build
         uses: actions/cache@v3
         with:
-          path: boost
+          path: /__w/RecoMore/RecoMore/boost
           key: boost-1.80-cache
-
 
 #      - if: steps.cache-boost-build.outputs.cache-hit != 'true'
 #        name: Download boost and make dir
@@ -132,7 +131,7 @@ jobs:
           libraries: thread serialization test
           platform: x64
           configuration: Release
-          directory: boost
+          directory: /__w/RecoMore/RecoMore/boost
 
       - name: Print dir 2
         run: |
