@@ -221,7 +221,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		
 		// Creating vector of references to parameter values that the fitter will use and modify. Note this means that
 		// the references are the initial values before the fit and the final values after the fit.
-		double                baseline = initBaseline;
+		double              baseline = initBaseline;
 		std::vector<double> params   = {};
 		params.push_back(baseline);
 		for (int i = 0; i < pesFound.size(); i++) {
