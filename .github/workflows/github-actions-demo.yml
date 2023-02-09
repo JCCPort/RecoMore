@@ -89,13 +89,13 @@ jobs:
           
       - name: Make boost dir
         run: |
-          mkdir '${{ runner.workspace }}/boost'
+          mkdir ~/boost
 
       - name: Cache boost build
         id: cache-boost-build
         uses: actions/cache@v3
         with:
-          path: '${{ runner.workspace }}/boost'
+          path: ~/boost
           key: boost-1.80-cache
 
       - if: steps. cache-boost-build.outputs.cache-hit != 'true'
@@ -110,11 +110,11 @@ jobs:
           libraries: thread serialization test
           platform: x64
           configuration: Release
-          directory: '${{ runner.workspace }}/boost'
+          directory: ~/boost
 
       - name: Print dir 2
         run: |
-          ls -lash '${{ runner.workspace }}/boost'
+          ls -lash ~/boost
           pwd
 
       - name: Print dir 3

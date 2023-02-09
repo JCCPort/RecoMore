@@ -220,11 +220,11 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		// Creating vector of references to parameter values that the fitter will use and modify. Note this means that
 		// the references are the initial values before the fit and the final values after the fit.
 		double                baseline = initBaseline;
-		std::vector<double *> params   = {};
-		params.push_back(&baseline);
+		std::vector<double> params   = {};
+		params.push_back(baseline);
 		for (int i = 0; i < pesFound.size(); i++) {
-			params.push_back(&amplitudes[i]);
-			params.push_back(&times[i]);
+			params.push_back(amplitudes[i]);
+			params.push_back(times[i]);
 		}
 		
 		// Creating the x values that the solver will use
@@ -250,13 +250,13 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 
 		// Formatting parameters to allow grouping of params for one PE
 		std::vector<double *> parameterBlocks;
-		double                x1[] = {*params[0]};
+		double                x1[] = {params[0]};
 		parameterBlocks.push_back(x1);
 		double x2[pesFound.size()][2];
 		
 		for (int i = 0; i < pesFound.size(); i++) {
-			x2[i][0] = *params[(2 * i)];
-			x2[i][1] = *params[(2 * i) + 1];
+			x2[i][0] = params[(2 * i)];
+			x2[i][1] = params[(2 * i) + 1];
 			parameterBlocks.push_back(x2[i]);
 		}
 
