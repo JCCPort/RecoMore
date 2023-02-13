@@ -98,7 +98,7 @@ jobs:
           ls ..
           echo ""
           ls ../..
-          git config --global --add safe.directory './*'
+          git config --global --add safe.directory /__w/RecoMore/RecoMore
           git submodule update --init
 
       - name: Build RecoMore
