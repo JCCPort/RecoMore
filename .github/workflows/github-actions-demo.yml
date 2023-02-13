@@ -26,55 +26,55 @@ jobs:
           - no-cuda
 
     steps:
-#      - uses: actions/checkout@v3
-#
-#      - name: Setup Dependencies
-#        run: |
-#          apt update
-#          apt install -y software-properties-common
-#          add-apt-repository ppa:apt-fast/stable
-#          apt -y install sudo apt-fast
-#
-#      - uses: actions/checkout@v3
-#      - uses: awalsh128/cache-apt-pkgs-action@latest
-#        with:
-#          packages: libxml2 libxml2-dev libboost-all-dev build-essential ccache libbenchmark-dev libblas-dev libeigen3-dev libgflags-dev libgoogle-glog-dev liblapack-dev libmetis-dev libsuitesparse-dev ninja-build libssl-dev git cmake apt-transport-https software-properties-common wget
-#          version: 1.0
-#
-#      - name: Cache Ceres-solver build
-#        id:  cache-ceres-build
-#        uses: actions/cache@v3
-#        with:
-#          path: ceres-solver
-#          key: ceres-solver-cache
-#
-#      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
-#        name: Setup Environment
-#        run: echo 'CXXFLAGS=-flto' >> $GITHUB_ENV
-#
-#      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
-#        name: Clone ceres-solver
-#        run: git clone https://ceres-solver.googlesource.com/ceres-solver
-#
-#      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
-#        name: Make build dir
-#        working-directory: ceres-solver
-#        run: mkdir build
-#
-#      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
-#        name: Configure
-#        working-directory: ceres-solver/build
-#        run: cmake ..
-#
-#      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
-#        name: Build
-#        working-directory: ceres-solver/build
-#        run: make -j4
-#
-#      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
-#        name: Install
-#        working-directory: ceres-solver/build
-#        run: make install
+      - uses: actions/checkout@v3
+
+      - name: Setup Dependencies
+        run: |
+          apt update
+          apt install -y software-properties-common
+          add-apt-repository ppa:apt-fast/stable
+          apt -y install sudo apt-fast
+
+      - uses: actions/checkout@v3
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: libxml2 libxml2-dev libboost-all-dev build-essential ccache libbenchmark-dev libblas-dev libeigen3-dev libgflags-dev libgoogle-glog-dev liblapack-dev libmetis-dev libsuitesparse-dev ninja-build libssl-dev git cmake apt-transport-https software-properties-common wget
+          version: 1.0
+
+      - name: Cache Ceres-solver build
+        id:  cache-ceres-build
+        uses: actions/cache@v3
+        with:
+          path: ceres-solver
+          key: ceres-solver-cache
+
+      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
+        name: Setup Environment
+        run: echo 'CXXFLAGS=-flto' >> $GITHUB_ENV
+
+      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
+        name: Clone ceres-solver
+        run: git clone https://ceres-solver.googlesource.com/ceres-solver
+
+      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
+        name: Make build dir
+        working-directory: ceres-solver
+        run: mkdir build
+
+      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
+        name: Configure
+        working-directory: ceres-solver/build
+        run: cmake ..
+
+      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
+        name: Build
+        working-directory: ceres-solver/build
+        run: make -j4
+
+      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
+        name: Install
+        working-directory: ceres-solver/build
+        run: make install
 
 
       - name: Setup Dependencies
@@ -89,19 +89,6 @@ jobs:
 
       - name: Make RecoMore build dir
         run: mkdir RecoMore-build
-
-#      - name: Initialise pybind11
-#        working-directory: ${{ github.workspace }}
-#        run: |
-#          pwd
-#          echo ""
-#          ls .
-#          echo ""
-#          ls ..
-#          echo ""
-#          ls ../..
-#          git config --global --add safe.directory /__w/RecoMore/RecoMore
-#          git submodule update --init
 
       - name: Build RecoMore
         working-directory: RecoMore-build
