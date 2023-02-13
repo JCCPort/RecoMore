@@ -75,6 +75,8 @@ jobs:
 #        name: Install
 #        working-directory: ceres-solver/build
 #        run: make install
+      - name: Check out repository code
+        uses: actions/checkout@v3
 
       - name: Make RecoMore build dir
         run: mkdir RecoMore-build
