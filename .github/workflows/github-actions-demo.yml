@@ -6,7 +6,7 @@ jobs:
   build:
     name: ubuntu-latest-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.gpu}}
     runs-on: ubuntu-latest
-    container: ubuntu-latest
+    container: ${{matrix.os}}
     defaults:
       run:
         shell: bash -e -o pipefail {0}
