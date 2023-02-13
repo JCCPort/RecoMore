@@ -84,22 +84,24 @@ jobs:
 
       - name: Check out repository code
         uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
       - name: Make RecoMore build dir
         run: mkdir RecoMore-build
 
-      - name: Initialise pybind11
-        working-directory: ${{ github.workspace }}
-        run: |
-          pwd
-          echo ""
-          ls .
-          echo ""
-          ls ..
-          echo ""
-          ls ../..
-          git config --global --add safe.directory /__w/RecoMore/RecoMore
-          git submodule update --init
+#      - name: Initialise pybind11
+#        working-directory: ${{ github.workspace }}
+#        run: |
+#          pwd
+#          echo ""
+#          ls .
+#          echo ""
+#          ls ..
+#          echo ""
+#          ls ../..
+#          git config --global --add safe.directory /__w/RecoMore/RecoMore
+#          git submodule update --init
 
       - name: Build RecoMore
         working-directory: RecoMore-build
