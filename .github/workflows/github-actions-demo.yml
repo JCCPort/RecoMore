@@ -95,5 +95,6 @@ jobs:
         working-directory: RecoMore-build
         id: recomore
         run: |
+          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:${{ github.workspace }}/ceres-solver
           cmake ..
           make -j4
