@@ -83,8 +83,11 @@ jobs:
         working-directory: /__w/RecoMore/RecoMore
         run: |
           pwd
+          echo ""
           ls .
+          echo ""
           ls ..
+          echo ""
           ls ../..
           git submodule update --init
 
