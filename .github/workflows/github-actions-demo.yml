@@ -98,6 +98,7 @@ jobs:
           ls ..
           echo ""
           ls ../..
+          git config --global --add safe.directory './*'
           git submodule update --init
 
       - name: Build RecoMore
