@@ -79,6 +79,7 @@ jobs:
 
       - name: Setup Dependencies
         run: |
+          apt update
           apt -y install git
 
       - name: Check out repository code
