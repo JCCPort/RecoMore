@@ -79,6 +79,9 @@ jobs:
       - name: Make RecoMore build dir
         run: mkdir RecoMore-build
 
+      - name: Initialise pybind11
+        run: git submodule update --init
+
       - name: Build RecoMore
         working-directory: RecoMore-build
         id: recomore
