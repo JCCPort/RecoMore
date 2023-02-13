@@ -4,8 +4,8 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: ubuntu-latest-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.gpu}}
-    runs-on: ubuntu-latest
+    name: ${{matrix.os}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.gpu}}
+    runs-on: ${{matrix.os}}
     container: ${{matrix.os}}
     defaults:
       run:
@@ -17,7 +17,7 @@ jobs:
       fail-fast: true
       matrix:
         os:
-          - ubuntu-latest
+          - ubuntu:22.04
         build_type:
           - Release
         lib:
