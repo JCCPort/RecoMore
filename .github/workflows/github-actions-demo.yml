@@ -78,14 +78,14 @@ jobs:
         working-directory: ceres-solver/build
         run: make install
 
-      - name: Install pwsh
-        run: |
-          wget -q "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb"
-          dpkg -i packages-microsoft-prod.deb
-          apt update
-          apt install -y powershell python3-pip
-          PATH=“$PATH:/usr/bin/python3”
-          pip install cmake-common
+#      - name: Install pwsh
+#        run: |
+#          wget -q "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb"
+#          dpkg -i packages-microsoft-prod.deb
+#          apt update
+#          apt install -y powershell python3-pip
+#          PATH=“$PATH:/usr/bin/python3”
+#          pip install cmake-common
           
 
 #      - name: Cache boost build
