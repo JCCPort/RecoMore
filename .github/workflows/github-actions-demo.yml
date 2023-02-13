@@ -45,7 +45,7 @@ jobs:
         id:  cache-ceres-build
         uses: actions/cache@v3
         with:
-          path: ceres-solver
+          path: ${{ github.workspace }}/ceres-solver
           key: ceres-solver-cache
 
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
@@ -54,26 +54,27 @@ jobs:
 
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
         name: Clone ceres-solver
+        working-directory: ${{ github.workspace }}
         run: git clone https://ceres-solver.googlesource.com/ceres-solver
 
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
         name: Make build dir
-        working-directory: ceres-solver
+        working-directory: ${{ github.workspace }}/ceres-solver
         run: mkdir build
 
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
         name: Configure
-        working-directory: ceres-solver/build
+        working-directory: ${{ github.workspace }}/ceres-solver/build
         run: cmake ..
 
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
         name: Build
-        working-directory: ceres-solver/build
+        working-directory: ${{ github.workspace }}/ceres-solver/build
         run: make -j4
 
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
         name: Install
-        working-directory: ceres-solver/build
+        working-directory: ${{ github.workspace }}/ceres-solver/build
         run: make install
 
 
