@@ -31,11 +31,11 @@ jobs:
       - name: Setup Dependencies
         run: |
           apt update
-          apt full-upgrade -y
-          apt install -y sudo
-          apt install -y software-properties-common
-          add-apt-repository ppa:apt-fast/stable
-          apt -y install apt-fast
+#          apt full-upgrade -y
+#          apt install -y sudo
+#          apt install -y software-properties-common
+#          add-apt-repository ppa:apt-fast/stable
+#          apt -y install apt-fast
           
       - uses: actions/checkout@v3
       - uses: awalsh128/cache-apt-pkgs-action@latest
@@ -146,9 +146,9 @@ jobs:
       - name: Make RecoMore build dir
         run: mkdir RecoMore-build
 
-#      - name: Build RecoMore
-#        working-directory: RecoMore-build
-#        id: recomore
-#        run: |
-#          cmake ..
-#          make -j4
+      - name: Build RecoMore
+        working-directory: RecoMore-build
+        id: recomore
+        run: |
+          cmake ..
+          make -j4
