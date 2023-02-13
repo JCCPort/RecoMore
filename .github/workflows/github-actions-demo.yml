@@ -31,7 +31,6 @@ jobs:
       - name: Setup Dependencies
         run: |
           apt update
-#          apt full-upgrade -y
           apt install -y sudo
 #          apt install -y software-properties-common
 #          add-apt-repository ppa:apt-fast/stable
