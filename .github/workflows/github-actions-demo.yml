@@ -80,6 +80,7 @@ jobs:
         run: mkdir RecoMore-build
 
       - name: Initialise pybind11
+        working-directory: /__w/RecoMore/RecoMore
         run: git submodule update --init
 
       - name: Build RecoMore
