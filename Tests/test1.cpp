@@ -56,7 +56,7 @@ bool SystemTest1::runOverTestData() {
 	auto pdfDir = "../TestData/pdf/";
 	saveWaveforms = false;
 	DigitiserRun data       = ReadWCDataFile(inputFileName);
-	int          numThreads = 8;
+	int numThreads  = 8;
 	int batchNumber = 8;
 	
 	// Global parameters

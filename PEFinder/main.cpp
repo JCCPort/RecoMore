@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
 	Writer writer(file);
 
 	static std::atomic<unsigned long> count{0};
-	std::mutex m;
+	std::mutex                        lock;
 
 	std::vector<std::vector<double>> idealWaveforms{64};
 	for (int ch = 0; ch < 64; ch++) {
@@ -89,11 +89,11 @@ int main(int argc, char** argv) {
 		idealWaveforms.at(ch) = readIdealWFs(ch, 10, pdfDir, pdfNSamples);
 	}
 
-	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(m),
+	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(lock),
 	                           data.getEvents().size());
 
 	if (numThreads == 1) {
-		batchFitEvents(data.getEvents(), count, m, &idealWaveforms, file);
+		batchFitEvents(data.getEvents(), std::reference_wrapper(count), std::reference_wrapper(lock), &idealWaveforms, file);
 	} else {
 		// Determining how many events each thread should run over.
 		unsigned int threadRepeatCount[batchNumber];
@@ -113,7 +113,7 @@ int main(int argc, char** argv) {
 		unsigned int eventPos = 0;
 		for(int i = 0; i < batchNumber; i++){
 			std::vector passData = slice(data.getEvents(), eventPos, eventPos + threadRepeatCount[i] - 1);
-			pool.push_task(batchFitEvents, passData, std::reference_wrapper(count), std::reference_wrapper(m), &idealWaveforms,
+			pool.push_task(batchFitEvents, passData, std::reference_wrapper(count), std::reference_wrapper(lock), &idealWaveforms,
 			               file);
 			eventPos += threadRepeatCount[i];
 		}
