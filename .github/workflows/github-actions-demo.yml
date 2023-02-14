@@ -126,6 +126,13 @@ jobs:
         working-directory: RecoMoreDir/RecoMore-build
         id: recomore
         run: |
+          pwd
+          echo ""
+          ls .
+          echo ""
+          ls ..
+          echo ""
+          ls -R ../..
           CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:${{ env.GITHUB_SHA_SHORT }}:ceres-solver
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j4
