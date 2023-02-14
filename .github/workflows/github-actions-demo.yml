@@ -84,6 +84,7 @@ jobs:
         working-directory: /__w/RecoMore/RecoMore/ceres-solver
         env:
           CERESDIR: $(pwd)
+        run: CERESDIR=$(pwd)
 
 
 #      - name: Setup Dependencies
