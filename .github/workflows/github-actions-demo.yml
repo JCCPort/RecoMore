@@ -55,7 +55,9 @@ jobs:
 
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
         name: Clone ceres-solver
-        run: git clone https://ceres-solver.googlesource.com/ceres-solver
+        run: |
+          git clone https://ceres-solver.googlesource.com/ceres-solver
+          pwd
 
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
         name: Make build dir
