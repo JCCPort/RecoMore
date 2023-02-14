@@ -96,6 +96,10 @@ jobs:
 
       - name: check dirs
         run: |
+          pwd
+          echo ""
+          ls /__w/RecoMore/RecoMore
+          echo ""
           ls .
           echo ""
           ls ..
