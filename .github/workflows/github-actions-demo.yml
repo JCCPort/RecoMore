@@ -81,8 +81,7 @@ jobs:
 
 
       - name: Set ceres dir
-        working-directory: /__w/RecoMore/RecoMore/ceres-solver
-        run: echo "{CERESDIR}={$(pwd)}" >> $GITHUB_ENV
+        run: echo "CERESDIR=$(pwd)" >> $GITHUB_ENV
 
 
 #      - name: Setup Dependencies
