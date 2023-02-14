@@ -134,12 +134,13 @@ jobs:
           ls ..
           echo ""
           ls -R ../..
-          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:../../ceres-solver/
+          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:../../ceres-solver/cmake
           Ceres_DIR=$(realpath ../../ceres-solver/)
           echo "Ceres_DIR=../../ceres-solver/" >> $GITHUB_ENV
           printenv
           echo ""
           ls $Ceres_DIR
+          ls $Ceres_DIR/cmake
           echo ""
           echo $CMAKE_PREFIX_PATH
           echo ""
