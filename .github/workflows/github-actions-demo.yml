@@ -82,8 +82,9 @@ jobs:
 
 
       - name: Set ceres dir
-        run: echo "CERESDIR=$(pwd)/ceres-solver" >> $GITHUB_ENV
-
+        run: |
+          echo "CERESDIR=ceres-solver-dir/ceres-solver" >> $GITHUB_ENV
+          echo "CERESDIR=ceres-solver-dir/ceres-solver"
 
       - name: Setup Dependencies
         run: |
