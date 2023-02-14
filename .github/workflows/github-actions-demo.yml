@@ -45,7 +45,7 @@ jobs:
         id:  cache-ceres-build
         uses: actions/cache@v3
         with:
-          path: ~/ceres-solver
+          path: ../ceres-solver
           key: ceres-solver-cache
 
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
@@ -54,27 +54,27 @@ jobs:
 
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
         name: Clone ceres-solver
-        working-directory: ~
+        working-directory: ..
         run: git clone https://ceres-solver.googlesource.com/ceres-solver
 
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
         name: Make build dir
-        working-directory: ~/ceres-solver
+        working-directory: ../ceres-solver
         run: mkdir build
 
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
         name: Configure
-        working-directory: ~/ceres-solver/build
+        working-directory: ../ceres-solver/build
         run: cmake ..
 
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
         name: Build
-        working-directory: ~/ceres-solver/build
+        working-directory: ../ceres-solver/build
         run: make -j4
 
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
         name: Install
-        working-directory: ~/ceres-solver/build
+        working-directory: ../ceres-solver/build
         run: make install
 
 
@@ -95,7 +95,7 @@ jobs:
         working-directory: RecoMore-build
         id: recomore
         run: |
-          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:~/ceres-solver
+          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:../ceres-solver
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j4
 
