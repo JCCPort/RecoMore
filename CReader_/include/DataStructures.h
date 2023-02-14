@@ -11,29 +11,29 @@
 // Input types
 
 struct DigitiserChannel {
-	unsigned short     ID;
+	unsigned int       ID;
 	std::vector<float> waveform{};
 };
 
 struct DigitiserEvent{
-	DigitiserChannel getDigitiserChannel(int channelNumber){
-		for(auto & channelWF : channels){
-			if(channelWF.ID == channelNumber){
-				return channelWF;
+	DigitiserChannel getChannel(unsigned int channelNumber){
+		for(auto & channel : channels){
+			if(channel.ID == channelNumber){
+				return channel;
 			}
 		}
 		throw std::runtime_error("Channel " + std::to_string(channelNumber) + " not found in event " + std::to_string(ID) + ".");
 	}
 	
-	std::vector<unsigned short> getChannelIDs(){
-		std::vector<unsigned short> channels;
+	std::vector<unsigned int> getChannelIDs(){
+		std::vector<unsigned int> channels_;
 		for(const auto& channel: channels){
-			channels.push_back(channel.channel);
+			channels_.push_back(channel.ID);
 		}
-		return channels;
+		return channels_;
 	}
 	
-	unsigned int ID;
+	unsigned int ID{};
 	std::string  correctedTime;
 	std::string                   date;
 	std::vector<DigitiserChannel> channels;
@@ -85,9 +85,9 @@ struct FitChannel {
 		ar & baseline;
 		ar & PEs;
 	}
-	unsigned short ID;
-	float          reducedChiSq;
-	float          baseline;
+	unsigned int ID;
+	float        reducedChiSq;
+	float        baseline;
 	std::vector<Photoelectron> PEs;
 };
 
@@ -112,17 +112,17 @@ struct FitEvent{
 		throw std::runtime_error("Channel " + std::to_string(channelNumber) + " not found in event " + std::to_string(ID) + ".");
 	}
 	
-	std::vector<unsigned short> getChannelIDs(){
-		std::vector<unsigned short> channels;
+	std::vector<unsigned int> getChannelIDs(){
+		std::vector<unsigned int> channels_;
 		for(const auto& channel: channels){
-			channels.push_back(channel.ch);
+			channels_.push_back(channel.ID);
 		}
-		return channels;
+		return channels_;
 	}
 	
 	unsigned int ID{};
 	std::string  correctedTime;
-	std::string  date;
+	std::string             date;
 	std::vector<FitChannel> channels;
 };
 
@@ -135,6 +135,7 @@ public:
 	std::vector<FitEvent> getEvents() { return events; };
 	FitEvent getEvent(unsigned int eventNumber);
 	FitChannel getEventChannel(unsigned int eventNumber, unsigned int channelNumber);
+	std::vector<unsigned int> getEventIDs();
 private:
 	std::vector<FitEvent> events{};
 };
@@ -146,11 +147,14 @@ public:
 	
 	[[maybe_unused]] FitParams(double, const std::vector<Photoelectron> &);
 	
-	[[maybe_unused]] std::vector<double *> makeFitterParams();
+	[[maybe_unused]] void makeFitterParams(std::vector<double *>);
 	
 	[[maybe_unused]] std::vector<float> makeGuesserParams();
 	
+	[[maybe_unused]] int getNumParams() const;
+	
 	unsigned int        numPEs_;
+	double              baseline_;
 	std::vector<double> PEParams_;
 };
 

@@ -28,7 +28,8 @@ Note: Make sure to include the trailing slash of the path to the PDF dir
 
 ## CReader
 
-CReader is a python wrapper around C++ file parsers to combine high performance with easy usage.
+CReader is a python wrapper around C++ file parsers to combine high performance with easy usage. To initialise
+pybind11 simply run `git submodule update --init` from the repo root directory.
 
 To build and install CReader to be a usable python module:
 - Navigate to the `CReader_` directory.
