@@ -96,7 +96,7 @@ jobs:
         run: |
           ls .
           echo ""
-          ls..
+          ls ..
           echo ""
           ls ceres-solver
 
