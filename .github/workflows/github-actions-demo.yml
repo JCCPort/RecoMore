@@ -114,6 +114,9 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Add RecoMore build
+        run: mkdir RecoMore-build
+
       - name: Build RecoMore
         working-directory: RecoMore-build
         id: recomore
