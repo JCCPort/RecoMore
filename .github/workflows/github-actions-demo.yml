@@ -89,6 +89,15 @@ jobs:
           apt update
           apt -y install git
 
+      - name: Check out repository code
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Add RecoMore build
+        run: mkdir RecoMore-build
+
+
       - name: check dirs
         run: |
           echo $CERESDIR
@@ -108,14 +117,6 @@ jobs:
           ls ../../../home
           ls ../../../usr
           ls ceres-solver
-
-      - name: Check out repository code
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
-
-      - name: Add RecoMore build
-        run: mkdir RecoMore-build
 
       - name: Build RecoMore
         working-directory: RecoMore-build
