@@ -138,6 +138,11 @@ jobs:
           Ceres_DIR=$(realpath ../../ceres-solver/)
           echo "Ceres_DIR=../../ceres-solver/" >> $GITHUB_ENV
           printenv
+          echo ""
+          ls $Ceres_DIR
+          echo ""
+          echo $CMAKE_PREFIX_PATH
+          echo ""
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j4
 
