@@ -80,12 +80,6 @@ jobs:
         working-directory: ceres-solver/build
         run: make install
 
-
-      - name: Set ceres dir
-        run: |
-          echo "CERESDIR=ceres-solver-dir/ceres-solver" >> $GITHUB_ENV
-          echo "CERESDIR=ceres-solver-dir/ceres-solver"
-
       - name: Setup Dependencies
         run: |
           apt update
@@ -128,7 +122,7 @@ jobs:
         id: recomore
         run: |
 
-          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$(../../ceres-solver/)
+          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$(realpath ../../ceres-solver/)
           Ceres_DIR=$(realpath ../../ceres-solver/)
           echo "Ceres_DIR=../../ceres-solver/" >> $GITHUB_ENV
           printenv
