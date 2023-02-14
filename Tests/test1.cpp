@@ -135,7 +135,8 @@ bool SystemTest1::comparisons(){
 	// Check number of events is the same
 	if(newData.getEvents().size() != oldData.getEvents().size()){
 		numEventsSame = false;
-		std::cout << newData.getEvents().size() << "\n" << oldData.getEvents().size() << std::endl;
+        std::cout << "Mis-match in number of events in files" << std::endl;
+		std::cout << newData.getEvents().size() << "\t" << oldData.getEvents().size() << std::endl;
 		return false;
 	}
 	numEventsSameRan = true;

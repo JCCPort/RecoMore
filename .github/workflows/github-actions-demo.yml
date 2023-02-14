@@ -101,4 +101,8 @@ jobs:
 
       - name: Run tests
         working-directory: RecoMore-build/Tests
-        run: ./Boost_Tests_run
+        run: |
+          ls ..
+          ls .
+          ls ../TestData
+          ./Boost_Tests_run
