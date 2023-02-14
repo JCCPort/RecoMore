@@ -34,7 +34,8 @@ jobs:
           apt -y install sudo apt-fast
 
       - uses: actions/checkout@v3
-        path: ceres-solver
+        with:
+          path: ceres-solver
 
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
