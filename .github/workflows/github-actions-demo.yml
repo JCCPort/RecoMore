@@ -93,10 +93,11 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
         with:
-          path: RecoMore
+          path: RecoMoreDir
           submodules: recursive
 
       - name: Add RecoMore build
+        working-directory: RecoMoreDir
         run: mkdir RecoMore-build
 
 
@@ -121,7 +122,7 @@ jobs:
           ls ceres-solver
 
       - name: Build RecoMore
-        working-directory: RecoMore-build
+        working-directory: RecoMoreDir/RecoMore-build
         id: recomore
         run: |
           CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:${{ env.GITHUB_SHA_SHORT }}
@@ -129,7 +130,7 @@ jobs:
           make -j4
 
       - name: Run tests
-        working-directory: RecoMore-build/Tests
+        working-directory: RecoMoreDir/RecoMore-build/Tests
         run: |
           ls ..
           ls .
