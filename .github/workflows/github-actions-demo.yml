@@ -102,39 +102,33 @@ jobs:
         run: mkdir RecoMore-build
 
 
-      - name: check dirs
-        run: |
-          echo $CERESDIR
-          echo ${{ env.GITHUB_SHA_SHORT }}
-          pwd
-          echo ""
-          ls /__w/RecoMore/RecoMore
-          echo ""
-          ls .
-          echo ""
-          ls ..
-          echo ""
-          echo ""
-          ls -R ../..
-          echo ""
-          ls ../../../github
-          ls ../../../home
-          ls ../../../usr
-          ls ceres-solver
-          echo "Ceres_DIR=$(realpath ../../ceres-solver/)" >> $GITHUB_ENV
+#      - name: check dirs
+#        run: |
+#          echo $CERESDIR
+#          echo ${{ env.GITHUB_SHA_SHORT }}
+#          pwd
+#          echo ""
+#          ls /__w/RecoMore/RecoMore
+#          echo ""
+#          ls .
+#          echo ""
+#          ls ..
+#          echo ""
+#          echo ""
+#          ls -R ../..
+#          echo ""
+#          ls ../../../github
+#          ls ../../../home
+#          ls ../../../usr
+#          ls ceres-solver
+#          echo "Ceres_DIR=$(realpath ../../ceres-solver/)" >> $GITHUB_ENV
 
       - name: Build RecoMore
         working-directory: RecoMoreDir/RecoMore-build
         id: recomore
         run: |
-          pwd
-          echo ""
-          ls .
-          echo ""
-          ls ..
-          echo ""
-          ls -R ../..
-          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:../../ceres-solver/cmake
+
+          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$(../../ceres-solver/)
           Ceres_DIR=$(realpath ../../ceres-solver/)
           echo "Ceres_DIR=../../ceres-solver/" >> $GITHUB_ENV
           printenv
