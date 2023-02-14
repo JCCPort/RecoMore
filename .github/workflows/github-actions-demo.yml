@@ -104,6 +104,10 @@ jobs:
           echo ""
           ls ..
           echo ""
+          echo ""
+          ls ../..
+          echo ""
+          ls ../../..
           ls ceres-solver
 
       - name: Build RecoMore
