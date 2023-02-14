@@ -133,7 +133,7 @@ jobs:
           ls ..
           echo ""
           ls -R ../..
-          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:${{ env.GITHUB_SHA_SHORT }}:ceres-solver
+          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:../../ceres-solver
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j4
 
