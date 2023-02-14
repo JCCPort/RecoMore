@@ -133,7 +133,10 @@ jobs:
           ls ..
           echo ""
           ls -R ../..
-          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:../../ceres-solver
+          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:../../ceres-solver/
+          Ceres_DIR=../../ceres-solver/
+          echo "Ceres_DIR=../../ceres-solver/" >> $GITHUB_ENV
+          printenv
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j4
 
