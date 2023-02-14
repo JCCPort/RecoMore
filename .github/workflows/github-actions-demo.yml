@@ -34,7 +34,7 @@ jobs:
 #          apt install -y software-properties-common
 #          add-apt-repository ppa:apt-fast/stable
 #          apt -y install sudo apt-fast
-
+#
 #      - uses: actions/checkout@v3
 #      - uses: awalsh128/cache-apt-pkgs-action@latest
 #        with:
@@ -49,8 +49,60 @@ jobs:
           key: ceres-solver-cache
           restore-keys: ceres-solver-cache
 
+      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
+        name: Setup Environment
+        run: echo 'CXXFLAGS=-flto' >> $GITHUB_ENV
+
+      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
+        name: Clone ceres-solver
+        run: |
+          git clone https://ceres-solver.googlesource.com/ceres-solver
+          pwd
+
+      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
+        name: Make build dir
+        working-directory: ceres-solver
+        run: mkdir build
+
+      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
+        name: Configure
+        working-directory: ceres-solver/build
+        run: cmake ..
+
+      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
+        name: Build
+        working-directory: ceres-solver/build
+        run: make -j4
+
+      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
+        name: Install
+        working-directory: ceres-solver/build
+        run: make install
+
+
+      - name: Set ceres dir
+        working-directory: /__w/RecoMore/RecoMore/ceres-solver
+        env:
+          CERESDIR: $(pwd)
+
+
+#      - name: Setup Dependencies
+#        run: |
+#          apt update
+#          apt -y install git
+#
+#      - name: Check out repository code
+#        uses: actions/checkout@v3
+#        with:
+#          submodules: recursive
+#
+#      - name: Make RecoMore build dir
+#        run: mkdir RecoMore-build
+
+
       - name: check dirs
         run: |
+          echo $CERESDIR
           pwd
           echo ""
           ls /__w/RecoMore/RecoMore
@@ -67,51 +119,6 @@ jobs:
           ls ../../../usr
           ls ceres-solver
 
-#      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
-#        name: Setup Environment
-#        run: echo 'CXXFLAGS=-flto' >> $GITHUB_ENV
-#
-#      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
-#        name: Clone ceres-solver
-#        run: |
-#          git clone https://ceres-solver.googlesource.com/ceres-solver
-#          pwd
-#
-#      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
-#        name: Make build dir
-#        working-directory: ceres-solver
-#        run: mkdir build
-#
-#      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
-#        name: Configure
-#        working-directory: ceres-solver/build
-#        run: cmake ..
-#
-#      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
-#        name: Build
-#        working-directory: ceres-solver/build
-#        run: make -j4
-#
-#      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
-#        name: Install
-#        working-directory: ceres-solver/build
-#        run: make install
-#
-#
-#      - name: Setup Dependencies
-#        run: |
-#          apt update
-#          apt -y install git
-#
-#      - name: Check out repository code
-#        uses: actions/checkout@v3
-#        with:
-#          submodules: recursive
-#
-#      - name: Make RecoMore build dir
-#        run: mkdir RecoMore-build
-#
-#
 #      - name: Build RecoMore
 #        working-directory: RecoMore-build
 #        id: recomore
