@@ -121,6 +121,7 @@ jobs:
           ls ../../../home
           ls ../../../usr
           ls ceres-solver
+          echo "Ceres_DIR=../../ceres-solver/" >> $GITHUB_ENV
 
       - name: Build RecoMore
         working-directory: RecoMoreDir/RecoMore-build
