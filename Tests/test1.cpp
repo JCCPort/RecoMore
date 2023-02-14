@@ -26,9 +26,9 @@ private:
 	FitRun newData;
 	FitRun oldData;
 	
-	double timeSimilarity = 1e-6;
-	double ampSimilarity = 1e-6;
-	double redChiSqSimilarity = 1e-3;
+	double timeSimilarity = 1e-5;
+	double ampSimilarity = 1e-5;
+	double redChiSqSimilarity = 1e-4;
 	
 public:
 	bool numEventsSame = true;

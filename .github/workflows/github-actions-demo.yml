@@ -96,5 +96,9 @@ jobs:
         id: recomore
         run: |
           CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:${{ github.workspace }}/ceres-solver
-          cmake ..
+          cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j4
+
+      - name: Run tests
+        working-directory: RecoMore-build/Tests
+        run: ./Boost_Tests_run
