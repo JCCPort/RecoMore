@@ -91,6 +91,15 @@ jobs:
       - name: Make RecoMore build dir
         run: mkdir RecoMore-build
 
+
+      - name: check dirs
+        run: |
+          ls .
+          echo ""
+          ls..
+          echo ""
+          ls ceres-solver
+
       - name: Build RecoMore
         working-directory: RecoMore-build
         id: recomore
