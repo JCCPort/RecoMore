@@ -35,7 +35,7 @@ jobs:
 
       - uses: actions/checkout@v3
         with:
-          path: ceres-solver
+          path: ceres-solver-dir
 
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
@@ -125,7 +125,7 @@ jobs:
         working-directory: RecoMoreDir/RecoMore-build
         id: recomore
         run: |
-          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:${{ env.GITHUB_SHA_SHORT }}
+          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:ceres-solver-dir/${{ env.GITHUB_SHA_SHORT }}
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j4
 
