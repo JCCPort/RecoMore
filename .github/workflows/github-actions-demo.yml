@@ -121,7 +121,7 @@ jobs:
           ls ../../../home
           ls ../../../usr
           ls ceres-solver
-          echo "Ceres_DIR=../../ceres-solver/" >> $GITHUB_ENV
+          echo "Ceres_DIR=$(realpath ../../ceres-solver/)" >> $GITHUB_ENV
 
       - name: Build RecoMore
         working-directory: RecoMoreDir/RecoMore-build
@@ -135,7 +135,7 @@ jobs:
           echo ""
           ls -R ../..
           CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:../../ceres-solver/
-          Ceres_DIR=../../ceres-solver/
+          Ceres_DIR=$(realpath ../../ceres-solver/)
           echo "Ceres_DIR=../../ceres-solver/" >> $GITHUB_ENV
           printenv
           cmake -DCMAKE_BUILD_TYPE=Release ..
