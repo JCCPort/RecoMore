@@ -96,26 +96,11 @@ jobs:
         run: mkdir RecoMore-build
 
 
-#      - name: check dirs
-#        run: |
-#          echo $CERESDIR
-#          echo ${{ env.GITHUB_SHA_SHORT }}
-#          pwd
-#          echo ""
-#          ls /__w/RecoMore/RecoMore
-#          echo ""
-#          ls .
-#          echo ""
-#          ls ..
-#          echo ""
-#          echo ""
-#          ls -R ../..
-#          echo ""
-#          ls ../../../github
-#          ls ../../../home
-#          ls ../../../usr
-#          ls ceres-solver
-#          echo "Ceres_DIR=$(realpath ../../ceres-solver/)" >> $GITHUB_ENV
+      - name: check dirs
+        run: |
+          echo $CERESDIR
+          ls ~/.cmake
+
 
       - name: Build RecoMore
         working-directory: RecoMoreDir/RecoMore-build
@@ -132,6 +117,7 @@ jobs:
           echo ""
           echo $CMAKE_PREFIX_PATH
           echo ""
+          ls $Ceres_DIR/build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j4
 
