@@ -117,7 +117,7 @@ jobs:
           echo ""
           echo $CMAKE_PREFIX_PATH
           echo ""
-          ls $Ceres_DIR/build/cmake
+          ls $Ceres_DIR/cmake
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j4
 
