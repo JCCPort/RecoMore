@@ -107,9 +107,9 @@ jobs:
         id: recomore
         run: |
 
-          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$(realpath ../../ceres-solver/)
-          Ceres_DIR=$(realpath ../../ceres-solver/)
-          echo "Ceres_DIR=../../ceres-solver/" >> $GITHUB_ENV
+          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$(realpath ../../ceres-solver/build)
+          Ceres_DIR=$(realpath ../../ceres-solver/build)
+          echo "Ceres_DIR=../../ceres-solver/build" >> $GITHUB_ENV
           printenv
           echo ""
           ls $Ceres_DIR
@@ -117,7 +117,7 @@ jobs:
           echo ""
           echo $CMAKE_PREFIX_PATH
           echo ""
-          ls $Ceres_DIR/build
+          ls $Ceres_DIR/build/cmake
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j4
 
