@@ -119,7 +119,7 @@ jobs:
           echo ""
           echo $CMAKE_PREFIX_PATH
           echo ""
-          ls $Ceres_DIR/cmake
+          ls ../../ceres-solver/build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j4
 
