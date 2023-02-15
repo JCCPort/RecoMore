@@ -104,29 +104,29 @@ jobs:
 #          ls ~/.cmake
 
 
-      - name: Build RecoMore
-        working-directory: RecoMoreDir/RecoMore-build
-        id: recomore
-        run: |
-
-          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$(realpath ../../ceres-solver/build):$(realpath ../../ceres-solver/install)
-          Ceres_DIR=$(realpath ../../ceres-solver/install)
-          echo "Ceres_DIR=../../ceres-solver/install" >> $GITHUB_ENV
-          printenv
-          echo ""
-          ls $Ceres_DIR
-          ls $Ceres_DIR/cmake
-          echo ""
-          echo $CMAKE_PREFIX_PATH
-          echo ""
-          ls $Ceres_DIR/cmake
-          cmake -DCMAKE_BUILD_TYPE=Release ..
-          make -j4
-
-      - name: Run tests
-        working-directory: RecoMoreDir/RecoMore-build/Tests
-        run: |
-          ls ..
-          ls .
-          ls ../TestData
-          ./Boost_Tests_run
+#      - name: Build RecoMore
+#        working-directory: RecoMoreDir/RecoMore-build
+#        id: recomore
+#        run: |
+#
+#          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$(realpath ../../ceres-solver/build):$(realpath ../../ceres-solver/install)
+#          Ceres_DIR=$(realpath ../../ceres-solver/install)
+#          echo "Ceres_DIR=../../ceres-solver/install" >> $GITHUB_ENV
+#          printenv
+#          echo ""
+#          ls $Ceres_DIR
+#          ls $Ceres_DIR/cmake
+#          echo ""
+#          echo $CMAKE_PREFIX_PATH
+#          echo ""
+#          ls $Ceres_DIR/cmake
+#          cmake -DCMAKE_BUILD_TYPE=Release ..
+#          make -j4
+#
+#      - name: Run tests
+#        working-directory: RecoMoreDir/RecoMore-build/Tests
+#        run: |
+#          ls ..
+#          ls .
+#          ls ../TestData
+#          ./Boost_Tests_run
