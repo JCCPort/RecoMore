@@ -99,7 +99,7 @@ jobs:
       - name: check dirs
         run: |
           echo $CERESDIR
-          ls ~/.cmake
+#          ls ~/.cmake
 
 
       - name: Build RecoMore
