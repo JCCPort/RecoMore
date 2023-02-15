@@ -63,12 +63,14 @@ jobs:
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
         name: Make build dir
         working-directory: ceres-solver
-        run: mkdir build
+        run: |
+          mkdir build
+          mkdir install
 
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
         name: Configure
         working-directory: ceres-solver/build
-        run: cmake ..
+        run: cmake -DCMAKE_INSTALL_PREFIX=../install ..
 
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
         name: Build
@@ -107,9 +109,9 @@ jobs:
         id: recomore
         run: |
 
-          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$(realpath ../../ceres-solver/build)
-          Ceres_DIR=$(realpath ../../ceres-solver/build)
-          echo "Ceres_DIR=../../ceres-solver/build" >> $GITHUB_ENV
+          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$(realpath ../../ceres-solver/build):$(realpath ../../ceres-solver/install)
+          Ceres_DIR=$(realpath ../../ceres-solver/install)
+          echo "Ceres_DIR=../../ceres-solver/install" >> $GITHUB_ENV
           printenv
           echo ""
           ls $Ceres_DIR
