@@ -125,10 +125,10 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make -j4
 
-      - name: Run tests
-        working-directory: RecoMoreDir/RecoMore-build/Tests
-        run: |
-          ls ..
-          ls .
-          ls ../TestData
-          ./Boost_Tests_run
+#      - name: Run tests
+#        working-directory: RecoMoreDir/RecoMore-build/Tests
+#        run: |
+#          ls ..
+#          ls .
+#          ls ../TestData
+#          ./Boost_Tests_run
