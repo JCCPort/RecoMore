@@ -97,11 +97,14 @@ jobs:
         working-directory: RecoMoreDir
         run: mkdir RecoMore-build
 
+      - name: Test
+        working-directory: ceres-solver/build
+        run: make test
+
 
       - name: check dirs
         run: |
           echo $CERESDIR
-#          ls ~/.cmake
 
 
       - name: Build RecoMore
