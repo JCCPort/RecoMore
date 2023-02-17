@@ -117,7 +117,7 @@ jobs:
         id: recomore
         run: |
           sudo apt-get remove cmake cmake-data
-          sudo apt-get install cmake3 cmake3-data
+          sudo apt-get install cmake cmake-data -y
           hash -r
           cmake --version
           CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:/__w/RecoMore/RecoMore/ceres-solver/install/lib/cmake/Ceres
