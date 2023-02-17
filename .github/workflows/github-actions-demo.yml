@@ -80,7 +80,10 @@ jobs:
 
       - name: Install
         working-directory: ceres-solver/build
-        run: make install
+        run: |
+          sudo apt-get remove cmake
+          sudo apt-get install cmake -y
+          make install
 
       - name: Setup Dependencies
         run: |
@@ -111,8 +114,6 @@ jobs:
         working-directory: RecoMoreDir/RecoMore-build
         id: recomore
         run: |
-          sudo apt-get remove cmake
-          sudo apt-get install cmake -y
           hash -r
           cmake --version
           CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$(realpath ../../ceres-solver/build):$(realpath ../../ceres-solver/install)
