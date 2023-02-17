@@ -107,29 +107,12 @@ jobs:
 #        run: make test
 
 
-      - name: check dirs
-        run: |
-          echo $CERESDIR
-
-
       - name: Build RecoMore
         working-directory: RecoMoreDir/RecoMore-build
         id: recomore
         run: |
           sudo apt-get remove cmake cmake-data -y
           sudo apt-get install cmake cmake-data -y
-          hash -r
-          cmake --version
-          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:/__w/RecoMore/RecoMore/ceres-solver/install/lib/cmake/Ceres:/__w/RecoMore/RecoMore/ceres-solver/install/:../../ceres-solver/build
-          Ceres_DIR=../../ceres-solver/build
-          echo "Ceres_DIR=../../ceres-solver/build" >> $GITHUB_ENV
-          printenv
-          echo ""
-          ls $Ceres_DIR
-          echo ""
-          echo $CMAKE_PREFIX_PATH
-          echo ""
-          ls ../../ceres-solver/build
           cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/__w/RecoMore/RecoMore/ceres-solver/install/ ..
           make -j4
 
