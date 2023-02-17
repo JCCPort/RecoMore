@@ -85,7 +85,7 @@ jobs:
       - name: Install
         working-directory: ceres-solver/build
         run: |
-          make install
+          sudo make install
 
       - name: Setup Dependencies
         run: |
