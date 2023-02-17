@@ -121,8 +121,8 @@ jobs:
           hash -r
           cmake --version
           CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:/__w/RecoMore/RecoMore/ceres-solver/install/lib/cmake/Ceres:/__w/RecoMore/RecoMore/ceres-solver/install/
-          Ceres_DIR=/__w/RecoMore/RecoMore/ceres-solver/install/
-          echo "Ceres_DIR=../../ceres-solver/install" >> $GITHUB_ENV
+          Ceres_DIR=/__w/RecoMore/RecoMore/ceres-solver/install/lib/cmake/Ceres
+          echo "Ceres_DIR=/__w/RecoMore/RecoMore/ceres-solver/install/lib/cmake/Ceres" >> $GITHUB_ENV
           printenv
           echo ""
           ls $Ceres_DIR
