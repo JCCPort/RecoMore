@@ -112,6 +112,8 @@ jobs:
         working-directory: RecoMoreDir/RecoMore-build
         id: recomore
         run: |
+          sudo apt-get remove cmake cmake-data
+          sudo apt-get install cmake3 cmake3-data
           hash -r
           cmake --version
           CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$(realpath ../../ceres-solver/build):$(realpath ../../ceres-solver/install)
