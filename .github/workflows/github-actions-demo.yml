@@ -116,7 +116,7 @@ jobs:
         working-directory: RecoMoreDir/RecoMore-build
         id: recomore
         run: |
-          sudo apt-get remove cmake cmake-data
+          sudo apt-get remove cmake cmake-data -y
           sudo apt-get install cmake cmake-data -y
           hash -r
           cmake --version
