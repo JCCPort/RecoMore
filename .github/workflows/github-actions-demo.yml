@@ -78,8 +78,7 @@ jobs:
         working-directory: ceres-solver/build
         run: make -j4
 
-      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
-        name: Install
+      - name: Install
         working-directory: ceres-solver/build
         run: make install
 
