@@ -37,11 +37,15 @@ jobs:
         with:
           path: ceres-solver-dir
 
-      - uses: awalsh128/cache-apt-pkgs-action@latest
-        with:
-          packages: libxml2 libxml2-dev libboost-all-dev build-essential ccache libbenchmark-dev libblas-dev libeigen3-dev libgflags-dev libgoogle-glog-dev 
-           liblapack-dev libmetis-dev libsuitesparse-dev ninja-build libssl-dev git cmake apt-transport-https software-properties-common wget
-          version: 1.3
+#      - uses: awalsh128/cache-apt-pkgs-action@latest
+#        with:
+#          packages: libxml2 libxml2-dev libboost-all-dev build-essential ccache libbenchmark-dev libblas-dev libeigen3-dev libgflags-dev libgoogle-glog-dev
+#           liblapack-dev libmetis-dev libsuitesparse-dev ninja-build libssl-dev git cmake apt-transport-https software-properties-common wget
+#          version: 1.3
+
+      - name: install deps
+        run: sudo apt install libxml2 libxml2-dev libboost-all-dev build-essential ccache libbenchmark-dev libblas-dev libeigen3-dev libgflags-dev libgoogle-glog-dev
+          liblapack-dev libmetis-dev libsuitesparse-dev ninja-build libssl-dev git cmake apt-transport-https software-properties-common wget -y
 
       - name: Cache Ceres-solver build
         id:  cache-ceres-build
@@ -78,10 +82,10 @@ jobs:
         working-directory: ceres-solver/build
         run: make -j4
 
-      - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
-        name: Install
+      - name: Install
         working-directory: ceres-solver/build
-        run: make install
+        run: |
+          sudo make install
 
       - name: Setup Dependencies
         run: |
