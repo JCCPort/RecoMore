@@ -116,7 +116,7 @@ jobs:
           sudo apt-get install cmake3 cmake3-data
           hash -r
           cmake --version
-          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:$(realpath ../../ceres-solver/build):$(realpath ../../ceres-solver/install)
+          CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:/__w/RecoMore/RecoMore/ceres-solver/install/lib/cmake/Ceres
           Ceres_DIR=$(realpath ../../ceres-solver/install)
           echo "Ceres_DIR=../../ceres-solver/install" >> $GITHUB_ENV
           printenv
