@@ -56,8 +56,8 @@ bool SystemTest1::runOverTestData() {
 	auto pdfDir = "../TestData/pdf/";
 	saveWaveforms = false;
 	DigitiserRun data       = ReadWCDataFile(inputFileName);
-	int numThreads  = 4;
-	int batchNumber = 4;
+	int numThreads  = 1;
+	int batchNumber = 1;
 	
 	// Global parameters
 	skipChannels = {32, 36, 40, 44, 48, 52, 56, 60};
@@ -126,6 +126,7 @@ bool SystemTest1::runOverTestData() {
 	progressThread.join();
 	
 	file->closeFile();
+    std::cout << "Mean reduced ChiSq:\t" << meanReducedChiSq << std::endl;
 	
 	return true;
 }
