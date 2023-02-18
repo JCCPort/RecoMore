@@ -291,7 +291,10 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		options.linear_solver_type           = ceres::DENSE_QR;
 		options.parameter_tolerance          = 1e-5; // default is 1e-8, check if this is tolerance for any or all params
 		options.minimizer_progress_to_stdout = false;
+		
+		std::cout << "Solver options set" << std::endl;
 		ceres::Solver::Summary summary;
+		std::cout << "Summary made" << std::endl;
 		Solve(options, &problem, &summary);
 		
 		std::cout << "Ran solver" << std::endl;
