@@ -285,7 +285,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		ceres::Solver::Summary summary;
 		Solve(options, &problem, &summary);
 
-//        std::cout << summary.FullReport() << "\n";
+        std::cout << summary.FullReport() << "\n";
 		
 		// Going back from ideal waveform PDF index to time
 		for (double &time: times) {
