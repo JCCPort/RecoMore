@@ -129,8 +129,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		chFit.ID = ch;
 		
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
-		const std::vector<double> tmp        = (*idealWaveforms)[ch];
-		const std::vector<double> *chIdealWF = &tmp;
+		const std::vector<double> *chIdealWF = &(*idealWaveforms)[ch];
 		
 		// Baseline calculation
 		float initBaseline = averageVector(channel.waveform, 2);
