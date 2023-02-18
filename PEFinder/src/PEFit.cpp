@@ -284,6 +284,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		}
 		
 		std::cout << "Lower bounds set, about to initialise solver" << std::endl;
+		std::cout << "NumPEs:\t" << numPEsFound << std::endl;
 		
 		// Run the solver!
 		ceres::Solver::Options options;
