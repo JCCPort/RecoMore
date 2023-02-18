@@ -283,13 +283,14 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		}
 		
 		std::cout << "Lower bounds set, about to initialise solver" << std::endl;
+		std::cout << "NumPEs:\t" << numPEsFound << std::endl;
 		
 		// Run the solver!
 		ceres::Solver::Options options;
 //		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
 		options.linear_solver_type           = ceres::DENSE_QR;
 		options.parameter_tolerance          = 1e-5; // default is 1e-8, check if this is tolerance for any or all params
-		options.minimizer_progress_to_stdout = false;
+		options.minimizer_progress_to_stdout = true;
 		
 		std::cout << "Solver options set" << std::endl;
 		ceres::Solver::Summary summary;
