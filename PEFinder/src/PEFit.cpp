@@ -117,7 +117,7 @@ inline void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vecto
 void
 fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> outputFile, std::mutex &lock) {
 	std::vector<FitChannel> chFits;
-	
+	std::cout << "Fitting to event" << std::endl;
 	for (const auto &channel: event->channels) { // Looping through all channels for a given event
 		auto residualWF = channel; // This will be the variable that is modified to be the residual distribution after each iteration
 		
