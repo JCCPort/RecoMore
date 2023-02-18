@@ -187,6 +187,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			numPEsFound += 1;
 			pesFound.push_back(guessPE);
 			residualWF = channel;
+            std::cout << "Initial guess loop" << std::endl;
 			
 			if (numPEsFound > maxPEs) {  // To handle the possibility of the algorithm being overly keen.
 				break;
@@ -256,6 +257,8 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			costFunction->AddParameterBlock(2); // Params for one PE
 		}
 
+        std::cout << "About to make parameter blocks" << std::endl;
+
 		// Formatting parameters to allow grouping of params for one PE
 		std::vector<double *> parameterBlocks;
 		double                x1[] = {params[0]};
@@ -268,7 +271,11 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			parameterBlocks.push_back(x2[i]);
 		}
 
+        std::cout << "Made parameter blocks" << std::endl;
+
 		auto lossFunction(new ceres::ArctanLoss(WFSigThresh));
+
+        std::cout << "Made loss function" << std::endl;
 		
 		problem.AddResidualBlock(costFunction, lossFunction, parameterBlocks);
 		
