@@ -283,6 +283,8 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			problem.SetParameterLowerBound(parameterBlocks[i], 0, 0);
 		}
 		
+		std::cout << "Lower bounds set, about to initialise solver" << std::endl;
+		
 		// Run the solver!
 		ceres::Solver::Options options;
 //		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
@@ -291,6 +293,8 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		options.minimizer_progress_to_stdout = false;
 		ceres::Solver::Summary summary;
 		Solve(options, &problem, &summary);
+		
+		std::cout << "Ran solver" << std::endl;
 
         std::cout << summary.FullReport() << "\n";
 		
