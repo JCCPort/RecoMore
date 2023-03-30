@@ -52,7 +52,8 @@ def fit(amps):
     p0.append(reducedChiSq[0])
     bounds[0].append(reducedChiSq[1])
     bounds[1].append(reducedChiSq[2])
-    displayPOpt = list(pOpt)
+    displayPOpt = []
+    displayPOpt.extend(pOpt)
     displayPOpt.append(reducedChiSq[3])
 
     # TODO(josh): Add this to be displayed on the graph
@@ -61,6 +62,8 @@ def fit(amps):
                    showindex=["Initial guess", "Lower bound", "Upper bound", "Fit"],
                    floatfmt=['.1f', '.2f', '.4f', '.2f', '.3f', '.5f', '.5f', '.2f', '.2f'],
                    numalign='left'))
+
+    print(pOpt)
 
     plt.plot(fitVals, hitAmpDistribution(fitVals, *pOpt), label="Fit")
     plt.step(bins, n, label="Data")

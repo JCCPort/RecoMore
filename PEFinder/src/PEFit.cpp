@@ -9,35 +9,37 @@
 
 
 struct NPEPDFFunctor {
-	NPEPDFFunctor(std::vector<float> x, std::vector<float> y,
+	NPEPDFFunctor(std::vector<float> waveformTimes, std::vector<float> waveformAmplitudes,
 	              ceres::CubicInterpolator<ceres::Grid1D<float, true>> *PDFInterpolator, unsigned int numPES)
-			: x_(std::move(x)), y_(std::move(y)), PDFInterpolator_(PDFInterpolator), numPES_(numPES) {};
+			: waveformTimes_(std::move(waveformTimes)), waveformAmplitudes_(std::move(waveformAmplitudes)), PDFInterpolator_(PDFInterpolator), numPES_(numPES) {};
 	
 	template<typename T>
-	bool operator()(T const *const *params, T *__restrict__ residual) const {
-		for (int j = 0; j < x_.size(); j++) {
+	inline bool operator()(T const *const *params, T *__restrict__ residual) const {
+		for (int j = 0; j < waveformTimes_.size(); j++) {
 			T f;
-			T X_(x_[j]);
+			T X_(waveformTimes_[j]);
 			residual[j] = params[0][0];
 			for (unsigned int i = 0; i < numPES_; ++i) {
 				auto peParams = params[i];
 				PDFInterpolator_->Evaluate((X_ - peParams[0]), &f);
 				residual[j] += (peParams[1] * f);
 			}
-			residual[j] -= y_[j];
+			residual[j] -= waveformAmplitudes_[j];
 		}
 		return true;
 	}
 
 private:
-	const std::vector<float>                        x_;
-	const std::vector<float>                        y_;
+	const std::vector<float>                        waveformTimes_;
+	const std::vector<float>                        waveformAmplitudes_;
 	ceres::CubicInterpolator<ceres::Grid1D<float> > *PDFInterpolator_;
 	const unsigned int                              numPES_;
 };
 
 
-float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double> *idealWaveform) {
+inline float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double> *idealWaveform) {
+	// TODO(josh): Replace p with an instance of fit parameters type
+	
 	// This way of passing x as a list then choosing the 0th index is from ROOT's syntax for fitting where you can fit
 	//  with an arbitrary number of dimensions (N input values -> single output, an N dimensional function)
 	
@@ -69,34 +71,76 @@ float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double>
 }
 
 
-void
-fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> file, std::mutex &m) {
-	std::vector<ChannelFitData> chFits;
+inline void updateGuessCorrector(const std::vector<double>& amps, const std::vector<double>& times,
+                                 const std::vector<double>& initialAmps, const std::vector<double>& initialTimes,
+                                 double baseline, double initBaseline, const std::vector<Photoelectron>& pesFound){
+	for (int k   = 0; k < pesFound.size(); k++) {
+		sysProcPECount++;
+		ampDiff  = ampDiff + ((amps[k] - initialAmps[k]) - ampDiff) / sysProcPECount;
+		timeDiff = timeDiff + ((times[k] - initialTimes[k]) - timeDiff) / sysProcPECount;
+	}
+	baselineDiff = baselineDiff + ((baseline - initBaseline) - baselineDiff) / sysProcPECount;
+}
+
+
+inline bool getNextPEGuess(DigitiserChannel* residualWF, Photoelectron *guessPE){
+	// Get initial guesses for the next PE
+	const auto         minPosIt   = std::min_element(residualWF->waveform.begin(), residualWF->waveform.end());
+	const unsigned int minTimePos = std::distance(residualWF->waveform.begin(), minPosIt);
 	
-	for (const auto &WFData: event->chData) { // Looping through all channels for a given event
-		auto residualWF = WFData; // This will be the variable that is modified to be the residual distribution after each iteration
+	// If lowest point in waveform isn't below threshold there are no more PEs
+	if (-residualWF->waveform[minTimePos] < WFSigThresh) {
+		return false;
+	}
+	
+	guessPE->amplitude = -residualWF->waveform[minTimePos];
+	guessPE->time      = float(minTimePos) * pdfSamplingRate;
+	return true;
+}
+
+
+inline void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vector<float> *params, std::vector<float> waveform, const std::vector<double> *chIdealWF){
+	for (int i = 0; i < pesFound->size(); i++) {
+		// TODO(josh): Improve the adjustment by averaging the shift based off of a few bins around the PE time
+		const unsigned int peTimeBinPos   = std::floor(pesFound->at(i).time / pdfSamplingRate);
+		const float        fitVal         = NPEPDFFunc(pesFound->at(i).time, *params, chIdealWF);
+		const float        extraAmplitude = fitVal - waveform[peTimeBinPos];
+		const float        newAmplitude   = pesFound->at(i).amplitude + extraAmplitude;
+		if (newAmplitude > WFSigThresh) { // TODO(josh): We need to consider the situations that this would ever be true
+			params->at(2 + (2 * i)) = newAmplitude;
+			pesFound->at(i).amplitude = newAmplitude;
+		}
+	}
+}
+
+
+void
+fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> outputFile, std::mutex &lock) {
+	std::vector<FitChannel> chFits;
+	std::cout << "Fitting to event" << std::endl;
+	for (const auto &channel: event->channels) { // Looping through all channels for a given event
+		auto residualWF = channel; // This will be the variable that is modified to be the residual distribution after each iteration
 		
-		ChannelFitData     chFit{};
-		const unsigned int ch = WFData.channel;
+		FitChannel         chFit{};
+		const unsigned int ch = channel.ID;
 		if (std::count(skipChannels.begin(), skipChannels.end(), ch)) {
 			continue;
 		}
-		chFit.ch = ch;
+		chFit.ID = ch;
 		
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
-		const std::vector<double> tmp        = (*idealWaveforms)[ch];
-		const std::vector<double> *chIdealWF = &tmp;
+		const std::vector<double> *chIdealWF = &(*idealWaveforms)[ch];
 		
 		// Baseline calculation
-		float initBaseline = averageVector(WFData.waveform, 2);
+		float initBaseline = averageVector(channel.waveform, 2);
 		chFit.baseline = initBaseline;
 
 		// Start loop that will break when no more PEs are present
-		std::vector<PEData> pesFound;
-		unsigned int        numPEsFound = 0;
+		std::vector<Photoelectron> pesFound;
+		unsigned int               numPEsFound = 0;
 		
 		// This is getting estimate PEs that will then be passed as initial guesses to the minimiser.
-		PEData guessPE{};
+		Photoelectron guessPE{};
 
 		// Initial baseline removal.
 		for (float &k: residualWF.waveform) {
@@ -110,7 +154,7 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			std::vector<float> params;
 			params.push_back((float) pesFound.size());
 			params.push_back(initBaseline);
-			for (auto pe: pesFound) {
+			for (const auto &pe: pesFound) {
 				params.push_back(pe.amplitude);
 				params.push_back(pe.time);
 			}
@@ -118,35 +162,14 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 			// Amplitude adjustment: if the latest PE found is before other one(s),
 			//  its tail is going to add some amplitude to the following one. Compares
 			//  real and fit amplitude at the time bin corresponding to the PE time.
-			for (int i = 0; i < pesFound.size(); i++) {
-				// TODO(josh): Improve the adjustment by averaging the shift based off of a few bins around the PE time
-				const unsigned int peTimeBinPos   = std::floor(pesFound[i].time / pdfSamplingRate);
-				const float        fitVal         = NPEPDFFunc(pesFound[i].time, params, chIdealWF);
-				const float        extraAmplitude = fitVal - WFData.waveform[peTimeBinPos];
-				const float        newAmplitude   = pesFound[i].amplitude + extraAmplitude;
-				if (newAmplitude > WFSigThresh) { // TODO(josh): We need to consider the situations that this would ever be true
-					params[2 + (2 * i)] = newAmplitude;
-					pesFound[i].amplitude = newAmplitude;
-				}
-			}
+			amplitudeCorrection(&pesFound, &params, channel.waveform, chIdealWF);
 			
 			// Compute residual
-			std::vector<float> fitVecForPlot; // Debug line
 			for (unsigned int  k = 0; k < residualWF.waveform.size(); ++k) {
 				// TODO(josh): Should it be k or k + 0.5?
 				const float fitVal = NPEPDFFunc((float)k * pdfSamplingRate, params, chIdealWF);
 				residualWF.waveform[k] = residualWF.waveform[k] - fitVal + initBaseline;
-				if (saveWaveforms) { fitVecForPlot.emplace_back(fitVal); } // Debug line
 			}
-			
-			
-			/** Debugging code - writing fits to CSV for plotting **/
-			if (saveWaveforms) {
-				writeVector("rawWaveform_" + std::to_string(waveformCount) + ".csv", WFData.waveform);
-				writeVector("fit_" + std::to_string(waveformCount) + ".csv", fitVecForPlot);
-				writeVector("residual_" + std::to_string(waveformCount) + ".csv", residualWF.waveform);
-			}
-			/** ================================================= **/
 
 			// Keep correcting baseline as new PEs are found.
 			if(!pesFound.empty()){
@@ -156,26 +179,23 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 				}
 			}
 			
-			// Get initial guesses for the next PE
-			const auto         minPosIt   = std::min_element(residualWF.waveform.begin(), residualWF.waveform.end());
-			const unsigned int minTimePos = std::distance(residualWF.waveform.begin(), minPosIt);
-			
-			// If lowest point in waveform isn't below threshold there are no more PEs
-			if (-residualWF.waveform[minTimePos] < WFSigThresh) {
+			if(!getNextPEGuess(&residualWF, &guessPE)){
 				break;
 			}
 			
-			guessPE.amplitude = -residualWF.waveform[minTimePos];
-			guessPE.time      = float(minTimePos) * pdfSamplingRate;
-			
 			numPEsFound += 1;
 			pesFound.push_back(guessPE);
-			residualWF = WFData;
+			residualWF = channel;
+            std::cout << "Initial guess loop" << std::endl;
 			
 			if (numPEsFound > maxPEs) {  // To handle the possibility of the algorithm being overly keen.
 				break;
 			}
 		} // End of PE find loop
+		
+		if(numPEsFound == 0){
+			continue;
+		}
 		
 		ceres::Problem problem{};
 		
@@ -207,140 +227,133 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
 		
 		// Creating vector of references to parameter values that the fitter will use and modify. Note this means that
 		// the references are the initial values before the fit and the final values after the fit.
-		double                baseline = initBaseline;
-		std::vector<double *> params   = {};
-		params.push_back(&baseline);
+		double              baseline = initBaseline;
+		std::vector<double> params   = {};
+		params.push_back(baseline);
 		for (int i = 0; i < pesFound.size(); i++) {
-			params.push_back(&amplitudes[i]);
-			params.push_back(&times[i]);
+			params.push_back(amplitudes[i]);
+			params.push_back(times[i]);
 		}
 		
 		// Creating the x values that the solver will use
 		std::vector<float> xValues;
-		for (unsigned int  j = 0; j < WFData.waveform.size(); j++) {
+		for (unsigned int  j = 0; j < channel.waveform.size(); j++) {
 			xValues.push_back(((float)j * 100.0f) + pdfT0SampleConv);  // Multiplying index to match position on ideal PDF
 		}
 		
 		// Set up the only cost function (also known as residual). This uses
 		// auto-differentiation to obtain the derivative (Jacobian).
-		auto costFunction = new ceres::DynamicAutoDiffCostFunction<NPEPDFFunctor>(new NPEPDFFunctor(xValues,
-		                                                                                            WFData.waveform,
-		                                                                                            idealPDFInterpolator,
-		                                                                                            pesFound.size()));
+		auto functor = new NPEPDFFunctor(xValues,
+		                                 channel.waveform,
+		                                 idealPDFInterpolator,
+		                                 pesFound.size());
+		auto costFunction = new ceres::DynamicAutoDiffCostFunction<NPEPDFFunctor>(functor);
 		
-		costFunction->SetNumResiduals((int) WFData.waveform.size());
+		costFunction->SetNumResiduals((int) channel.waveform.size());
 		
 		costFunction->AddParameterBlock(1); // Baseline param
-		for ([[maybe_unused]] auto pe: pesFound) {
+		for ([[maybe_unused]]const auto &pe: pesFound) {
 			costFunction->AddParameterBlock(2); // Params for one PE
 		}
 
+        std::cout << "About to make parameter blocks" << std::endl;
+
 		// Formatting parameters to allow grouping of params for one PE
 		std::vector<double *> parameterBlocks;
-		double                x1[] = {*params[0]};
+		double                x1[] = {params[0]};
 		parameterBlocks.push_back(x1);
-		auto **x2 = new double *[pesFound.size()];
-		for (int i = 1; i <= int((params.size() - 1) / 2); i++) {
-			x2[i-1]    = new double[2];
-			x2[i-1][0] = *params[2 * i - 1];
-			x2[i-1][1] = *params[2 * i];
-			parameterBlocks.push_back(x2[i - 1]);
+		double x2[pesFound.size()][2];
+		
+		for (int i = 0; i < pesFound.size(); i++) {
+			x2[i][0] = params[(2 * i) + 1];
+			x2[i][1] = params[(2 * i) + 2];
+			parameterBlocks.push_back(x2[i]);
 		}
 
+        std::cout << "Made parameter blocks" << std::endl;
+
 		auto lossFunction(new ceres::ArctanLoss(WFSigThresh));
+
+        std::cout << "Made loss function" << std::endl;
 		
 		problem.AddResidualBlock(costFunction, lossFunction, parameterBlocks);
 		
-		for (int i = 1; i < int((params.size() - 1) / 2); i++) {
+		for (int i = 1; i < pesFound.size() + 1; i++) {
 			problem.SetParameterLowerBound(parameterBlocks[i], 0, 0);
 		}
+		
+		std::cout << "Lower bounds set, about to initialise solver" << std::endl;
+		std::cout << "NumPEs:\t" << numPEsFound << std::endl;
 		
 		// Run the solver!
 		ceres::Solver::Options options;
 //		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
 		options.linear_solver_type           = ceres::DENSE_QR;
 		options.parameter_tolerance          = 1e-5; // default is 1e-8, check if this is tolerance for any or all params
-		options.minimizer_progress_to_stdout = false;
+		options.minimizer_progress_to_stdout = true;
+		
+		std::cout << "Solver options set" << std::endl;
 		ceres::Solver::Summary summary;
+		std::cout << "Summary made" << std::endl;
 		Solve(options, &problem, &summary);
+		
+		std::cout << "Ran solver" << std::endl;
 
-//        std::cout << summary.FullReport() << "\n";
+        std::cout << summary.FullReport() << "\n";
 		
 		// Going back from ideal waveform PDF index to time
 		for (double &time: times) {
 			time = time / samplingRate2Inv;
 		}
 		
-		std::vector<PEData> FitPEs;
+		std::vector<Photoelectron> FitPEs;
 		for (int            k = 0; k < pesFound.size(); k++) {
-			PEData pe{};
+			Photoelectron pe{};
 			pe.amplitude = float(amplitudes[k]);
 			pe.time      = float(times[k]);
 			FitPEs.push_back(pe);
 		}
-		chFit.pes             = FitPEs;
-		chFit.baseline        = float(baseline);
+		chFit.PEs      = FitPEs;
+		chFit.baseline = float(baseline);
 		
 		
 		std::vector<float> finalParams;
 		finalParams.push_back((float) FitPEs.size());
 		finalParams.push_back((float) baseline);
-		for (auto PE: FitPEs) {
+		for (const auto &PE: FitPEs) {
 			finalParams.push_back((float) PE.amplitude);
 			finalParams.push_back((float) PE.time);
 		}
 
 		float            chiSq    = 0;
-		for (unsigned int j        = 0; j < WFData.waveform.size(); j++) {
-			const float observed = WFData.waveform[j];
+		for (unsigned int j        = 0; j < channel.waveform.size(); j++) {
+			const float observed = channel.waveform[j];
 			const float expected = NPEPDFFunc((float) j * pdfSamplingRate, finalParams, chIdealWF);
 			chiSq += (float)std::pow(observed - expected, 2) / (pdfResidualRMS / 1000);
 			//TODO(josh): Need to calculate the residual RMS on a per waveform basis?
 		}
-		float            redChiSq = chiSq / ((float) WFData.waveform.size() - ((float) finalParams.size() - 1));
+		float            redChiSq = chiSq / ((float) channel.waveform.size() - ((float) finalParams.size() - 1));
 		
 		sysProcWFCount++;
 		meanReducedChiSq = meanReducedChiSq + (redChiSq - meanReducedChiSq) / sysProcWFCount;
 		
-		chFit.redChiSq = redChiSq;
+		chFit.reducedChiSq = redChiSq;
 		
-		m.lock();
+		lock.lock();
 		reducedChiSqs.emplace_back(redChiSq);
-		m.unlock();
-		
-		/** Debugging code - writing fits to CSV for plotting **/
-		if (saveWaveforms) {
-			std::vector<float> fullFitVecForPlot;
-			for (unsigned int  k = 0; k < WFData.waveform.size(); k++) {
-				const auto posVal = NPEPDFFunc((float) k * pdfSamplingRate, finalParams, chIdealWF);
-				fullFitVecForPlot.emplace_back(posVal);
-			}
-			writeVector("fullFit_" + std::to_string(waveformCount) + ".csv", fullFitVecForPlot);
-			m.lock();
-			waveformCount++;
-			m.unlock();
-		}
+		lock.unlock();
 		
 		chFits.push_back(chFit);
 		
 		// Update correction values for initial guesses
-		for (int k   = 0; k < pesFound.size(); k++) {
-			sysProcPECount++;
-			ampDiff  = ampDiff + (((float)amplitudes[k] - (float)initialAmplitudes[k]) - ampDiff) / (float)sysProcPECount;
-			timeDiff = timeDiff + (((float)times[k] - (float)initialTimes[k]) - timeDiff) / (float)sysProcPECount;
-		}
-		baselineDiff = baselineDiff + (((float)baseline - initBaseline) - baselineDiff) / (float)sysProcPECount;
+		updateGuessCorrector(amplitudes, times, initialAmplitudes, initialTimes, baseline, initBaseline, pesFound);
 		
-		for (int i = 0; i < int((params.size() - 1) / 2); i++){
-			delete x2[i];
-		}
-		delete[] x2;
 		delete idealPDFInterpolator;
 	}
 	
-	EventFitData evFitDat{event->eventID, event->TDCCorrTime, event->date, chFits};
+	FitEvent evFitDat{event->ID, event->correctedTime, event->date, chFits};
 	
-	Writer writer(std::move(file));
+	Writer writer(std::move(outputFile));
 	writer.writeEventInfo(evFitDat);
 }
 
@@ -348,18 +361,18 @@ fitPE(const EventData *event, const std::vector<std::vector<double>> *idealWavef
  *
  * @param events
  * @param count
- * @param m
+ * @param lock
  * @param idealWaveforms
  * @param file
  * @return
  */
-bool fitBatchPEs(const std::vector<EventData> &events, std::atomic<unsigned long> &count, std::mutex &m,
-                 const std::vector<std::vector<double>> *idealWaveforms, const std::shared_ptr<SyncFile> &file) {
+bool batchFitEvents(const std::vector<DigitiserEvent> &events, std::atomic<unsigned long> &count, std::mutex &lock,
+                    const std::vector<std::vector<double>> *idealWaveforms, const std::shared_ptr<SyncFile> &file) {
 	for (const auto &event: events) {
-		m.lock();
+		lock.lock();
 		++count;
-		m.unlock();
-		fitPE(&event, idealWaveforms, file, m);
+		lock.unlock();
+		fitEvent(&event, idealWaveforms, file, lock);
 	}
 	return true;
 }

@@ -12,57 +12,58 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(CReader, m) {
 	m.doc() = "C++ readers for wavecatcher data files.";
-	py::class_<PEData>(m, "PE")
+	py::class_<Photoelectron>(m, "PE")
 			.def(py::init<const float&, const float&, const float&, const float&, const float&, const float&>())
-			.def_readwrite("amplitude", &PEData::amplitude)
-			.def_readwrite("amplitudeError", &PEData::amplitudeError)
-			.def_readwrite("time", &PEData::time)
-			.def_readwrite("timeError", &PEData::timeError)
-			.def_readwrite("foundAmplitude", &PEData::foundAmplitude)
-			.def_readwrite("foundTime", &PEData::foundTime);
+			.def_readwrite("amplitude", &Photoelectron::amplitude)
+			.def_readwrite("amplitudeError", &Photoelectron::amplitudeError)
+			.def_readwrite("time", &Photoelectron::time)
+			.def_readwrite("timeError", &Photoelectron::timeError)
+			.def_readwrite("foundAmplitude", &Photoelectron::initialAmplitude)
+			.def_readwrite("foundTime", &Photoelectron::initialTime);
 	
-	py::class_<ChannelFitData>(m, "ChannelFitData", py::dynamic_attr())
-			.def(py::init<const unsigned short&, const float&, const float&, const std::vector<PEData>&>())
-			.def_readwrite("ch", &ChannelFitData::ch)
-			.def_readwrite("redChiSq", &ChannelFitData::redChiSq)
-			.def_readwrite("baseline", &ChannelFitData::baseline)
-			.def_readwrite("pes", &ChannelFitData::pes);
+	py::class_<FitChannel>(m, "ChannelFitData", py::dynamic_attr())
+			.def(py::init<const unsigned short&, const float&, const float&, const std::vector<Photoelectron>&>())
+			.def_readwrite("ch", &FitChannel::ID)
+			.def_readwrite("redChiSq", &FitChannel::reducedChiSq)
+			.def_readwrite("baseline", &FitChannel::baseline)
+			.def_readwrite("pes", &FitChannel::PEs);
 	
-	py::class_<EventFitData>(m, "EventFitData", py::dynamic_attr())
-			.def(py::init<const unsigned int&, const std::string&, const std::string&, const std::vector<ChannelFitData>>())
-			.def_readwrite("eventID", &EventFitData::eventID)
-			.def_readwrite("TDCCorrTime", &EventFitData::TDCCorrTime)
-			.def_readwrite("date", &EventFitData::date)
-			.def_readwrite("SiPM", &EventFitData::SiPM);
+	py::class_<FitEvent>(m, "EventFitData", py::dynamic_attr())
+			.def(py::init<const unsigned int&, const std::string&, const std::string&, const std::vector<FitChannel>>())
+			.def_readwrite("eventID", &FitEvent::ID)
+			.def_readwrite("TDCCorrTime", &FitEvent::correctedTime)
+			.def_readwrite("date", &FitEvent::date)
+			.def_readwrite("SiPM", &FitEvent::channels);
 	
-	py::class_<ChannelData>(m, "ChannelData", py::dynamic_attr())
+	py::class_<DigitiserChannel>(m, "ChannelData", py::dynamic_attr())
 			.def(py::init<const unsigned short&, const std::vector<float>&>())
-			.def_readwrite("channel", &ChannelData::channel)
-			.def_readwrite("waveform", &ChannelData::waveform);
+			.def_readwrite("channel", &DigitiserChannel::ID)
+			.def_readwrite("waveform", &DigitiserChannel::waveform);
 	
-	py::class_<EventData>(m, "EventData", py::dynamic_attr())
-			.def(py::init<const unsigned int&, const std::string&, const std::string&, const std::vector<ChannelData>>())
-			.def_readwrite("eventID", &EventData::eventID)
-			.def_readwrite("TDCCorrTime", &EventData::TDCCorrTime)
-			.def_readwrite("date", &EventData::date)
-			.def_readwrite("chData", &EventData::chData);
+	py::class_<DigitiserEvent>(m, "EventData", py::dynamic_attr())
+			.def(py::init<const unsigned int&, const std::string&, const std::string&, const std::vector<DigitiserChannel>>())
+			.def_readwrite("eventID", &DigitiserEvent::ID)
+			.def_readwrite("TDCCorrTime", &DigitiserEvent::correctedTime)
+			.def_readwrite("date", &DigitiserEvent::date)
+			.def_readwrite("chData", &DigitiserEvent::channels);
 	
-	py::class_<WCData>(m, "WCData")
-			.def("addRow", &WCData::addRow, "Add entry row to WCData")
-			.def("getEvents", &WCData::getEvents, "Get all events")
-			.def("getEvent", &WCData::getEvent, "Get event by event number")
-			.def("getChannelWaveform", &WCData::getChannelWaveform, "Get channel waveform by event and channel number");
+	py::class_<DigitiserRun>(m, "WCData")
+			.def("addEvent", &DigitiserRun::addEvent, "Add entry row to WCData")
+			.def("getEvents", &DigitiserRun::getEvents, "Get all events")
+			.def("getEvent", &DigitiserRun::getEvent, "Get event by event number")
+			.def("getEventChannel", &DigitiserRun::getEventChannel, "Get channel waveform by event and channel number");
 	
-	py::class_<FitData>(m, "FitData")
-			.def("addRow", &FitData::addRow, "Add entry row to FitData")
-			.def("getFitEvents", &FitData::getFitEvents, "Get all fit events")
-			.def("getEventFit", &FitData::getEventFit, "Get event fit by event number")
-			.def("getChannelFit", &FitData::getChannelFit, "Get channel fit by event and channel number");
+	py::class_<FitRun>(m, "FitData")
+			.def("addEvent", &FitRun::addEvent, "Add entry row to FitData")
+			.def("setEvents", &FitRun::setEvents, "Set whole event fit vector at once.")
+			.def("getEvents", &FitRun::getEvents, "Get all fit events")
+			.def("getEvent", &FitRun::getEvent, "Get event fit by event number")
+			.def("getEventChannel", &FitRun::getEventChannel, "Get channel fit by event and channel number");
 	
 	m.def("ReadWCDataFileDat", &ReadWCDataFileDat, "Read plain text WaveCatcher data files.");
 	m.def("ReadWCDataFileBinary", &ReadWCDataFileBinary, "Read binary WaveCatcher data files.");
 	m.def("ReadWCDataFile", &ReadWCDataFile, "Read WaveCatcher data files.");
-	m.def("ReadRecoMoreOutput", &ReadRecoMoreOutput, "Read RecoMore output text files.");
+	m.def("ReadRecoMoreTextOutput", &ReadRecoMoreTextOutput, "Read RecoMore output text files.");
 	m.def("ReadRecoMoreBinaryOutput", &ReadRecoMoreBinaryOutput, "Read RecoMore output binary files.");
 	m.def("ReadRecoMoreOutput", &ReadRecoMoreOutput, "Read RecoMore output files.");
 
