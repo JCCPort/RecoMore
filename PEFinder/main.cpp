@@ -26,7 +26,8 @@ int main(int argc, char** argv) {
 		.required()
 		.help("Path to raw data file (.dat or .bin).");
 	program.add_argument("-o", "--output")
-		.help("Path for output reco file. Defaults to input file name with 'PES' appended.");
+		.required()
+		.help("Path for output reco file.");
 	program.add_argument("--txt-output")
          	.default_value(false)
 	        .implicit_value(true)
@@ -56,11 +57,11 @@ int main(int argc, char** argv) {
 	
 	std::string inputFileName = program.get<std::string>("-i");
 	std::string outputFileName;
-	if(program.is_used("-o")){
-		outputFileName = program.get<std::string>("-o");
-	} else {
-		outputFileName = defaultOutputName(program.get<std::string>("-i"));
-	}
+	//if(program.is_used("-o")){
+	//	outputFileName = program.get<std::string>("-o");
+	//} else {
+	//	outputFileName = defaultOutputName(program.get<std::string>("-i"));
+	//}
 	auto pdfDir = program.get<std::string>("--pdf_dir");
 	unsigned int numThreads = program.get<int>("--n_threads");
 	unsigned int batchNumber = program.get<int>("--num_batches");

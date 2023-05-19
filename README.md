@@ -20,7 +20,7 @@ To build RecoMore:
 
 To run RecoMore:
 
-```./PEFinder -i <pathToDataFile> --pdf_dir <pathToIdealPDFsDir> --n_threads <numberOFThreads> --n_batches <numberOfBatches>```
+```./PEFinder -i <pathToDataFile> -o <pathToOutputFile> --pdf_dir <pathToIdealPDFsDir> --n_threads <numberOFThreads> --n_batches <numberOfBatches>```
 
 For more info run `./PEFinder -h` to get the help output.
 
