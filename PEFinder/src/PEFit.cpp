@@ -117,7 +117,7 @@ inline void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vecto
 void
 fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> outputFile, std::mutex &lock) {
 	std::vector<FitChannel> chFits;
-	std::cout << "Fitting to event" << std::endl;
+//	std::cout << "Fitting to event" << std::endl;
 	for (const auto &channel: event->channels) { // Looping through all channels for a given event
 		auto residualWF = channel; // This will be the variable that is modified to be the residual distribution after each iteration
 		
@@ -186,7 +186,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			numPEsFound += 1;
 			pesFound.push_back(guessPE);
 			residualWF = channel;
-            std::cout << "Initial guess loop" << std::endl;
+//            std::cout << "Initial guess loop" << std::endl;
 			
 			if (numPEsFound > maxPEs) {  // To handle the possibility of the algorithm being overly keen.
 				break;
@@ -248,15 +248,15 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		                                 idealPDFInterpolator,
 		                                 pesFound.size());
 		auto costFunction = new ceres::DynamicAutoDiffCostFunction<NPEPDFFunctor>(functor);
-		
+
 		costFunction->SetNumResiduals((int) channel.waveform.size());
-		
+
 		costFunction->AddParameterBlock(1); // Baseline param
 		for ([[maybe_unused]]const auto &pe: pesFound) {
 			costFunction->AddParameterBlock(2); // Params for one PE
 		}
 
-        std::cout << "About to make parameter blocks" << std::endl;
+//        std::cout << "About to make parameter blocks" << std::endl;
 
 		// Formatting parameters to allow grouping of params for one PE
 		std::vector<double *> parameterBlocks;
@@ -270,36 +270,36 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			parameterBlocks.push_back(x2[i]);
 		}
 
-        std::cout << "Made parameter blocks" << std::endl;
+//        std::cout << "Made parameter blocks" << std::endl;
 
-		auto lossFunction(new ceres::ArctanLoss(WFSigThresh));
+		auto lossFunction(new ceres::ArctanLoss(WFSigThresh/2));
 
-        std::cout << "Made loss function" << std::endl;
+//        std::cout << "Made loss function" << std::endl;
 		
 		problem.AddResidualBlock(costFunction, lossFunction, parameterBlocks);
-		
+
 		for (int i = 1; i < pesFound.size() + 1; i++) {
 			problem.SetParameterLowerBound(parameterBlocks[i], 0, 0);
 		}
 		
-		std::cout << "Lower bounds set, about to initialise solver" << std::endl;
-		std::cout << "NumPEs:\t" << numPEsFound << std::endl;
+//		std::cout << "Lower bounds set, about to initialise solver" << std::endl;
+//		std::cout << "NumPEs:\t" << numPEsFound << std::endl;
 		
 		// Run the solver!
 		ceres::Solver::Options options;
 //		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
-		options.linear_solver_type           = ceres::DENSE_QR;
-		options.parameter_tolerance          = 1e-5; // default is 1e-8, check if this is tolerance for any or all params
-		options.minimizer_progress_to_stdout = true;
+//		options.linear_solver_type           = ceres::DENSE_QR;
+//		options.parameter_tolerance          = 1e-5; // default is 1e-8, check if this is tolerance for any or all params
+		options.minimizer_progress_to_stdout = false;
 		
-		std::cout << "Solver options set" << std::endl;
+//		std::cout << "Solver options set" << std::endl;
 		ceres::Solver::Summary summary;
-		std::cout << "Summary made" << std::endl;
+//		std::cout << "Summary made" << std::endl;
 		Solve(options, &problem, &summary);
 		
-		std::cout << "Ran solver" << std::endl;
+//		std::cout << "Ran solver" << std::endl;
 
-        std::cout << summary.FullReport() << "\n";
+//        std::cout << summary.FullReport() << "\n";
 		
 		// Going back from ideal waveform PDF index to time
 		for (double &time: times) {

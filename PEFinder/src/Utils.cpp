@@ -19,7 +19,7 @@
  */
 void displayProgress(std::atomic<unsigned long> &count, std::mutex &m, unsigned int dataLength) {
 	while (count != dataLength) {
-		std::this_thread::sleep_for(std::chrono::seconds(1));
+		std::this_thread::sleep_for(std::chrono::milliseconds (100));
 		m.lock();
 		std::cout << "Processed: " << std::setw(20) << count << "/" << dataLength << " \r" << std::flush;
 		m.unlock();

@@ -1,3 +1,4 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LogNorm
@@ -20,7 +21,7 @@ class RecoMoreFitExaminer:
         self.reducedChiSqs = []
         self.amps = []
         self.times = []
-        for event_ in self.RMPEs.getFitEvents():
+        for event_ in self.RMPEs.getEvents():
             for channel_ in event_.SiPM:
                 self.reducedChiSqs.append(channel_.redChiSq)
                 if len(channel_.pes) > 0:
@@ -35,8 +36,8 @@ class RecoMoreFitExaminer:
         :param channelNumber:
         :return:
         """
-        RMEvent = self.RMPEs.getChannelFit(eventID, channelNumber)
-        rawEvent = self.rawWFs.getChannelWaveform(eventID, channelNumber)
+        RMEvent = self.RMPEs.getEventChannel(eventID, channelNumber)
+        rawEvent = self.rawWFs.getEventChannel(eventID, channelNumber)
 
         return RMEvent, rawEvent
 
@@ -58,7 +59,7 @@ class RecoMoreFitExaminer:
                                           '\nBaseline: {:.2e} V'
                  .format(RMEvent_.redChiSq,
                          RMEvent_.baseline) + formattedPEList)
-        plt.xlabel("Times (ns)")
+        plt.xlabel("Time (ns)")
         plt.ylabel("Amplitude (V)")
         plt.grid()
         plt.legend()
@@ -66,7 +67,7 @@ class RecoMoreFitExaminer:
         plt.show()
 
     def plotAllEvents(self, numPEThresh: int = 0):
-        for event_ in self.RMPEs.getFitEvents():
+        for event_ in self.RMPEs.getEvents():
             for channel in event_.SiPM:
                 if len(channel.pes) > numPEThresh:
                     self.plotSingleEvent(eventID=event_.eventID, channelNumber=channel.ch)
@@ -75,22 +76,28 @@ class RecoMoreFitExaminer:
         plt.hist(self.amps, bins=300)
         plt.xlabel("PE amplitudes (V)")
         # plt.yscale('log')
+        plt.grid()
+        plt.tight_layout()
         plt.show()
 
     def plotTimes(self):
         plt.hist(self.times, bins=300)
         plt.xlabel("PE times (ns)")
+        plt.tight_layout()
+        plt.grid()
         plt.show()
 
     def plotChiSq(self):
         plt.hist(self.reducedChiSqs, bins=300)
         plt.xlabel(r"$\chi^2_r$")
+        plt.tight_layout()
+        plt.grid()
         plt.show()
 
     def timeAmpCorrelation(self, channel=None):
         times_ = []
         amps_ = []
-        for event_ in self.RMPEs.getFitEvents():
+        for event_ in self.RMPEs.getEvents():
             for channel_ in event_.SiPM:
                 if channel is not None:
                     if channel_.ch != channel:
@@ -107,6 +114,7 @@ class RecoMoreFitExaminer:
                    extent=[xEdges[0], xEdges[-1], yEdges[0], yEdges[-1]], aspect='auto', norm=LogNorm())
         plt.ylabel('Amplitude (V)')
         plt.xlabel('Time since first PE in waveform (ns)')
+        plt.tight_layout()
         plt.show()
 
     def plotSumAmps(self, channel: int = None, PEThresh: float = 0):
@@ -114,7 +122,7 @@ class RecoMoreFitExaminer:
         minRunSum = 1000
         maxRunSum = 0
 
-        for event_ in self.RMPEs.getFitEvents():
+        for event_ in self.RMPEs.getEvents():
             for channel_ in event_.SiPM:
                 if channel is not None:
                     if channel_.ch != channel:
@@ -136,22 +144,27 @@ class RecoMoreFitExaminer:
         bins = np.linspace(minRunSum, maxRunSum, 600)
         for key, val in sumPES.items():
             fit(val)
+
+        for key, val in sumPES.items():
             plt.hist(val, bins=bins, label='{}'.format(key), histtype='step')
 
         plt.xlabel("Summed amplitude (V)")
         plt.legend()
+        plt.tight_layout()
         plt.show()
 
 
 if __name__ == "__main__":
     # recoMoreFileName = "/Users/joshuaporter/Library/CloudStorage/OneDrive-UniversityofSussex/liquidOLab/dataSTOP_DO_NOT_WRITE_HERE/WavecatcherRuns/Runs/R193/R193PES.dat"
     # rawFileName = "/Users/joshuaporter/Library/CloudStorage/OneDrive-UniversityofSussex/liquidOLab/dataSTOP_DO_NOT_WRITE_HERE/WavecatcherRuns/Runs/R193/R193.bin"
-    recoMoreFileName = "/Users/joshuaporter/CLionProjects/RecoMore/DebugUtils/testData/R185PES.dat"
-    rawFileName = "/Users/joshuaporter/CLionProjects/RecoMore/DebugUtils/testData/R185.bin"
+    matplotlib.rcParams.update({'font.size': 16})
+    matplotlib.use("TKAgg", force=True)
+    recoMoreFileName = "/home/joshuap/Software/JoshSoftware/RecoMore/R185PES.dat"
+    rawFileName = "/home/joshuap/Software/JoshSoftware/RecoMore/R185.bin"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
-    examiner.plotAllEvents()
-    examiner.plotSumAmps(PEThresh=0.008)
+    # examiner.plotAllEvents()
+    # examiner.plotSumAmps(PEThresh=0.008)
     examiner.timeAmpCorrelation()
     examiner.plotAmps()
     examiner.plotTimes()
