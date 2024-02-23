@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LogNorm
 
-from DebugUtils.CalibFitter import fit
-from DebugUtils.GenerateRMFitView import makeWaveformArray
+from CalibFitter import fit
+from GenerateRMFitView import makeWaveformArray
 from CReader import *
 
 
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     # recoMoreFileName = "/Users/joshuaporter/Library/CloudStorage/OneDrive-UniversityofSussex/liquidOLab/dataSTOP_DO_NOT_WRITE_HERE/WavecatcherRuns/Runs/R193/R193PES.dat"
     # rawFileName = "/Users/joshuaporter/Library/CloudStorage/OneDrive-UniversityofSussex/liquidOLab/dataSTOP_DO_NOT_WRITE_HERE/WavecatcherRuns/Runs/R193/R193.bin"
     matplotlib.rcParams.update({'font.size': 16})
-    matplotlib.use("TKAgg", force=True)
+    matplotlib.use("Agg", force=True)
     recoMoreFileName = "/home/joshuap/Software/JoshSoftware/RecoMore/R185PES.dat"
     rawFileName = "/home/joshuap/Software/JoshSoftware/RecoMore/R185.bin"
 

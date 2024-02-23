@@ -3,7 +3,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from DebugUtils.PythonRecoMoreReader import PE
+from PythonRecoMoreReader import PE
 
 
 def specialRound(x, base):
