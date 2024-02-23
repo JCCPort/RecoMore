@@ -28,6 +28,8 @@ endif ()
 
 #### Finding BOOST
 
+message(WARNING "WARNING: Boost must be installed through conda in your current conda environment. System installations of boost are not supported.")
+
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
