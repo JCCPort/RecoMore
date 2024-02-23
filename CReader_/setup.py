@@ -4,6 +4,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+import warnings
 
 from distutils.version import LooseVersion
 
@@ -51,6 +52,12 @@ class CMakeBuild(build_ext):
             f"-DPYTHON_EXECUTABLE={sys.executable}",
             f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
         ]
+
+        conda_prefix = os.environ.get("CONDA_PREFIX")
+        if conda_prefix:
+            cmake_args.append(f"-DCMAKE_PREFIX_PATH={conda_prefix}")
+        else:
+            warnings.warn("Installing package without using conda is not supported and may cause you stress.")
 
         build_args = []
         # Adding CMake arguments set as environment variable

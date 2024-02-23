@@ -163,7 +163,7 @@ if __name__ == "__main__":
     rawFileName = "/home/joshuap/Software/JoshSoftware/RecoMore/R185.bin"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
-    # examiner.plotAllEvents()
+    examiner.plotAllEvents()
     # examiner.plotSumAmps(PEThresh=0.008)
     examiner.timeAmpCorrelation()
     examiner.plotAmps()
