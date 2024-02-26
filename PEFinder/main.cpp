@@ -61,6 +61,11 @@ int main(int argc, char** argv) {
 	} else {
 		outputFileName = defaultOutputName(program.get<std::string>("-i"));
 	}
+
+    if(outputFileName == inputFileName){
+        throw std::runtime_error("Input and output file names are the same. Please specify a different output file name.");
+    }
+
 	auto pdfDir = program.get<std::string>("--pdf_dir");
 	unsigned int numThreads = program.get<int>("--n_threads");
 	unsigned int batchNumber = program.get<int>("--num_batches");
@@ -81,8 +86,9 @@ int main(int argc, char** argv) {
 	static std::atomic<unsigned long> count{0};
 	std::mutex                        lock;
 
-	std::vector<std::vector<double>> idealWaveforms{64};
-	for (int ch = 0; ch < 64; ch++) {
+    unsigned int numChannels = 16;
+	std::vector<std::vector<double>> idealWaveforms{numChannels};
+	for (int ch = 0; ch < numChannels; ch++) {
 		if (std::count(skipChannels.begin(), skipChannels.end(), ch)) {
 			continue;
 		}

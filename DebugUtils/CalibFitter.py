@@ -85,10 +85,16 @@ def fit(amps):
 
     print(pOpt)
 
+    # Set upper x limit to where there are no more bins with a height greater than two.
+    upperXLim = bins[np.where(n > 2)[0][-1]]
+
+    plt.figure(figsize=(12, 9))
     plt.plot(fitVals, hitAmpDistribution(fitVals, *pOpt), label="Fit")
     plt.step(bins, n, label="Data")
     plt.xlabel("Amplitude (V)")
     plt.ylabel("Count")
+    plt.xlim(0, upperXLim)
     plt.legend()
+    plt.grid()
     plt.tight_layout()
     plt.show()
