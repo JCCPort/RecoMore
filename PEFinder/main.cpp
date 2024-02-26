@@ -58,7 +58,10 @@ int main(int argc, char** argv) {
 	std::string outputFileName;
 	if(program.is_used("-o")){
 		outputFileName = program.get<std::string>("-o");
-	} else {
+        if(outputFileName == inputFileName){
+            throw std::runtime_error("Input and output file names are the same. Please specify a different output file name.");
+        }
+    } else {
 		outputFileName = defaultOutputName(program.get<std::string>("-i"));
 	}
 	auto pdfDir = program.get<std::string>("--pdf_dir");
