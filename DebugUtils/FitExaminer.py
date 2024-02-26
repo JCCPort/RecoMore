@@ -238,17 +238,18 @@ class RecoMoreFitExaminer:
 
         plt.figure(figsize=(12, 9))
         for key, val in sumPES.items():
-            n, bins = np.histogram(val, bins=bins)
-            bins = bins[:-1]/np.max(bins[:-1])
+            n, bins_ = np.histogram(val, bins=bins)
+            bins_ = bins_[:-1]/np.max(bins_[:-1])
             # bins = bins - np.min(bins)
-            plt.step(bins, n, label='RecoMore', lw=3, ls='--')
+            plt.fill_between(bins_, n, alpha=0.5, step='pre')
+            plt.step(bins_, n, label='RecoMore', lw=3, ls='--')
             # plt.hist(val, bins=bins, label='{} RM'.format(key), histtype='step', lw=2)
 
 
         # Raw integration
-        sumPES = {}
-        minRunSum = 1000
-        maxRunSum = 0
+        sumPESRAW = {}
+        minRunSumRAW = 1000
+        maxRunSumRAW = 0
 
         for event_ in self.rawWFs.getEvents():
             for channel_ in event_.chData:
@@ -256,39 +257,40 @@ class RecoMoreFitExaminer:
                     if channel_.channel != channel:
                         continue
                 rawWF = np.array(channel_.waveform)
-                # runSum = -np.sum(rawWF[rawWF < 0])
-                runSum = -np.sum(rawWF)
+                runSum = -np.sum(rawWF[rawWF < 0])
+                # runSum = -np.sum(rawWF)
                 runSum = runSum + np.random.normal(runSum, 0.0005, 1)[0]
                 # if runSum > 0:
-                if channel_.channel not in sumPES:
-                    sumPES[channel_.channel] = []
-                sumPES[channel_.channel].append(runSum)
+                if channel_.channel not in sumPESRAW:
+                    sumPESRAW[channel_.channel] = []
+                sumPESRAW[channel_.channel].append(runSum)
 
-                if runSum > maxRunSum:
-                    maxRunSum = runSum
-                if runSum < minRunSum:
-                    minRunSum = runSum
+                if runSum > maxRunSumRAW:
+                    maxRunSumRAW = runSum
+                if runSum < minRunSumRAW:
+                    minRunSumRAW = runSum
 
-        bins = np.linspace(minRunSum, maxRunSum, 200)
+        binsRAW = np.linspace(minRunSumRAW, maxRunSumRAW, 200)
         # for key, val in sumPES.items():
         #     fit(val)
 
         # plt.figure(figsize=(12, 9))
-        for key, val in sumPES.items():
-            n, bins = np.histogram(val, bins=bins)
-            bins = bins[:-1]/np.max(bins[:-1])
+        for key, val in sumPESRAW.items():
+            n, binsRAW_ = np.histogram(val, bins=binsRAW)
+            binsRAW_ = binsRAW_[:-1]/np.max(binsRAW_[:-1])
             # bins = bins - np.min(bins)
-            plt.step(bins, n, label='Integration', lw=3)
+            plt.fill_between(binsRAW_, n, alpha=0.5, step='pre')
+            plt.step(binsRAW_, n, label='Integration', lw=3)
 
             # plt.hist(val, bins=bins, label='{}'.format(key), histtype='step', lw=2)
 
         plt.xlabel("Summed amplitude (V)")
-        plt.xlim([0, 0.6])
+        plt.xlim([0, 0.8])
         plt.legend()
         plt.grid()
         plt.tight_layout()
 
-        plt.savefig("SumAmps.png", dpi=300, bbox_inches='tight')
+        # plt.savefig("SumAmps.png", dpi=300, bbox_inches='tight')
 
         plt.show()
 
@@ -301,11 +303,11 @@ if __name__ == "__main__":
     # recoMoreFileName = "/home/joshuap/Software/JoshSoftware/RecoMore/R185PES.dat"
     # rawFileName = "/home/joshuap/Software/JoshSoftware/RecoMore/R185.bin"
 
-    # recoMoreFileName = "/home/joshuap/Downloads/R13PES.dat"
-    # rawFileName = "/home/joshuap/Downloads/R13.dat"
+    recoMoreFileName = "/home/joshuap/Downloads/R15PES.dat"
+    rawFileName = "/home/joshuap/Downloads/R15.dat"
 
-    recoMoreFileName = "/home/joshuap/Downloads/R22121331PES.dat"
-    rawFileName = "/home/joshuap/Downloads/R22121331.bin"
+    # recoMoreFileName = "/home/joshuap/Downloads/R22121331PES.dat"
+    # rawFileName = "/home/joshuap/Downloads/R22121331.bin"
 
     # recoMoreFileName = "/home/joshuap/Downloads/0-78PES.dat"
     # rawFileName = "/home/joshuap/Downloads/0-78.dat"
@@ -314,7 +316,7 @@ if __name__ == "__main__":
     # examiner.plotAllEvents()
     # examiner.plotSumAmps(PEThresh=0.00)
     # examiner.plotSumAmpsRaw(PEThresh=0.00)
-    examiner.recoMoreVsRawComparison(channel=1, PEThresh=0.00)
+    examiner.recoMoreVsRawComparison(channel=8, PEThresh=0.00)
     # examiner.timeAmpCorrelation()
     # examiner.plotAmps()
     # examiner.plotTimes()
