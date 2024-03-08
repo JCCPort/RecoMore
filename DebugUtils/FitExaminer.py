@@ -6,6 +6,8 @@ from matplotlib.colors import LogNorm
 from DebugUtils.CalibFitter import fit
 from DebugUtils.GenerateRMFitView import makeWaveformArray
 from CReader import *
+import matplotlib.font_manager
+import matplotlib as mpl
 
 
 class RecoMoreFitExaminer:
@@ -84,7 +86,7 @@ class RecoMoreFitExaminer:
 
     def plotAmps(self):
         plt.figure(figsize=(12, 9))
-        plt.hist(self.amps, bins=300)
+        plt.hist(self.amps, bins=1300)
         plt.xlabel("PE amplitudes (V)")
         # plt.yscale('log')
         plt.grid()
@@ -207,7 +209,19 @@ class RecoMoreFitExaminer:
 
         plt.show()
 
-    def recoMoreVsRawComparison(self, channel: int = None, PEThresh: float = 0):
+    def recoMoreVsRawComparison(self, channel: int = None, PEThresh: float = 0, cutMode: str = 'time', runName: str = ''):
+        colour = '#164ba1'
+        binCount = 1600
+
+        # Check that cutMode is either 'none', 'time', 'negativeAmp' or 'timeAndNegativeAmp'
+        if cutMode not in ['none', 'time', 'negativeAmp', 'timeAndNegativeAmp']:
+            print("Invalid cutMode. Please choose from 'none', 'time', 'negativeAmp' or 'timeAndNegativeAmp'.")
+            return
+
+        if (cutMode == 'time') or (cutMode == 'timeAndNegativeAmp'):
+            lowerTimeCut = 30
+            upperTimeCut = 70
+
         # RecoMore
         sumPES = {}
         minRunSum = 1000
@@ -221,7 +235,14 @@ class RecoMoreFitExaminer:
                 runSum = 0
                 for PE_ in channel_.pes:
                     if PE_.amplitude > PEThresh:
-                        runSum += PE_.amplitude
+                        timeDiff = PE_.time - channel_.pes[0].time
+
+                        if (cutMode == 'time') or (cutMode == 'timeAndNegativeAmp'):
+                            if (timeDiff > -lowerTimeCut) and (timeDiff < upperTimeCut):
+                                runSum += PE_.amplitude
+                        else:
+                            runSum += PE_.amplitude
+
                 if runSum > 0:
                     if channel_.ch not in sumPES:
                         sumPES[channel_.ch] = []
@@ -232,19 +253,21 @@ class RecoMoreFitExaminer:
                     if runSum < minRunSum:
                         minRunSum = runSum
 
-        bins = np.linspace(minRunSum, maxRunSum, 200)
-        # for key, val in sumPES.items():
-        #     fit(val)
+        bins = np.linspace(minRunSum, maxRunSum, binCount)
 
-        plt.figure(figsize=(12, 9))
+        fig, (ax1, ax2) = plt.subplots(nrows=2, figsize=(12, 9), height_ratios=[1, 1])
         for key, val in sumPES.items():
             n, bins_ = np.histogram(val, bins=bins)
             bins_ = bins_[:-1]/np.max(bins_[:-1])
             # bins = bins - np.min(bins)
-            plt.fill_between(bins_, n, alpha=0.5, step='pre')
-            plt.step(bins_, n, label='RecoMore', lw=3, ls='--')
+            ax1.fill_between(bins_, n, alpha=0.4, step='pre', color=colour)
+            ax1.step(bins_, n, label='RecoMore', lw=2, color='k')
             # plt.hist(val, bins=bins, label='{} RM'.format(key), histtype='step', lw=2)
 
+            # Set upper x limit to where there are no more bins with a height greater than 25.
+            upperXLim = bins_[np.where(n > 25)[0][-1]]
+            lowerXLim = bins_[np.where(n > 25)[0][0]]
+            ax1.set_xlim([lowerXLim, upperXLim])
 
         # Raw integration
         sumPESRAW = {}
@@ -257,10 +280,27 @@ class RecoMoreFitExaminer:
                     if channel_.channel != channel:
                         continue
                 rawWF = np.array(channel_.waveform)
-                runSum = -np.sum(rawWF[rawWF < 0])
-                # runSum = -np.sum(rawWF)
+
+                if cutMode == 'none':
+                    runSum = -np.sum(rawWF)
+                elif cutMode == 'negativeAmp':
+                    negAmpMask = rawWF < 0
+                    runSum = -np.sum(rawWF[negAmpMask])
+                elif cutMode == 'time':
+                    minAmpTimeIDX = np.argmin(rawWF)
+                    lowerIndex = minAmpTimeIDX - (int(lowerTimeCut / 0.3125))
+                    upperIndex = minAmpTimeIDX + (int(upperTimeCut / 0.3125))
+                    timeCutWF = rawWF[lowerIndex:upperIndex]
+                    runSum = -np.sum(timeCutWF)
+                elif cutMode == 'timeAndNegativeAmp':
+                    minAmpTimeIDX = np.argmin(rawWF)
+                    lowerIndex = minAmpTimeIDX - (int(lowerTimeCut / 0.3125))
+                    upperIndex = minAmpTimeIDX + (int(upperTimeCut / 0.3125))
+                    timeCutWF = rawWF[lowerIndex:upperIndex]
+                    negAmpMask = timeCutWF < 0
+                    runSum = -np.sum(timeCutWF[negAmpMask])
+
                 runSum = runSum + np.random.normal(runSum, 0.0005, 1)[0]
-                # if runSum > 0:
                 if channel_.channel not in sumPESRAW:
                     sumPESRAW[channel_.channel] = []
                 sumPESRAW[channel_.channel].append(runSum)
@@ -270,32 +310,64 @@ class RecoMoreFitExaminer:
                 if runSum < minRunSumRAW:
                     minRunSumRAW = runSum
 
-        binsRAW = np.linspace(minRunSumRAW, maxRunSumRAW, 200)
-        # for key, val in sumPES.items():
-        #     fit(val)
+        binsRAW = np.linspace(minRunSumRAW, maxRunSumRAW, binCount)
 
-        # plt.figure(figsize=(12, 9))
         for key, val in sumPESRAW.items():
             n, binsRAW_ = np.histogram(val, bins=binsRAW)
             binsRAW_ = binsRAW_[:-1]/np.max(binsRAW_[:-1])
             # bins = bins - np.min(bins)
-            plt.fill_between(binsRAW_, n, alpha=0.5, step='pre')
-            plt.step(binsRAW_, n, label='Integration', lw=3)
+            ax2.fill_between(binsRAW_, n, alpha=0.4, step='pre', color=colour)
+            ax2.step(binsRAW_, n, label='Integration', lw=2, color='k')
 
-            # plt.hist(val, bins=bins, label='{}'.format(key), histtype='step', lw=2)
+            # Set upper x limit to where there are no more bins with a height greater than 25.
+            upperXLim = binsRAW_[np.where(n > 25)[0][-1]]
+            lowerXLim = binsRAW_[np.where(n > 25)[0][0]]
+            ax2.set_xlim([lowerXLim, upperXLim])
 
-        plt.xlabel("Summed amplitude (V)")
-        plt.xlim([0, 0.8])
-        plt.legend()
-        plt.grid()
-        plt.tight_layout()
+        ax1.set_ylim(bottom=0)
+        ax2.set_ylim(bottom=0)
+        leg1 = ax1.legend(fontsize=34, handlelength=0, handletextpad=0, frameon=False, alignment='left')
+        leg2 = ax2.legend(fontsize=34, handlelength=0, handletextpad=0, frameon=False, alignment='left')
+        for t in leg1.texts:
+            t.set_alpha(0.8)
+        for t in leg2.texts:
+            t.set_alpha(0.8)
 
-        # plt.savefig("SumAmps.png", dpi=300, bbox_inches='tight')
+        plt.setp(ax1.spines.values(), linewidth=1.7)
+        plt.setp(ax2.spines.values(), linewidth=1.7)
 
-        plt.show()
+        ax1.grid()
+        ax2.grid()
+        # ax1.set_axis_off()
+        # ax2.set_axis_off()
+        ax1.set_xticks([])
+        ax2.set_xticks([])
+
+        ax1.set_yticks([])
+        ax2.set_yticks([])
+
+        ax1.grid()
+        ax2.grid()
+
+        plt.subplots_adjust(hspace=0.03)
+        # ax1.set_yscale('log')
+        # ax2.set_yscale('log')
+        # plt.tight_layout()
+        ax2.set_xlabel("Waveform amplitude", fontsize=26)
+        fig.text(0.1, 0.5, 'Count', ha='center', va='center', rotation='vertical', fontsize=26)
+
+        # plt.savefig("SumAmps_IntegrationTimeCut.png", dpi=300, bbox_inches='tight')
+        plt.savefig("SumAmps_{}_{}.png".format(cutMode, runName), dpi=300, bbox_inches='tight')
+        plt.close()
+
+        # plt.show()
 
 
 if __name__ == "__main__":
+    print(matplotlib.font_manager.findSystemFonts(fontpaths=None, fontext='ttf')[:10])
+
+    mpl.rcParams['font.family'] = 'Roboto'
+
     # recoMoreFileName = "/Users/joshuaporter/Library/CloudStorage/OneDrive-UniversityofSussex/liquidOLab/dataSTOP_DO_NOT_WRITE_HERE/WavecatcherRuns/Runs/R193/R193PES.dat"
     # rawFileName = "/Users/joshuaporter/Library/CloudStorage/OneDrive-UniversityofSussex/liquidOLab/dataSTOP_DO_NOT_WRITE_HERE/WavecatcherRuns/Runs/R193/R193.bin"
     matplotlib.rcParams.update({'font.size': 20})
@@ -303,8 +375,9 @@ if __name__ == "__main__":
     # recoMoreFileName = "/home/joshuap/Software/JoshSoftware/RecoMore/R185PES.dat"
     # rawFileName = "/home/joshuap/Software/JoshSoftware/RecoMore/R185.bin"
 
-    recoMoreFileName = "/home/joshuap/Downloads/R15PES.dat"
-    rawFileName = "/home/joshuap/Downloads/R15.dat"
+    # Laser run
+    # recoMoreFileName = "/home/joshuap/Downloads/R15PES.dat"
+    # rawFileName = "/home/joshuap/Downloads/R15.dat"
 
     # recoMoreFileName = "/home/joshuap/Downloads/R22121331PES.dat"
     # rawFileName = "/home/joshuap/Downloads/R22121331.bin"
@@ -312,11 +385,23 @@ if __name__ == "__main__":
     # recoMoreFileName = "/home/joshuap/Downloads/0-78PES.dat"
     # rawFileName = "/home/joshuap/Downloads/0-78.dat"
 
+    # Scintillator run
+    recoMoreFileName = "/home/joshuap/PycharmProjects/SiPMSimulations/testOutputPES.dat"
+    rawFileName = "/home/joshuap/PycharmProjects/SiPMSimulations/testOutput.dat"
+
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
-    # examiner.plotAllEvents()
+    examiner.plotAllEvents()
     # examiner.plotSumAmps(PEThresh=0.00)
     # examiner.plotSumAmpsRaw(PEThresh=0.00)
-    examiner.recoMoreVsRawComparison(channel=8, PEThresh=0.00)
+    examiner.recoMoreVsRawComparison(channel=0, PEThresh=0.00, cutMode='time', runName='R118')
+    # examiner.recoMoreVsRawComparison(channel=0, PEThresh=0.00, cutMode='none', runName='R118')
+    # examiner.recoMoreVsRawComparison(channel=0, PEThresh=0.00, cutMode='negativeAmp', runName='R118')
+    examiner.recoMoreVsRawComparison(channel=0, PEThresh=0.00, cutMode='timeAndNegativeAmp', runName='R118')
+
+    # examiner.recoMoreVsRawComparison(channel=8, PEThresh=0.00, cutMode='time', runName='R15')
+    # examiner.recoMoreVsRawComparison(channel=8, PEThresh=0.00, cutMode='none', runName='R15')
+    # examiner.recoMoreVsRawComparison(channel=8, PEThresh=0.00, cutMode='negativeAmp', runName='R15')
+    # examiner.recoMoreVsRawComparison(channel=8, PEThresh=0.00, cutMode='timeAndNegativeAmp', runName='R15')
     # examiner.timeAmpCorrelation()
     # examiner.plotAmps()
     # examiner.plotTimes()

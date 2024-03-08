@@ -167,13 +167,15 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			// Compute residual
 			for (unsigned int  k = 0; k < residualWF.waveform.size(); ++k) {
 				// TODO(josh): Should it be k or k + 0.5?
-				const float fitVal = NPEPDFFunc((float)k * pdfSamplingRate, params, chIdealWF);
+				const float fitVal = NPEPDFFunc((float)(k) * pdfSamplingRate, params, chIdealWF);
 				residualWF.waveform[k] = residualWF.waveform[k] - fitVal + initBaseline;
 			}
 
 			// Keep correcting baseline as new PEs are found.
 			if(!pesFound.empty()){
-				initBaseline = averageVector(residualWF.waveform, 2);
+                // Make new vector for the first 10 ns of waveform
+                std::vector<float> tempWF(residualWF.waveform.begin(), residualWF.waveform.begin() + 10);
+				initBaseline = averageVector(tempWF, 2);
 				for (float &k: residualWF.waveform) {
 					k = k - initBaseline;
 				}
@@ -192,6 +194,24 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 				break;
 			}
 		} // End of PE find loop
+
+
+        // Carry out one final adjustment to the amplitude of the PEs found and recalculate baseline, residual.
+        std::vector<float> params2;
+        params2.push_back((float) pesFound.size());
+        params2.push_back(initBaseline);
+        for (const auto &pe: pesFound) {
+            params2.push_back(pe.amplitude);
+            params2.push_back(pe.time);
+        }
+        amplitudeCorrection(&pesFound, &params2, channel.waveform, chIdealWF);
+
+        std::vector<float> tempWF(residualWF.waveform.begin(), residualWF.waveform.begin() + 10);
+        initBaseline = averageVector(tempWF, 2);
+        for (float &k: residualWF.waveform) {
+            k = k - initBaseline;
+        }
+
 		
 		if(numPEsFound == 0){
 			continue;
@@ -272,7 +292,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 
 //        std::cout << "Made parameter blocks" << std::endl;
 
-		auto lossFunction(new ceres::ArctanLoss(WFSigThresh/2));
+		auto lossFunction(new ceres::ArctanLoss(WFSigThresh/0.5));
 
 //        std::cout << "Made loss function" << std::endl;
 		
@@ -289,7 +309,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		ceres::Solver::Options options;
 //		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
 //		options.linear_solver_type           = ceres::DENSE_QR;
-//		options.parameter_tolerance          = 1e-5; // default is 1e-8, check if this is tolerance for any or all params
+//		options.parameter_tolerance          = 1e-16; // default is 1e-8, check if this is tolerance for any or all params
 		options.minimizer_progress_to_stdout = false;
 		
 //		std::cout << "Solver options set" << std::endl;

@@ -12,6 +12,7 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(CReader, m) {
 	m.doc() = "C++ readers for wavecatcher data files.";
+// TODO(josh): Change python class names to match C++ class names... a bit unnecessarily confusing
 	py::class_<Photoelectron>(m, "PE")
 			.def(py::init<const float&, const float&, const float&, const float&, const float&, const float&>())
 			.def_readwrite("amplitude", &Photoelectron::amplitude)

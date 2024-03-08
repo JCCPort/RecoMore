@@ -23,7 +23,9 @@ def NPEPDFFunc(x, PEs: List[PE], baseline, idealWF):
 
 
 def makeWaveformArray(waveform, RMEvent):
-    pdf = pd.read_csv("../PEFinder/pdf/ch{}.txt".format(waveform.channel), sep="\t", names=['time', 'amp'])
+    # pdf = pd.read_csv("../PEFinder/pdf/ch{}.txt".format(waveform.channel), sep="\t", names=['time', 'amp'])
+    pdf = pd.read_csv("/home/joshuap/PycharmProjects/SiPMSimulations/OutputDataForRecoMore/pdf/ch{}.txt".format(waveform.channel), sep="\t", names=['time', 'amp'])
+    # TODO(Josh): Should have this path as a variable so other SiPMs can be used
     amps = pdf['amp'].values
     times = pdf['time'].values
 
