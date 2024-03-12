@@ -1,6 +1,7 @@
 #include "Globals.h"
 
 std::vector<int>    skipChannels{32, 36, 40, 44, 48, 52, 56, 60, 15};
+// TODO(Josh): Clarify the pdf___ numbers, why they have those values
 int                 pdfNSamples        = 105601;
 float               pdfSamplingRate    = 0.003125;
 int                 pdfT0Sample        = 3201;

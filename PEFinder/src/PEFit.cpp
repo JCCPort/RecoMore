@@ -211,6 +211,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
         for (float &k: residualWF.waveform) {
             k = k - initBaseline;
         }
+        // =========================================
 
 		
 		if(numPEsFound == 0){
@@ -350,6 +351,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			const float observed = channel.waveform[j];
 			const float expected = NPEPDFFunc((float) j * pdfSamplingRate, finalParams, chIdealWF);
 			chiSq += (float)std::pow(observed - expected, 2) / (pdfResidualRMS / 1000);
+            //TODO(josh): Where does the 1000 come from? Is it to convert from mV to V?
 			//TODO(josh): Need to calculate the residual RMS on a per waveform basis?
 		}
 		float            redChiSq = chiSq / ((float) channel.waveform.size() - ((float) finalParams.size() - 1));

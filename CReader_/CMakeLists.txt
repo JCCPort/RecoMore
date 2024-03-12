@@ -28,7 +28,7 @@ endif ()
 
 #### Finding BOOST
 
-message(WARNING "WARNING: Boost must be installed through conda in your current conda environment. System installations of boost are not supported.")
+message(WARNING "WARNING: Boost should be installed through conda in your current conda environment for CReader. System installations of boost are not supported.")
 
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
