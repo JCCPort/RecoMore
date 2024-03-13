@@ -253,7 +253,7 @@ DigitiserRun ReadWCDataFileBinary(const std::string &fileName) {
  * @return
  */
 std::vector<double>
-readIdealWFs(unsigned int ch, int interpFactor, const std::string &idealWFDir, unsigned int expectedSize) {
+readIdealWFs(unsigned int ch, unsigned int interpFactor, const std::string &idealWFDir, unsigned int expectedSize) {
 	std::string idealWFPath = idealWFDir + "ch" + std::to_string(ch) + ".txt";
 	std::ifstream idealWFFile(idealWFPath, std::ifstream::in);
 	

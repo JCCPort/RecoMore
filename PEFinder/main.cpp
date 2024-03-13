@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
 		if (std::count(skipChannels.begin(), skipChannels.end(), ch)) {
 			continue;
 		}
-		idealWaveforms.at(ch) = readIdealWFs(ch, 10, pdfDir, pdfNSamples);
+		idealWaveforms.at(ch) = readIdealWFs(ch, pdfInternalInterpFactor, pdfDir, pdfNSamples);
 	}
 
 	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(lock),

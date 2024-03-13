@@ -34,6 +34,9 @@ DigitiserRun ReadWCDataFile(const std::string &fileName){
     if(!std::filesystem::exists(fileName)) {
         throw std::runtime_error("WaveCatcher data file: " + fileName + " not found.");
     }
+    if (testFileOpen.fail()){
+        throw std::runtime_error("WaveCatcher data file: " + fileName + " could not be opened.");
+    }
 
 	std::string  ending = fileName.substr(fileName.length() - 4);
 	DigitiserRun returnDat;
@@ -262,13 +265,19 @@ DigitiserRun ReadWCDataFileBinary(const std::string &fileName) {
  * @return
  */
 std::vector<double>
-readIdealWFs(unsigned int ch, int interpFactor, const std::string &idealWFDir, unsigned int expectedSize) {
+readIdealWFs(unsigned int ch, unsigned int interpFactor, const std::string &idealWFDir, unsigned int expectedSize) {
 	std::string idealWFPath = idealWFDir + "ch" + std::to_string(ch) + ".txt";
 	std::ifstream idealWFFile(idealWFPath, std::ifstream::in);
 	
 	if (!idealWFFile.is_open()) {
-		throw std::runtime_error("Ideal PE PDF: " + idealWFPath + " not found.");
+		throw std::runtime_error("Ideal PE PDF file: " + idealWFPath + " not found.");
 	}
+    if(idealWFFile.peek() == std::ifstream::traits_type::eof()){
+        throw std::runtime_error("Ideal PE PDF file: " + idealWFPath + " is empty.");
+    }
+    if (idealWFFile.fail()){
+        throw std::runtime_error("Ideal PE PDF file: " + idealWFPath + " could not be opened.");
+    }
 	
 	double idealWFTime;
 	double idealWFAmp;
@@ -284,7 +293,7 @@ readIdealWFs(unsigned int ch, int interpFactor, const std::string &idealWFDir, u
 	while (idealWFFile >> idealWFTime >> idealWFAmp) {
 		double delta_v = (idealWFAmp - prevAmp) / double(interpFactor);
 
-		for (int step = 1; step < interpFactor; ++step)  // Add linearly interpolated points to ideal PDF
+		for (unsigned int step = 1; step < interpFactor; ++step)  // Add linearly interpolated points to ideal PDF
 			waveform.emplace_back(prevAmp + double(step) * delta_v);
 
 		waveform.emplace_back(idealWFAmp);
@@ -306,6 +315,18 @@ readIdealWFs(unsigned int ch, int interpFactor, const std::string &idealWFDir, u
  */
 FitRun ReadRecoMoreOutput(const std::string &fileName){
 	// TODO(josh): Add error checking to if the data file is corrupted/invalid
+    std::ifstream testFileOpen(fileName, std::ifstream::in);
+
+    if (testFileOpen.peek() == std::ifstream::traits_type::eof()) {
+        throw std::runtime_error("RecoMore data file: " + fileName + " is empty.");
+    }
+    if (!std::filesystem::exists(fileName)) {
+        throw std::runtime_error("RecoMore data file: " + fileName + " not found.");
+    }
+    if (testFileOpen.fail()){
+        throw std::runtime_error("RecoMore data file: " + fileName + " could not be opened.");
+    }
+
 	std::string ending = fileName.substr(fileName.length() - 4);
 	FitRun      returnDat;
 	if(ending == ".dat"){
