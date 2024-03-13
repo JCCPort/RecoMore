@@ -46,9 +46,9 @@ public:
 			for(int i = 0; i < binaryWriteCache_.size(); i++){ // TODO(josh): Decide on a better way to handle this abomination.
 				for(int j = 0; j < binaryWriteCache_[i].channels.size(); j++){
 					for(int k = 0; k < binaryWriteCache_[i].channels[j].PEs.size(); k++){
-						binaryWriteCache_[i].channels[j].PEs[k].time      = binaryWriteCache_[i].channels[j].PEs[k].time * 100;
-						binaryWriteCache_[i].channels[j].PEs[k].timeError   = binaryWriteCache_[i].channels[j].PEs[k].timeError * 100;
-						binaryWriteCache_[i].channels[j].PEs[k].initialTime = binaryWriteCache_[i].channels[j].PEs[k].timeError * 100;
+						binaryWriteCache_[i].channels[j].PEs[k].time      = binaryWriteCache_[i].channels[j].PEs[k].time;
+						binaryWriteCache_[i].channels[j].PEs[k].timeError   = binaryWriteCache_[i].channels[j].PEs[k].timeError;
+						binaryWriteCache_[i].channels[j].PEs[k].initialTime = binaryWriteCache_[i].channels[j].PEs[k].timeError;
 					}
 				}
 			}
