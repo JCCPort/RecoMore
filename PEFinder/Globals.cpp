@@ -2,13 +2,16 @@
 
 std::vector<int>    skipChannels{32, 36, 40, 44, 48, 52, 56, 60, 15};
 // TODO(Josh): Clarify the pdf___ numbers, why they have those values
-int                 pdfNSamples        = 105601;
-float               pdfSamplingRate    = 0.003125;
-int                 pdfT0Sample        = 3201;
+unsigned int pdfExternalInterpFactor = 10;
+unsigned int pdfInternalInterpFactor = 10;
+unsigned int totalInterpFactor = pdfExternalInterpFactor * pdfInternalInterpFactor;
+int                 pdfNSamples        = 105601; // This is a count, not an index position
+float               pdfSamplingRate    = 0.3125f / (float)totalInterpFactor; // 0.3125 is true sampling rate
+int                 pdfT0Sample        = 3201; // TODO(Josh): Now this IS an index position?
 float               pdfResidualRMS     = 0.827/1000;
 double              meanReducedChiSq   = 0;
 std::vector<double> reducedChiSqs{};
-float               samplingRate2Inv   = 1.0f / (0.01f * pdfSamplingRate);
+float               samplingRate2Inv   = 1.0f / (pdfSamplingRate); //TODO(Josh): Change to double? Loss of precision isn't too significant
 float               pdfT0SampleConv    = pdfT0Sample;
 double              WFSigThresh        = 0.0025;
 int                 maxPEs             = 100;

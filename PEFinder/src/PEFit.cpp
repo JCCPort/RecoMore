@@ -62,7 +62,8 @@ inline float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<
 		float PE_CHARGE  = p[2 + PE * 2];
 		float PE_TIME    = p[3 + PE * 2];
 		// TODO(josh): Start using interpolation for this too instead of using floor
-		int   PE_PDF_BIN = pdfT0Sample + (int) std::floor(0.5 + (X - PE_TIME) * samplingRate2Inv);
+        int distCurrPECurrXPos = (int) std::floor(0.5 + (X - PE_TIME) * samplingRate2Inv); // What is the time difference (in terms of bins) between the current PE being considered, and the time bin being considered.
+		int PE_PDF_BIN = pdfT0Sample + distCurrPECurrXPos; // Equivalent bin in ideal PDF is the time difference (in terms of bins) plus the bin where the PE is centred in the ideal PDF.
 		if ((PE_PDF_BIN >= 0) && (PE_PDF_BIN < pdfNSamples)) {
 			value += PE_CHARGE * (float)idealWaveform->at(PE_PDF_BIN);
 		}
@@ -94,7 +95,7 @@ inline bool getNextPEGuess(DigitiserChannel* residualWF, Photoelectron *guessPE)
 	}
 	
 	guessPE->amplitude = -residualWF->waveform[minTimePos];
-	guessPE->time      = float(minTimePos) * pdfSamplingRate;
+	guessPE->time      = float(minTimePos) * (pdfSamplingRate*totalInterpFactor);
 	return true;
 }
 
@@ -102,7 +103,7 @@ inline bool getNextPEGuess(DigitiserChannel* residualWF, Photoelectron *guessPE)
 inline void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vector<float> *params, std::vector<float> waveform, const std::vector<double> *chIdealWF){
 	for (int i = 0; i < pesFound->size(); i++) {
 		// TODO(josh): Improve the adjustment by averaging the shift based off of a few bins around the PE time
-		const unsigned int peTimeBinPos   = std::floor(pesFound->at(i).time / pdfSamplingRate);
+		const unsigned int peTimeBinPos   = std::floor(pesFound->at(i).time / (pdfSamplingRate*totalInterpFactor));
 		const float        fitVal         = NPEPDFFunc(pesFound->at(i).time, *params, chIdealWF);
 		const float        extraAmplitude = fitVal - waveform[peTimeBinPos];
 		const float        newAmplitude   = pesFound->at(i).amplitude + extraAmplitude;
@@ -167,7 +168,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			// Compute residual
 			for (unsigned int  k = 0; k < residualWF.waveform.size(); ++k) {
 				// TODO(josh): Should it be k or k + 0.5?
-				const float fitVal = NPEPDFFunc((float)(k) * pdfSamplingRate, params, chIdealWF);
+				const float fitVal = NPEPDFFunc((float)(k) * (pdfSamplingRate*totalInterpFactor), params, chIdealWF);
 				residualWF.waveform[k] = residualWF.waveform[k] - fitVal + initBaseline;
 			}
 
@@ -256,10 +257,10 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			params.push_back(times[i]);
 		}
 		
-		// Creating the x values that the solver will use
+		// Creating the x values that the solver will use. These are the index positions on the ideal WF for the positions on the real WF.
 		std::vector<float> xValues;
 		for (unsigned int  j = 0; j < channel.waveform.size(); j++) {
-			xValues.push_back(((float)j * 100.0f) + pdfT0SampleConv);  // Multiplying index to match position on ideal PDF
+			xValues.push_back(((float)j * (float)totalInterpFactor) + pdfT0SampleConv);  // Multiplying index to match position on ideal PDF
 		}
 		
 		// Set up the only cost function (also known as residual). This uses
@@ -321,7 +322,6 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 //		std::cout << "Ran solver" << std::endl;
 
 //        std::cout << summary.FullReport() << "\n";
-		
 		// Going back from ideal waveform PDF index to time
 		for (double &time: times) {
 			time = time / samplingRate2Inv;
@@ -349,7 +349,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		float            chiSq    = 0;
 		for (unsigned int j        = 0; j < channel.waveform.size(); j++) {
 			const float observed = channel.waveform[j];
-			const float expected = NPEPDFFunc((float) j * pdfSamplingRate, finalParams, chIdealWF);
+			const float expected = NPEPDFFunc((float) j * (pdfSamplingRate*totalInterpFactor), finalParams, chIdealWF);
 			chiSq += (float)std::pow(observed - expected, 2) / (pdfResidualRMS / 1000);
             //TODO(josh): Where does the 1000 come from? Is it to convert from mV to V?
 			//TODO(josh): Need to calculate the residual RMS on a per waveform basis?

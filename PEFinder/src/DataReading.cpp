@@ -264,21 +264,44 @@ readIdealWFs(unsigned int ch, int interpFactor, const std::string &idealWFDir, u
 	double idealWFTime;
 	double idealWFAmp;
 	double prevAmp;
-	
+
+    int currIdxUnintrp = -1;
+    int currIdx = -1;
+
 	// Parse first line
 	idealWFFile >> idealWFTime >> idealWFAmp;
 	std::vector<double> waveform;
 	waveform.emplace_back(idealWFAmp);
+    currIdxUnintrp++;
+    currIdx++;
 	prevAmp = idealWFAmp;
+
+    // New index = oldIndex + (oltIndex -1)*9
+    std::vector<double> uninterpedVals;
+    uninterpedVals.emplace_back(idealWFAmp);
 	
 	// Parse next line
 	while (idealWFFile >> idealWFTime >> idealWFAmp) {
 		double delta_v = (idealWFAmp - prevAmp) / double(interpFactor);
-		
-		for (int step = 1; step < interpFactor; ++step)  // Add linearly interpolated points to ideal PDF
-			waveform.emplace_back(prevAmp + double(step) * delta_v);
-		
-		waveform.emplace_back(idealWFAmp);
+		if(std::abs(prevAmp - -1) < 1e-8){
+            std::cout << "prevAmp: " << prevAmp << std::endl;
+        }
+		for (int step = 1; step < interpFactor; ++step){
+            waveform.emplace_back(prevAmp + double(step) * delta_v);
+            currIdx++;
+
+        }  // Add linearly interpolated points to ideal PDF
+
+        waveform.emplace_back(idealWFAmp);
+        uninterpedVals.emplace_back(idealWFAmp);
+        currIdxUnintrp++;
+        currIdx++;
+
+		if(currIdxUnintrp > 315){
+            std::cout << "";
+        }
+
+
 		prevAmp = idealWFAmp;
 	}
 	
