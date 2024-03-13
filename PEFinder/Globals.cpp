@@ -7,6 +7,7 @@ unsigned int pdfInternalInterpFactor = 10;
 unsigned int totalInterpFactor = pdfExternalInterpFactor * pdfInternalInterpFactor;
 int                 pdfNSamples        = 105601; // This is a count, not an index position
 float               pdfSamplingRate    = 0.3125f / (float)totalInterpFactor; // 0.3125 is true sampling rate
+float               trueSamplingRate   = 0.3125f;
 int                 pdfT0Sample        = 3201; // TODO(Josh): Now this IS an index position?
 float               pdfResidualRMS     = 0.827/1000;
 double              meanReducedChiSq   = 0;

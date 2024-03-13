@@ -95,7 +95,7 @@ inline bool getNextPEGuess(DigitiserChannel* residualWF, Photoelectron *guessPE)
 	}
 	
 	guessPE->amplitude = -residualWF->waveform[minTimePos];
-	guessPE->time      = float(minTimePos) * (pdfSamplingRate*totalInterpFactor);
+	guessPE->time      = float(minTimePos) * trueSamplingRate;
 	return true;
 }
 
@@ -103,7 +103,7 @@ inline bool getNextPEGuess(DigitiserChannel* residualWF, Photoelectron *guessPE)
 inline void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vector<float> *params, std::vector<float> waveform, const std::vector<double> *chIdealWF){
 	for (int i = 0; i < pesFound->size(); i++) {
 		// TODO(josh): Improve the adjustment by averaging the shift based off of a few bins around the PE time
-		const unsigned int peTimeBinPos   = std::floor(pesFound->at(i).time / (pdfSamplingRate*totalInterpFactor));
+		const unsigned int peTimeBinPos   = std::floor(pesFound->at(i).time / trueSamplingRate);
 		const float        fitVal         = NPEPDFFunc(pesFound->at(i).time, *params, chIdealWF);
 		const float        extraAmplitude = fitVal - waveform[peTimeBinPos];
 		const float        newAmplitude   = pesFound->at(i).amplitude + extraAmplitude;
@@ -168,7 +168,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			// Compute residual
 			for (unsigned int  k = 0; k < residualWF.waveform.size(); ++k) {
 				// TODO(josh): Should it be k or k + 0.5?
-				const float fitVal = NPEPDFFunc((float)(k) * (pdfSamplingRate*totalInterpFactor), params, chIdealWF);
+				const float fitVal = NPEPDFFunc((float)(k) * trueSamplingRate, params, chIdealWF);
 				residualWF.waveform[k] = residualWF.waveform[k] - fitVal + initBaseline;
 			}
 
@@ -349,7 +349,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		float            chiSq    = 0;
 		for (unsigned int j        = 0; j < channel.waveform.size(); j++) {
 			const float observed = channel.waveform[j];
-			const float expected = NPEPDFFunc((float) j * (pdfSamplingRate*totalInterpFactor), finalParams, chIdealWF);
+			const float expected = NPEPDFFunc((float) j * trueSamplingRate, finalParams, chIdealWF);
 			chiSq += (float)std::pow(observed - expected, 2) / (pdfResidualRMS / 1000);
             //TODO(josh): Where does the 1000 come from? Is it to convert from mV to V?
 			//TODO(josh): Need to calculate the residual RMS on a per waveform basis?

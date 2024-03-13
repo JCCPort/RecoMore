@@ -12,6 +12,7 @@ extern unsigned int totalInterpFactor;
 extern int pdfNSamples; // Expected number of rows in ideal waveform file.
 
 extern float pdfSamplingRate; // Sampling rate used to create ideal waveforms.
+extern float trueSamplingRate; // True sampling rate of the data.
 
 // TODO(josh): Should pdfT0Sample be used somewhere it currently isn't being used. Probably not given how well things are working.
 extern int pdfT0Sample; // Index corresponding to T=0 in ideal waveforms.
