@@ -1,7 +1,6 @@
 #include "Globals.h"
 
 std::vector<int>    skipChannels{32, 36, 40, 44, 48, 52, 56, 60, 15};
-// TODO(Josh): Clarify the pdf___ numbers, why they have those values
 unsigned int pdfExternalInterpFactor = 10;
 unsigned int pdfInternalInterpFactor = 10;
 unsigned int totalInterpFactor = pdfExternalInterpFactor * pdfInternalInterpFactor;

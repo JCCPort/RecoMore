@@ -1,4 +1,5 @@
 #include <string>
+#include <filesystem>
 #include <regex>
 #include <boost/fusion/adapted.hpp>
 #include <boost/spirit/include/qi.hpp>
@@ -26,6 +27,14 @@ std::string to_string_with_precision(const T aValue, const int n) {
  */
 DigitiserRun ReadWCDataFile(const std::string &fileName){
 	// TODO(josh): Add error checking to if the data file is corrupted/invalid
+    std::ifstream testFileOpen(fileName);
+    if(testFileOpen.peek() == std::ifstream::traits_type::eof()){
+        throw std::runtime_error("WaveCatcher data file: " + fileName + " is empty.");
+    }
+    if(!std::filesystem::exists(fileName)) {
+        throw std::runtime_error("WaveCatcher data file: " + fileName + " not found.");
+    }
+
 	std::string  ending = fileName.substr(fileName.length() - 4);
 	DigitiserRun returnDat;
 	if(ending == ".dat"){

@@ -118,7 +118,6 @@ inline void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vecto
 void
 fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> outputFile, std::mutex &lock) {
 	std::vector<FitChannel> chFits;
-//	std::cout << "Fitting to event" << std::endl;
 	for (const auto &channel: event->channels) { // Looping through all channels for a given event
 		auto residualWF = channel; // This will be the variable that is modified to be the residual distribution after each iteration
 		
@@ -292,21 +291,14 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			parameterBlocks.push_back(x2[i]);
 		}
 
-//        std::cout << "Made parameter blocks" << std::endl;
-
 		auto lossFunction(new ceres::ArctanLoss(WFSigThresh/0.5));
 
-//        std::cout << "Made loss function" << std::endl;
-		
 		problem.AddResidualBlock(costFunction, lossFunction, parameterBlocks);
 
 		for (int i = 1; i < pesFound.size() + 1; i++) {
 			problem.SetParameterLowerBound(parameterBlocks[i], 0, 0);
 		}
-		
-//		std::cout << "Lower bounds set, about to initialise solver" << std::endl;
-//		std::cout << "NumPEs:\t" << numPEsFound << std::endl;
-		
+
 		// Run the solver!
 		ceres::Solver::Options options;
 //		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
