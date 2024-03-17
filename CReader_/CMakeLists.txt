@@ -2,6 +2,10 @@ set(CMAKE_CXX_STANDARD 17)
 cmake_minimum_required(VERSION 3.20)
 project(CReader)
 
+if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
+    set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "Build architectures for Mac OS X" FORCE)
+endif ()
+
 set(CMAKE_VERBOSE_MAKEFILE ON)
 add_compile_options(-v)
 
@@ -19,9 +23,7 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
     set(CMAKE_CXX_FLAGS "-O2 -fprofile-arcs")
 endif ()
 
-EXECUTE_PROCESS(COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE)
-set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE INTERNAL "" FORCE)
-if (NOT "${ARCHITECTURE}" STREQUAL "arm64" AND CMAKE_BUILD_TYPE STREQUAL "Release")
+if ((NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang") AND (CMAKE_BUILD_TYPE STREQUAL "Release"))
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 endif ()
