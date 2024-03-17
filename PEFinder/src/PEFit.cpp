@@ -36,22 +36,27 @@ private:
 	const unsigned int                              numPES_;
 };
 
-
+/**
+ * Function that returns the fit y-value of a waveform at a given time (in ns) X, given a set of parameters p and an ideal waveform.
+ * 	 Parameters are structured as follows:
+ *	 p[0] : number N of PE (fixed)
+ *	 p[1] : baseline
+ *	 p[2] : amplitude of PE #0
+ *	 p[3] : time of PE #0
+ *	 [...]
+ *	 p[2+N*2] : amplitude of PE #N
+ *   p[3+N*2] : time of PE #N
+ *
+ * @param X Time at which y-value is evaluated (in ns).
+ * @param p Vector of parameters containing the number of PE, the baseline, and the amplitude and time of each PE.
+ * @param idealWaveform Pointer to the ideal waveform used to fit the data.
+ * @return
+ */
 inline float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double> *idealWaveform) {
 	// TODO(josh): Replace p with an instance of fit parameters type
 	
 	// This way of passing x as a list then choosing the 0th index is from ROOT's syntax for fitting where you can fit
 	//  with an arbitrary number of dimensions (N input values -> single output, an N dimensional function)
-	
-	// parameter of the function:
-	// p[0] : number N of PE (fixed)
-	// p[1] : baseline
-	// p[2] : ampl of PE #0
-	// p[3] : time of PE #0
-	// [...]
-	// p[2+N*2] : ampl of PE #N
-	// p[3+N*2] : time of PE #N
-	
 	int   NPE      = (int) (p[0]);
 	float BASELINE = p[1];
 	
@@ -79,12 +84,18 @@ inline void updateGuessCorrector(const std::vector<double>& amps, const std::vec
 		sysProcPECount++;
 		ampDiff  = ampDiff + ((amps[k] - initialAmps[k]) - ampDiff) / sysProcPECount;
 		timeDiff = timeDiff + ((times[k] - initialTimes[k]) - timeDiff) / sysProcPECount;
+        if(ampDiff != ampDiff){
+            throw std::runtime_error("AmpDiff is NaN");
+        }
+        if(timeDiff != timeDiff){
+            throw std::runtime_error("TimeDiff is NaN");
+        }
 	}
 	baselineDiff = baselineDiff + ((baseline - initBaseline) - baselineDiff) / sysProcPECount;
 }
 
 
-inline bool getNextPEGuess(DigitiserChannel* residualWF, Photoelectron *guessPE){
+inline bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE, double baseline, std::vector<Photoelectron> pesFound_, DigitiserChannel channel_, const std::vector<double> *idealWF_) {
 	// Get initial guesses for the next PE
 	const auto         minPosIt   = std::min_element(residualWF->waveform.begin(), residualWF->waveform.end());
 	const unsigned int minTimePos = std::distance(residualWF->waveform.begin(), minPosIt);
@@ -96,6 +107,53 @@ inline bool getNextPEGuess(DigitiserChannel* residualWF, Photoelectron *guessPE)
 	
 	guessPE->amplitude = -residualWF->waveform[minTimePos];
 	guessPE->time      = float(minTimePos) * trueSamplingRate;
+
+    std::vector<Photoelectron> pesFoundLocal = pesFound_;
+    pesFoundLocal.push_back(*guessPE);
+
+    std::vector<float> paramsLocal;
+    paramsLocal.push_back((float) paramsLocal.size());
+    paramsLocal.push_back(baseline);
+    for (const auto &pe: pesFoundLocal) {
+        paramsLocal.push_back(pe.amplitude);
+        paramsLocal.push_back(pe.time);
+    }
+
+    std::vector<float> tempResidual = channel_.waveform;
+    for (unsigned int  k = 0; k < tempResidual.size(); ++k) {
+        // TODO(josh): Should it be k or k + 0.5?
+        const float fitVal = NPEPDFFunc((float)(k) * trueSamplingRate, paramsLocal, idealWF_);
+        tempResidual[k] = tempResidual[k] - fitVal + baseline;
+    }
+
+    // This is effectively checking in what direction the residual is skewed.
+    // (t1*a1)/(a1*a2*a3) + (t2*a2)/(a1*a2*a3) + (t3*a3)/(a1*a2*a3)
+    // If the estimated PE time is larger than truth the residual will be negative on the left,
+    // and positive on the right (of the PE time), this means a1/(a1*a2*a3) will be less than one,
+    // and a3/(a1+a2+a3) will be greater than one, shifting the time to the right...
+    if ((minTimePos > 1) && (minTimePos < tempResidual.size() - 1)) {
+        // improve initial time for a new PE based on average time
+        // over 3 consecutive sample ponderated by the amplitude
+        // of each sample... help a lot to resolve PEs very close!
+        float            timeSum        = 0;
+        float            ponderationSum = 0;
+        for (unsigned int b = minTimePos - 1; b <= minTimePos + 1; ++b) {
+            float binCenter = ((float)b - 0.5f) * (trueSamplingRate);
+            float binVal    = tempResidual[b]*1000;
+            timeSum += binCenter * binVal;
+            ponderationSum += binVal;
+        }
+        if((std::abs(timeSum) > 1e-10) & (std::abs(ponderationSum) > 1e-10)){
+            double newVal = 0.015935 + timeSum/ponderationSum;
+            if(newVal != newVal){
+                std::cout << "NewVal is NaN" << std::endl;
+            }
+            if(((newVal / trueSamplingRate) > 0) & ((newVal / trueSamplingRate) < tempResidual.size())){
+                guessPE->time = newVal;
+            }
+//            guessPE->time = newVal;
+        }
+    }
 	return true;
 }
 
@@ -163,7 +221,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			//  its tail is going to add some amplitude to the following one. Compares
 			//  real and fit amplitude at the time bin corresponding to the PE time.
 			amplitudeCorrection(&pesFound, &params, channel.waveform, chIdealWF);
-			
+
 			// Compute residual
 			for (unsigned int  k = 0; k < residualWF.waveform.size(); ++k) {
 				// TODO(josh): Should it be k or k + 0.5?
@@ -181,7 +239,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 				}
 			}
 			
-			if(!getNextPEGuess(&residualWF, &guessPE)){
+			if(!getNextPEGuess(&residualWF, &guessPE, initBaseline, pesFound, channel, chIdealWF)){
 				break;
 			}
 			
@@ -213,6 +271,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
         }
         // =========================================
 
+        // TODO(JOSH): ADD A CHECKER TO SEE IF FIT IS GOOD ENOUGH AT THIS POINT AND THEN SKIP USING CERES IF IT IS.
 		
 		if(numPEsFound == 0){
 			continue;
@@ -291,9 +350,10 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			parameterBlocks.push_back(x2[i]);
 		}
 
-		auto lossFunction(new ceres::ArctanLoss(WFSigThresh/0.5));
-
-		problem.AddResidualBlock(costFunction, lossFunction, parameterBlocks);
+//		auto lossFunction(new ceres::ArctanLoss(WFSigThresh/0.5));
+//		problem.AddResidualBlock(costFunction, lossFunction, parameterBlocks);
+//		problem.AddResidualBlock(costFunction, nullptr, parameterBlocks);
+//         TODO(Josh): Using ArctanLoss essentially stops minimisation.
 
 		for (int i = 1; i < pesFound.size() + 1; i++) {
 			problem.SetParameterLowerBound(parameterBlocks[i], 0, 0);
@@ -312,8 +372,9 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		Solve(options, &problem, &summary);
 		
 //		std::cout << "Ran solver" << std::endl;
+        problem.GetParameterBlocks(&parameterBlocks);
+        std::cout << summary.FullReport() << "\n";
 
-//        std::cout << summary.FullReport() << "\n";
 		// Going back from ideal waveform PDF index to time
 		for (double &time: times) {
 			time = time / samplingRate2Inv;
@@ -328,6 +389,13 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		}
 		chFit.PEs      = FitPEs;
 		chFit.baseline = float(baseline);
+
+//        // Use parameterBlocks to update to new baseline and PE values in baseline, amplitudes, times
+//        baseline = *parameterBlocks[0];
+//        for (int i = 1; i <= pesFound.size(); i++) {
+//            amplitudes[i] = *parameterBlocks[i][0];
+//            times[i] = *parameterBlocks[i][1];
+//        }
 		
 		
 		std::vector<float> finalParams;
