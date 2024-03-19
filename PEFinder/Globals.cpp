@@ -13,7 +13,7 @@ double              meanReducedChiSq   = 0;
 std::vector<double> reducedChiSqs{};
 float               samplingRate2Inv   = 1.0f / (pdfSamplingRate); //TODO(Josh): Change to double? Loss of precision isn't too significant
 float               pdfT0SampleConv    = (float)pdfT0Sample;
-double              WFSigThresh        = 0.005;
+double              WFSigThresh        = 0.007;
 int                 maxPEs             = 100;
 double              ampDiff            = 0;
 double              timeDiff           = 0;

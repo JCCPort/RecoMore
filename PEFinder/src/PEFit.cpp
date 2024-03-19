@@ -20,9 +20,21 @@ struct NPEPDFFunctor {
 			T X_(waveformTimes_[j]);
 			residual[j] = params[0][0];
 			for (unsigned int i = 0; i < numPES_; ++i) {
-				auto peParams = params[i];
-				PDFInterpolator_->Evaluate((X_ - peParams[0]), &f);
-				residual[j] += (peParams[1] * f);
+				unsigned int i2 = 2 * i;
+				PDFInterpolator_->Evaluate((double) pdfT0Sample + (X_ - params[i2 + 2][0]), &f);
+				residual[j] += (params[i2 + 1][0] * f);
+				
+				std::cout << i2 + 2 << std::endl;
+				std::cout << i2 + 1 << std::endl;
+				
+//				std::cout << std::endl;
+//				std::cout << "f\t" << f << std::endl;
+//				std::cout << "(X_ - peParams[0])\t" << (X_ - peParams[0]) << std::endl;
+//				std::cout << "(peParams[1] * f)\t" << (peParams[1] * f) << std::endl;
+//				std::cout << "peParams[0]\t" << peParams[0] << std::endl;
+//				std::cout << "peParams[1]\t" << peParams[1] << std::endl;
+//
+				std::cout << "hello" << std::endl;
 			}
 			residual[j] -= waveformAmplitudes_[j];
 		}
@@ -308,11 +320,11 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		// Creating vector of references to parameter values that the fitter will use and modify. Note this means that
 		// the references are the initial values before the fit and the final values after the fit.
 		double              baseline = initBaseline;
-		std::vector<double> params   = {};
-		params.push_back(baseline);
+		std::vector<double*> params   = {};
+		params.push_back(&baseline);
 		for (int i = 0; i < pesFound.size(); i++) {
-			params.push_back(amplitudes[i]);
-			params.push_back(times[i]);
+			params.push_back(&amplitudes[i]);
+			params.push_back(&times[i]);
 		}
 		
 		// Creating the x values that the solver will use. These are the index positions on the ideal WF for the positions on the real WF.
@@ -333,30 +345,14 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 
 		costFunction->AddParameterBlock(1); // Baseline param
 		for ([[maybe_unused]]const auto &pe: pesFound) {
-			costFunction->AddParameterBlock(2); // Params for one PE
+			costFunction->AddParameterBlock(1); // Params for one PE amplitude
+			costFunction->AddParameterBlock(1); // Params for one PE time
 		}
 
-//        std::cout << "About to make parameter blocks" << std::endl;
+		problem.AddResidualBlock(costFunction, nullptr, params);
 
-		// Formatting parameters to allow grouping of params for one PE
-		std::vector<double *> parameterBlocks;
-		double                x1[] = {params[0]};
-		parameterBlocks.push_back(x1);
-		double x2[pesFound.size()][2];
-		
-		for (int i = 0; i < pesFound.size(); i++) {
-			x2[i][0] = params[(2 * i) + 1];
-			x2[i][1] = params[(2 * i) + 2];
-			parameterBlocks.push_back(x2[i]);
-		}
-
-//		auto lossFunction(new ceres::ArctanLoss(WFSigThresh/0.5));
-//		problem.AddResidualBlock(costFunction, lossFunction, parameterBlocks);
-//		problem.AddResidualBlock(costFunction, nullptr, parameterBlocks);
-//         TODO(Josh): Using ArctanLoss essentially stops minimisation.
-
-		for (int i = 1; i < pesFound.size() + 1; i++) {
-			problem.SetParameterLowerBound(parameterBlocks[i], 0, 0);
+		for (auto & param : params) {
+			problem.SetParameterLowerBound(param, 0, 0);
 		}
 
 		// Run the solver!
@@ -364,17 +360,20 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 //		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
 //		options.linear_solver_type           = ceres::DENSE_QR;
 //		options.parameter_tolerance          = 1e-16; // default is 1e-8, check if this is tolerance for any or all params
-		options.minimizer_progress_to_stdout = false;
+		options.minimizer_progress_to_stdout = true;
 		
-//		std::cout << "Solver options set" << std::endl;
 		ceres::Solver::Summary summary;
-//		std::cout << "Summary made" << std::endl;
 		Solve(options, &problem, &summary);
 		
-//		std::cout << "Ran solver" << std::endl;
-        problem.GetParameterBlocks(&parameterBlocks);
         std::cout << summary.FullReport() << "\n";
-
+		
+		// Updating the amplitudes and times using params which is a vector of pointers to doubles
+		baseline = *(params[0]);
+		for (int i = 1; i <= pesFound.size(); i++) {
+			amplitudes[i] = *(params[i]);
+			times[i] = *(params[i + 1]);
+		}
+		
 		// Going back from ideal waveform PDF index to time
 		for (double &time: times) {
 			time = time / samplingRate2Inv;
@@ -389,14 +388,6 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		}
 		chFit.PEs      = FitPEs;
 		chFit.baseline = float(baseline);
-
-//        // Use parameterBlocks to update to new baseline and PE values in baseline, amplitudes, times
-//        baseline = *parameterBlocks[0];
-//        for (int i = 1; i <= pesFound.size(); i++) {
-//            amplitudes[i] = *parameterBlocks[i][0];
-//            times[i] = *parameterBlocks[i][1];
-//        }
-		
 		
 		std::vector<float> finalParams;
 		finalParams.push_back((float) FitPEs.size());
@@ -431,6 +422,12 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		updateGuessCorrector(amplitudes, times, initialAmplitudes, initialTimes, baseline, initBaseline, pesFound);
 		
 		delete idealPDFInterpolator;
+		
+//		delete[] x1;
+//		for (int i = 0; i < pesFound.size(); i++) {
+//			delete[] x2[i];
+//		}
+//		delete[] x2;
 	}
 	
 	FitEvent evFitDat{event->ID, event->correctedTime, event->date, chFits};

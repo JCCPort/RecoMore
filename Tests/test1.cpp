@@ -60,21 +60,26 @@ bool SystemTest1::runOverTestData() {
 	int batchNumber = 1;
 	
 	// Global parameters
-	skipChannels = {32, 36, 40, 44, 48, 52, 56, 60};
-	pdfNSamples        = 105601;
-	pdfSamplingRate    = 0.003125;
-	pdfT0Sample        = 3201;
-	pdfResidualRMS     = 0.827/1000;
-	meanReducedChiSq   = 0;
-	samplingRate2Inv   = 1.0f / (0.01f * pdfSamplingRate);
-	pdfT0SampleConv    = pdfT0Sample;
-	WFSigThresh        = 0.005;
-	maxPEs             = 100;
-	ampDiff            = 0;
-	timeDiff           = 0;
-	baselineDiff       = 0;
-	sysProcPECount     = 0;
-	sysProcWFCount     = 0;
+	skipChannels               = {32, 36, 40, 44, 48, 52, 56, 60};
+	pdfExternalInterpFactor    = 10;
+	pdfInternalInterpFactor    = 10;
+	totalInterpFactor          = pdfExternalInterpFactor * pdfInternalInterpFactor;
+	pdfNSamples                = 105601; // This is a count, not an index position
+	pdfSamplingRate            = 0.3125f / totalInterpFactor; // 0.3125 is true sampling rate
+	trueSamplingRate           = 0.3125f;
+	pdfT0Sample                = 3201; // TODO(Josh): Now this IS an index position?
+	pdfResidualRMS             = 0.827/1000;
+	meanReducedChiSq           = 0;
+	reducedChiSqs              = {};
+	samplingRate2Inv           = 1.0f / pdfSamplingRate; //TODO(Josh): Change to double? Loss of precision isn't too significant
+	pdfT0SampleConv            = pdfT0Sample;
+	WFSigThresh                = 0.005;
+	maxPEs                     = 100;
+	ampDiff                    = 0;
+	timeDiff                   = 0;
+	baselineDiff               = 0;
+	sysProcPECount             = 0;
+	sysProcWFCount             = 0;
 	
 	// Processing
 	std::shared_ptr<SyncFile> file;
