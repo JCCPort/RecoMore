@@ -21,20 +21,27 @@ struct NPEPDFFunctor {
 			residual[j] = params[0][0];
 			for (unsigned int i = 0; i < numPES_; ++i) {
 				unsigned int i2 = 2 * i;
-				PDFInterpolator_->Evaluate((double) pdfT0Sample + (X_ - params[i2 + 2][0]), &f);
-				residual[j] += (params[i2 + 1][0] * f);
-				
-				std::cout << i2 + 2 << std::endl;
-				std::cout << i2 + 1 << std::endl;
-				
-//				std::cout << std::endl;
-//				std::cout << "f\t" << f << std::endl;
-//				std::cout << "(X_ - peParams[0])\t" << (X_ - peParams[0]) << std::endl;
-//				std::cout << "(peParams[1] * f)\t" << (peParams[1] * f) << std::endl;
-//				std::cout << "peParams[0]\t" << peParams[0] << std::endl;
-//				std::cout << "peParams[1]\t" << peParams[1] << std::endl;
+				auto pos = X_ - params[i2 + 2][0];
+				if((pos >= 0) && (pos < pdfNSamples)){
+					PDFInterpolator_->Evaluate(pos, &f);
+					
+					residual[j] += (params[i2 + 1][0] * f);
+					
+//					std::cout << i2 + 2 << std::endl;
+//					std::cout << i2 + 1 << std::endl;
 //
-				std::cout << "hello" << std::endl;
+//					std::cout << std::endl;
+//					std::cout << "f\t" << f << std::endl;
+//					std::cout << "(X_ - (params[i2 + 2][0] * (double)pdfSamplingRate))\t" << (X_ - (params[i2 + 2][0] * (double)pdfSamplingRate)) << std::endl;
+//					std::cout << "(params[i2 + 1][0] * f)\t" << (params[i2 + 1][0] * f) << std::endl;
+//					std::cout << "params[i2 + 2][0]\t" << params[i2 + 2][0] << std::endl;
+//					std::cout << "params[i2 + 1][0]\t" << params[i2 + 1][0] << std::endl;
+//					std::cout << "X_\t" << X_ << std::endl;
+//					std::cout << "params[i2 + 2][0] * (double)pdfSamplingRate\t" << params[i2 + 2][0] * (double)pdfSamplingRate << std::endl;
+//
+//					std::cout << "hello" << std::endl;
+				}
+				
 			}
 			residual[j] -= waveformAmplitudes_[j];
 		}
@@ -83,6 +90,17 @@ inline float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<
 		int PE_PDF_BIN = pdfT0Sample + distCurrPECurrXPos; // Equivalent bin in ideal PDF is the time difference (in terms of bins) plus the bin where the PE is centred in the ideal PDF.
 		if ((PE_PDF_BIN >= 0) && (PE_PDF_BIN < pdfNSamples)) {
 			value += PE_CHARGE * (float)idealWaveform->at(PE_PDF_BIN);
+			
+//			std::cout << (float)idealWaveform->at(PE_PDF_BIN) << std::endl;
+//			std::cout << std::endl;
+//			std::cout << "(float)idealWaveform->at(PE_PDF_BIN)\t" << (float)idealWaveform->at(PE_PDF_BIN) << std::endl;
+//			std::cout << "distCurrPECurrXPos\t" << distCurrPECurrXPos << std::endl;
+//			std::cout << "PE_CHARGE * (float)idealWaveform->at(PE_PDF_BIN)\t" << PE_CHARGE * (float)idealWaveform->at(PE_PDF_BIN) << std::endl;
+//			std::cout << "PE_TIME * samplingRate2Inv\t" << PE_TIME * samplingRate2Inv << std::endl;
+//			std::cout << "PE_CHARGE\t" << PE_CHARGE << std::endl;
+//			std::cout << "X\t" << X << std::endl;
+//
+//			std::cout << "hello" << std::endl;
 		}
 	}
 	return value;
@@ -237,6 +255,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			// Compute residual
 			for (unsigned int  k = 0; k < residualWF.waveform.size(); ++k) {
 				// TODO(josh): Should it be k or k + 0.5?
+//				std::cout << "AAAAAHHH" << std::endl;
 				const float fitVal = NPEPDFFunc((float)(k) * trueSamplingRate, params, chIdealWF);
 				residualWF.waveform[k] = residualWF.waveform[k] - fitVal + initBaseline;
 			}
@@ -301,10 +320,10 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		// Want to create a copy of the initial estimates to modify in below running correction.
 		std::vector<double> times      = initialTimes;
 		std::vector<double> amplitudes = initialAmplitudes;
-		for (int i = 0; i < times.size(); i++) {
-			times[i] += timeDiff;
-			amplitudes[i] += ampDiff;
-		}
+//		for (int i = 0; i < times.size(); i++) {
+//			times[i] += timeDiff;
+//			amplitudes[i] += ampDiff;
+//		}
 		
 		// Converting the time into an ideal waveform PDF index to simplify NPEPDFFunctor method call
 		for (double &time: times) {
@@ -330,7 +349,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		// Creating the x values that the solver will use. These are the index positions on the ideal WF for the positions on the real WF.
 		std::vector<float> xValues;
 		for (unsigned int  j = 0; j < channel.waveform.size(); j++) {
-			xValues.push_back(((float)j * (float)totalInterpFactor) + pdfT0SampleConv);  // Multiplying index to match position on ideal PDF
+			xValues.push_back(((float)j * 100.0f) + pdfT0SampleConv);  // Multiplying index to match position on ideal PDF
 		}
 		
 		// Set up the only cost function (also known as residual). This uses
@@ -348,6 +367,15 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			costFunction->AddParameterBlock(1); // Params for one PE amplitude
 			costFunction->AddParameterBlock(1); // Params for one PE time
 		}
+		
+		std::cout << "\n=====================" << std::endl;
+		std::cout << "Initial guesses" << std::endl;
+		std::cout << "Baseline : " << *(params[0]) << std::endl;
+		for (int i = 0; i < pesFound.size(); i++) {
+			std::cout << "Amplitude " << i << " : " << *(params[2*i + 1]) << std::endl;
+			std::cout << "Time " << i << " : " << *(params[2*i + 2]) << std::endl;
+		}
+		std::cout << "=====================" << std::endl;
 
 		problem.AddResidualBlock(costFunction, nullptr, params);
 
@@ -357,22 +385,34 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 
 		// Run the solver!
 		ceres::Solver::Options options;
-//		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
-//		options.linear_solver_type           = ceres::DENSE_QR;
+		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
+		options.linear_solver_type           = ceres::DENSE_QR;
 //		options.parameter_tolerance          = 1e-16; // default is 1e-8, check if this is tolerance for any or all params
+//		options.function_tolerance          = 1e-16; // default is 1e-8, check if this is tolerance for any or all params
 		options.minimizer_progress_to_stdout = true;
 		
 		ceres::Solver::Summary summary;
 		Solve(options, &problem, &summary);
 		
         std::cout << summary.FullReport() << "\n";
+
+		std::vector<double> postfitParams{};
+		for (auto &param : params) {
+			postfitParams.push_back(*param);
+		}
 		
 		// Updating the amplitudes and times using params which is a vector of pointers to doubles
-		baseline = *(params[0]);
-		for (int i = 1; i <= pesFound.size(); i++) {
-			amplitudes[i] = *(params[i]);
-			times[i] = *(params[i + 1]);
+		std::cout << "\n\n=====================" << std::endl;
+		std::cout << "Fit values" << std::endl;
+		std::cout << "Baseline : " << (postfitParams[0]) << std::endl;
+		baseline = (postfitParams[0]);
+		for (int i = 0; i < pesFound.size(); i++) {
+			std::cout << "Amplitude " << i << " : " << (postfitParams[2*i + 1]) << std::endl;
+			std::cout << "Time " << i << " : " << (postfitParams[2*i + 2]) << std::endl;
+			amplitudes[i] = (postfitParams[2*i + 1]);
+			times[i] = (postfitParams[2*i + 2]);
 		}
+		std::cout << "=====================" << std::endl;
 		
 		// Going back from ideal waveform PDF index to time
 		for (double &time: times) {
