@@ -349,7 +349,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		// Creating the x values that the solver will use. These are the index positions on the ideal WF for the positions on the real WF.
 		std::vector<float> xValues;
 		for (unsigned int  j = 0; j < channel.waveform.size(); j++) {
-			xValues.push_back(((float)j * 100.0f) + pdfT0SampleConv);  // Multiplying index to match position on ideal PDF
+			xValues.push_back(((float)j * (float)totalInterpFactor) + pdfT0SampleConv);  // Multiplying index to match position on ideal PDF
 		}
 		
 		// Set up the only cost function (also known as residual). This uses
@@ -368,14 +368,14 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			costFunction->AddParameterBlock(1); // Params for one PE time
 		}
 		
-		std::cout << "\n=====================" << std::endl;
-		std::cout << "Initial guesses" << std::endl;
-		std::cout << "Baseline : " << *(params[0]) << std::endl;
-		for (int i = 0; i < pesFound.size(); i++) {
-			std::cout << "Amplitude " << i << " : " << *(params[2*i + 1]) << std::endl;
-			std::cout << "Time " << i << " : " << *(params[2*i + 2]) << std::endl;
-		}
-		std::cout << "=====================" << std::endl;
+//		std::cout << "\n=====================" << std::endl;
+//		std::cout << "Initial guesses" << std::endl;
+//		std::cout << "Baseline : " << *(params[0]) << std::endl;
+//		for (int i = 0; i < pesFound.size(); i++) {
+//			std::cout << "Amplitude " << i << " : " << *(params[2*i + 1]) << std::endl;
+//			std::cout << "Time " << i << " : " << *(params[2*i + 2]) << std::endl;
+//		}
+//		std::cout << "=====================" << std::endl;
 
 		problem.AddResidualBlock(costFunction, nullptr, params);
 
@@ -385,16 +385,16 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 
 		// Run the solver!
 		ceres::Solver::Options options;
-		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
-		options.linear_solver_type           = ceres::DENSE_QR;
-//		options.parameter_tolerance          = 1e-16; // default is 1e-8, check if this is tolerance for any or all params
+//		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
+//		options.linear_solver_type           = ceres::DENSE_QR;
+		options.parameter_tolerance          = 1e-3; // default is 1e-8, check if this is tolerance for any or all params
 //		options.function_tolerance          = 1e-16; // default is 1e-8, check if this is tolerance for any or all params
-		options.minimizer_progress_to_stdout = true;
+		options.minimizer_progress_to_stdout = false;
 		
 		ceres::Solver::Summary summary;
 		Solve(options, &problem, &summary);
 		
-        std::cout << summary.FullReport() << "\n";
+//        std::cout << summary.FullReport() << "\n";
 
 		std::vector<double> postfitParams{};
 		for (auto &param : params) {
@@ -402,17 +402,17 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		}
 		
 		// Updating the amplitudes and times using params which is a vector of pointers to doubles
-		std::cout << "\n\n=====================" << std::endl;
-		std::cout << "Fit values" << std::endl;
-		std::cout << "Baseline : " << (postfitParams[0]) << std::endl;
-		baseline = (postfitParams[0]);
-		for (int i = 0; i < pesFound.size(); i++) {
-			std::cout << "Amplitude " << i << " : " << (postfitParams[2*i + 1]) << std::endl;
-			std::cout << "Time " << i << " : " << (postfitParams[2*i + 2]) << std::endl;
-			amplitudes[i] = (postfitParams[2*i + 1]);
-			times[i] = (postfitParams[2*i + 2]);
-		}
-		std::cout << "=====================" << std::endl;
+//		std::cout << "\n\n=====================" << std::endl;
+//		std::cout << "Fit values" << std::endl;
+//		std::cout << "Baseline : " << (postfitParams[0]) << std::endl;
+//		baseline = (postfitParams[0]);
+//		for (int i = 0; i < pesFound.size(); i++) {
+//			std::cout << "Amplitude " << i << " : " << (postfitParams[2*i + 1]) << std::endl;
+//			std::cout << "Time " << i << " : " << (postfitParams[2*i + 2]) << std::endl;
+//			amplitudes[i] = (postfitParams[2*i + 1]);
+//			times[i] = (postfitParams[2*i + 2]);
+//		}
+//		std::cout << "=====================" << std::endl;
 		
 		// Going back from ideal waveform PDF index to time
 		for (double &time: times) {
