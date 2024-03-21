@@ -215,6 +215,10 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			continue;
 		}
 		chFit.ID = ch;
+
+        std::vector<float> preSignalWF(residualWF.waveform.begin(), residualWF.waveform.begin() + int(18/0.3125));
+        auto stdDevNoise = calculateVariance(preSignalWF, calculateMean(preSignalWF));
+        pdfResidualRMS = (float)stdDevNoise;
 		
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
 		const std::vector<double> *chIdealWF = &(*idealWaveforms)[ch];
@@ -320,10 +324,10 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		// Want to create a copy of the initial estimates to modify in below running correction.
 		std::vector<double> times      = initialTimes;
 		std::vector<double> amplitudes = initialAmplitudes;
-//		for (int i = 0; i < times.size(); i++) {
-//			times[i] += timeDiff;
-//			amplitudes[i] += ampDiff;
-//		}
+		for (int i = 0; i < times.size(); i++) {
+			times[i] += timeDiff;
+			amplitudes[i] += ampDiff;
+		}
 		
 		// Converting the time into an ideal waveform PDF index to simplify NPEPDFFunctor method call
 		for (double &time: times) {
@@ -387,7 +391,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		ceres::Solver::Options options;
 //		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
 //		options.linear_solver_type           = ceres::DENSE_QR;
-		options.parameter_tolerance          = 1e-3; // default is 1e-8, check if this is tolerance for any or all params
+		options.parameter_tolerance          = 1e-8; // default is 1e-8, check if this is tolerance for any or all params
 //		options.function_tolerance          = 1e-16; // default is 1e-8, check if this is tolerance for any or all params
 		options.minimizer_progress_to_stdout = false;
 		
@@ -441,7 +445,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		for (unsigned int j        = 0; j < channel.waveform.size(); j++) {
 			const float observed = channel.waveform[j];
 			const float expected = NPEPDFFunc((float) j * trueSamplingRate, finalParams, chIdealWF);
-			chiSq += (float)std::pow(observed - expected, 2) / (pdfResidualRMS / 1000);
+			chiSq += (float)std::pow(observed - expected, 2) / (pdfResidualRMS);
             //TODO(josh): Where does the 1000 come from? Is it to convert from mV to V?
 			//TODO(josh): Need to calculate the residual RMS on a per waveform basis?
 		}

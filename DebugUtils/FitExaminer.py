@@ -386,8 +386,8 @@ if __name__ == "__main__":
     # rawFileName = "/home/joshuap/Downloads/0-78.dat"
 
     # Scintillator run
-    recoMoreFileName = "/home/joshuap/Downloads/R22121331PES.dat"
-    rawFileName = "/home/joshuap/Downloads/R22121331.bin"
+    recoMoreFileName = "/home/joshuap/Downloads/R135PES.dat"
+    rawFileName = "/home/joshuap/Downloads/R135.dat"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
     examiner.plotAllEvents()

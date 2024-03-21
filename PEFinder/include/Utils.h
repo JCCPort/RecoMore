@@ -97,4 +97,30 @@ std::string to_string_with_precision(const T a_value, const int n) {
 	out << std::fixed << a_value;
 	return out.str();
 }
+
+template<typename T>
+double calculateMean(const std::vector<T>& numbers) {
+    T sum = T(); // Initializes to zero (for numeric types)
+    for (const auto& num : numbers) {
+        sum += num;
+    }
+    return sum / static_cast<double>(numbers.size());
+}
+
+template<typename T>
+double calculateVariance(const std::vector<T>& numbers, double mean) {
+    double variance = 0.0;
+    for (const auto& num : numbers) {
+        variance += std::pow(num - mean, 2);
+    }
+    return variance / numbers.size();
+}
+
+template<typename T>
+double calculateStandardDeviation(const std::vector<T>& numbers) {
+    double mean = calculateMean(numbers);
+    double variance = calculateVariance(numbers, mean);
+    return std::sqrt(variance);
+}
+
 #endif //RECOMORE_UTILS_H

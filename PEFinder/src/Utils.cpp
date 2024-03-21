@@ -9,6 +9,8 @@
 #include <iomanip>
 #include "../Globals.h"
 #include <mutex>
+#include <vector>
+#include <cmath> // for std::sqrt
 
 
 /**
@@ -44,6 +46,7 @@ std::string defaultOutputName(std::string inputName){
 	std::string outputFile = directory + fileExtSplit[0] + "PES.dat";
 	return outputFile;
 }
+
 
 #endif //RECOMORE_UTILS_H
 
