@@ -37,7 +37,7 @@ DigitiserRun ReadWCDataFile(const std::string &fileName){
 	else{
 		throw std::runtime_error("Provided data file (" + fileName + ") is not one of the accepted formats .dat, .bin.");
 	}
-	std::cout << "Data file read" << std::endl;
+//	std::cout << "Data file read" << std::endl;
 	return returnDat;
 }
 
@@ -308,7 +308,7 @@ FitRun ReadRecoMoreOutput(const std::string &fileName){
 	else{
 		throw std::runtime_error("Provided RecoMore data file (" + fileName + ") is not one of the accepted formats .dat, .bin.");
 	}
-	std::cout << "RecoMore data file read" << std::endl;
+//	std::cout << "RecoMore data file read" << std::endl;
 	return returnDat;
 }
 

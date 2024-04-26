@@ -123,4 +123,23 @@ double calculateStandardDeviation(const std::vector<T>& numbers) {
     return std::sqrt(variance);
 }
 
+template<typename T>
+double logLikelihood(const std::vector<T>& observed,
+                     const std::vector<T>& predicted,
+                     double stdDev) {
+    const double pi = 3.14159265358979323846;
+    double term2 = 0.0;
+    size_t n = observed.size();
+
+    double term1 = (-(double)n/2) * std::log(2 * pi * stdDev * stdDev);
+
+    for (size_t i = 0; i < n; ++i) {
+        double residual = observed[i] - predicted[i];
+        term2 += (residual * residual);
+    }
+    term2 = term2 / (2 * stdDev * stdDev);
+
+    return term1 - term2;
+}
+
 #endif //RECOMORE_UTILS_H

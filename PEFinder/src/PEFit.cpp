@@ -217,7 +217,8 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		chFit.ID = ch;
 
         std::vector<float> preSignalWF(residualWF.waveform.begin(), residualWF.waveform.begin() + int(18/0.3125));
-        auto stdDevNoise = calculateVariance(preSignalWF, calculateMean(preSignalWF));
+//        auto stdDevNoise = calculateVariance(preSignalWF, calculateMean(preSignalWF));
+        auto stdDevNoise = calculateStandardDeviation(preSignalWF);
         pdfResidualRMS = (float)stdDevNoise;
 		
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
@@ -391,8 +392,9 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		ceres::Solver::Options options;
 //		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
 //		options.linear_solver_type           = ceres::DENSE_QR;
-		options.parameter_tolerance          = 1e-8; // default is 1e-8, check if this is tolerance for any or all params
-//		options.function_tolerance          = 1e-16; // default is 1e-8, check if this is tolerance for any or all params
+		options.parameter_tolerance          = 1e-7; // default is 1e-8, check if this is tolerance for any or all params
+//		options.function_tolerance          = 1e-6; // default is 1e-8, check if this is tolerance for any or all params
+//        options.gradient_tolerance = 1e-10
 		options.minimizer_progress_to_stdout = false;
 		
 		ceres::Solver::Summary summary;
@@ -441,15 +443,24 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			finalParams.push_back((float) PE.time);
 		}
 
+        std::vector<double> observedValues;
+        std::vector<double> predictedValues;
+
 		float            chiSq    = 0;
 		for (unsigned int j        = 0; j < channel.waveform.size(); j++) {
 			const float observed = channel.waveform[j];
 			const float expected = NPEPDFFunc((float) j * trueSamplingRate, finalParams, chIdealWF);
-			chiSq += (float)std::pow(observed - expected, 2) / (pdfResidualRMS);
+            observedValues.push_back(observed);
+            predictedValues.push_back(expected);
+			chiSq += (float)std::pow(observed - expected, 2) / (pdfResidualRMS * pdfResidualRMS);
             //TODO(josh): Where does the 1000 come from? Is it to convert from mV to V?
 			//TODO(josh): Need to calculate the residual RMS on a per waveform basis?
 		}
 		float            redChiSq = chiSq / ((float) channel.waveform.size() - ((float) finalParams.size() - 1));
+
+//        double logLikeli = logLikelihood(observedValues, predictedValues, pdfResidualRMS);
+//        double BIC = (double)finalParams.size() * std::log(channel.waveform.size()) - 2 * logLikeli;
+//        redChiSq = -1*(double) BIC;
 		
 		sysProcWFCount++;
 		meanReducedChiSq = meanReducedChiSq + (redChiSq - meanReducedChiSq) / sysProcWFCount;

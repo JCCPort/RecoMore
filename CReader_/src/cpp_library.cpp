@@ -55,6 +55,7 @@ PYBIND11_MODULE(CReader, m) {
 			.def("getEventChannel", &DigitiserRun::getEventChannel, "Get channel waveform by event and channel number");
 	
 	py::class_<FitRun>(m, "FitData")
+            .def_property("events", &FitRun::getEvents, &FitRun::setEvents)
 			.def("addEvent", &FitRun::addEvent, "Add entry row to FitData")
 			.def("setEvents", &FitRun::setEvents, "Set whole event fit vector at once.")
 			.def("getEvents", &FitRun::getEvents, "Get all fit events")

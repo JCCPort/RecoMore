@@ -36,7 +36,7 @@ set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
-set(Boost_NO_SYSTEM_PATHS TRUE)
+#set(Boost_NO_SYSTEM_PATHS FALSE)
 find_package(Boost REQUIRED COMPONENTS serialization)
 
 if (NOT TARGET Boost::filesystem)

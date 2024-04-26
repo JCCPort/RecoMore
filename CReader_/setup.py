@@ -154,9 +154,15 @@ setup(
     author_email="jccporter@gmail.com",
     description="Pybind11 made reader for data files",
     ext_modules=[CMakeExtension("CReader")],
-    packages=find_packages(),
+    packages=find_packages() + ["stubs"],
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,
     install_requires=["numpy"],
-    python_requires=">=3.9"
+    include_package_data=True,
+    # Specify the package data to include your .pyi stubs.
+    package_data={
+        "": ["*.pyi"],  # Include any .pyi files found in any package
+        "CReader": ["stubs/*.pyi"],  # Specifically include .pyi files in the CReader package
+    },
+    python_requires=">=3.9",
 )
