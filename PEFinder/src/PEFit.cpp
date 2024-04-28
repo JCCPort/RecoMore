@@ -6,6 +6,7 @@
 #include "ceres/ceres.h"
 #include "ceres/cubic_interpolation.h"
 #include <memory>
+#include <utility>
 
 
 struct NPEPDFFunctor {
@@ -15,33 +16,18 @@ struct NPEPDFFunctor {
 	
 	template<typename T>
 	inline bool operator()(T const *const *params, T *__restrict__ residual) const {
-		for (int j = 0; j < waveformTimes_.size(); j++) {
+		for (unsigned int j = 0; j < waveformTimes_.size(); j++) {
 			T f;
-			T X_(waveformTimes_[j]);
+			const T X_(waveformTimes_[j]);
 			residual[j] = params[0][0];
 			for (unsigned int i = 0; i < numPES_; ++i) {
 				unsigned int i2 = 2 * i;
 				auto pos = X_ - params[i2 + 2][0];
 				if((pos >= 0) && (pos < pdfNSamples)){
 					PDFInterpolator_->Evaluate(pos, &f);
-					
+
 					residual[j] += (params[i2 + 1][0] * f);
-					
-//					std::cout << i2 + 2 << std::endl;
-//					std::cout << i2 + 1 << std::endl;
-//
-//					std::cout << std::endl;
-//					std::cout << "f\t" << f << std::endl;
-//					std::cout << "(X_ - (params[i2 + 2][0] * (double)pdfSamplingRate))\t" << (X_ - (params[i2 + 2][0] * (double)pdfSamplingRate)) << std::endl;
-//					std::cout << "(params[i2 + 1][0] * f)\t" << (params[i2 + 1][0] * f) << std::endl;
-//					std::cout << "params[i2 + 2][0]\t" << params[i2 + 2][0] << std::endl;
-//					std::cout << "params[i2 + 1][0]\t" << params[i2 + 1][0] << std::endl;
-//					std::cout << "X_\t" << X_ << std::endl;
-//					std::cout << "params[i2 + 2][0] * (double)pdfSamplingRate\t" << params[i2 + 2][0] * (double)pdfSamplingRate << std::endl;
-//
-//					std::cout << "hello" << std::endl;
 				}
-				
 			}
 			residual[j] -= waveformAmplitudes_[j];
 		}
@@ -90,17 +76,6 @@ inline float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<
 		int PE_PDF_BIN = pdfT0Sample + distCurrPECurrXPos; // Equivalent bin in ideal PDF is the time difference (in terms of bins) plus the bin where the PE is centred in the ideal PDF.
 		if ((PE_PDF_BIN >= 0) && (PE_PDF_BIN < pdfNSamples)) {
 			value += PE_CHARGE * (float)idealWaveform->at(PE_PDF_BIN);
-			
-//			std::cout << (float)idealWaveform->at(PE_PDF_BIN) << std::endl;
-//			std::cout << std::endl;
-//			std::cout << "(float)idealWaveform->at(PE_PDF_BIN)\t" << (float)idealWaveform->at(PE_PDF_BIN) << std::endl;
-//			std::cout << "distCurrPECurrXPos\t" << distCurrPECurrXPos << std::endl;
-//			std::cout << "PE_CHARGE * (float)idealWaveform->at(PE_PDF_BIN)\t" << PE_CHARGE * (float)idealWaveform->at(PE_PDF_BIN) << std::endl;
-//			std::cout << "PE_TIME * samplingRate2Inv\t" << PE_TIME * samplingRate2Inv << std::endl;
-//			std::cout << "PE_CHARGE\t" << PE_CHARGE << std::endl;
-//			std::cout << "X\t" << X << std::endl;
-//
-//			std::cout << "hello" << std::endl;
 		}
 	}
 	return value;
@@ -138,12 +113,12 @@ inline bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE,
 	guessPE->amplitude = -residualWF->waveform[minTimePos];
 	guessPE->time      = float(minTimePos) * trueSamplingRate;
 
-    std::vector<Photoelectron> pesFoundLocal = pesFound_;
+    std::vector<Photoelectron> pesFoundLocal = std::move(pesFound_);
     pesFoundLocal.push_back(*guessPE);
 
     std::vector<float> paramsLocal;
     paramsLocal.push_back((float) paramsLocal.size());
-    paramsLocal.push_back(baseline);
+    paramsLocal.push_back((float) baseline);
     for (const auto &pe: pesFoundLocal) {
         paramsLocal.push_back(pe.amplitude);
         paramsLocal.push_back(pe.time);
@@ -153,7 +128,7 @@ inline bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE,
     for (unsigned int  k = 0; k < tempResidual.size(); ++k) {
         // TODO(josh): Should it be k or k + 0.5?
         const float fitVal = NPEPDFFunc((float)(k) * trueSamplingRate, paramsLocal, idealWF_);
-        tempResidual[k] = tempResidual[k] - fitVal + baseline;
+        tempResidual[k] = tempResidual[k] - fitVal + (float) baseline;
     }
 
     // This is effectively checking in what direction the residual is skewed.
@@ -178,8 +153,8 @@ inline bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE,
             if(newVal != newVal){
                 std::cout << "NewVal is NaN" << std::endl;
             }
-            if(((newVal / trueSamplingRate) > 0) & ((newVal / trueSamplingRate) < tempResidual.size())){
-                guessPE->time = newVal;
+            if(((newVal / trueSamplingRate) > 0) & ((newVal / trueSamplingRate) < (double) tempResidual.size())){
+                guessPE->time = (float) newVal;
             }
 //            guessPE->time = newVal;
         }
@@ -392,7 +367,7 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		ceres::Solver::Options options;
 //		options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
 //		options.linear_solver_type           = ceres::DENSE_QR;
-		options.parameter_tolerance          = 1e-7; // default is 1e-8, check if this is tolerance for any or all params
+		options.parameter_tolerance          = 1e-8; // default is 1e-8, check if this is tolerance for any or all params
 //		options.function_tolerance          = 1e-6; // default is 1e-8, check if this is tolerance for any or all params
 //        options.gradient_tolerance = 1e-10
 		options.minimizer_progress_to_stdout = false;
