@@ -51,6 +51,10 @@ int main(int argc, char** argv) {
 	program.add_argument("--save_waveforms")
 		.default_value(false)
 		.help("Save waveforms with initial and final fits to csv files.");
+    program.add_argument("--parameter_tolerance")
+        .default_value(1e-8)
+        .help("Tolerance for the fit.")
+        .scan<'e', float>();
 	
 	program.parse_args(argc, argv);
 	
@@ -71,6 +75,7 @@ int main(int argc, char** argv) {
 	unsigned int batchNumber = program.get<int>("--num_batches");
 	skipChannels = program.get<std::vector<int>>("--skip_channels");
 	saveWaveforms = program.get<bool>("--save_waveforms");
+    parameterTolerance = program.get<float>("--parameter_tolerance");
 	DigitiserRun data = ReadWCDataFile(inputFileName);
  
 	std::shared_ptr<SyncFile> file;

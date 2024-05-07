@@ -37,4 +37,6 @@ extern int sysProcWFCount; // Count of number of waveforms processed during enti
 extern bool saveWaveforms; // Save debug CSVs or not. This is DEPRECATED and will be removed in the future.
 extern unsigned int waveformCount; // Count of waveform number used for outputting debug CSVs.
 
+extern float parameterTolerance; // Tolerance for the fit.
+
 #endif //RECOMORE_GLOBALS_H

@@ -139,6 +139,8 @@ class RecoMoreFitExaminer:
         minRunSum = 1000
         maxRunSum = 0
 
+        print(len(self.RMPEs.getEvents()))
+
         for event_ in self.RMPEs.getEvents():
             for channel_ in event_.SiPM:
                 if channel is not None:
@@ -157,6 +159,16 @@ class RecoMoreFitExaminer:
                         maxRunSum = runSum
                     if runSum < minRunSum:
                         minRunSum = runSum
+
+        allChannelSums = []
+        for key, val in sumPES.items():
+            allChannelSums.extend(val)
+            print(key, np.mean(val))
+
+        print("")
+
+        # print(np.mean(allChannelSums))
+        # print(np.mean(allChannelSums, axis=0))
 
         bins = np.linspace(minRunSum, maxRunSum, 600)
         for key, val in sumPES.items():
@@ -386,8 +398,8 @@ if __name__ == "__main__":
     # rawFileName = "/home/joshuap/Downloads/0-78.dat"
 
     # Scintillator run
-    # recoMoreFileName = "/home/joshuap/Downloads/R135PES.dat"
-    # rawFileName = "/home/joshuap/Downloads/R135.dat"
+    # recoMoreFileName = "/home/joshuap/Downloads/R152PES.dat"
+    # rawFileName = "/home/joshuap/Downloads/R152.dat"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
     examiner.plotAllEvents()

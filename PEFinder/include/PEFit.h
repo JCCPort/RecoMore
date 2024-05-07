@@ -21,7 +21,7 @@ void updateGuessCorrector(const std::vector<double>& amps, const std::vector<dou
                                  const std::vector<double>& initialAmps, const std::vector<double>& initialTimes,
                                  double baseline, double initBaseline, const std::vector<Photoelectron>& pesFound);
 
-bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE, double baseline, std::vector<Photoelectron> pesFound_, DigitiserChannel channel_, const std::vector<double> *idealWF_);
+bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE, double baseline, std::vector<Photoelectron> pesFound_, const DigitiserChannel& channel_, const std::vector<double> *idealWF_);
 
 void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vector<float> *params, std::vector<float> waveform, const std::vector<double> *);
 
