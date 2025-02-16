@@ -4,6 +4,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+import warnings
 
 from distutils.version import LooseVersion
 
@@ -51,6 +52,12 @@ class CMakeBuild(build_ext):
             f"-DPYTHON_EXECUTABLE={sys.executable}",
             f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
         ]
+
+        conda_prefix = os.environ.get("CONDA_PREFIX")
+        if conda_prefix:
+            cmake_args.append(f"-DCMAKE_PREFIX_PATH={conda_prefix}")
+        else:
+            warnings.warn("Installing package without using conda is not supported and may cause you stress.")
 
         build_args = []
         # Adding CMake arguments set as environment variable
@@ -147,9 +154,15 @@ setup(
     author_email="jccporter@gmail.com",
     description="Pybind11 made reader for data files",
     ext_modules=[CMakeExtension("CReader")],
-    packages=find_packages(),
+    packages=find_packages() + ["stubs"],
     cmdclass=dict(build_ext=CMakeBuild),
     zip_safe=False,
     install_requires=["numpy"],
-    python_requires=">=3.9"
+    include_package_data=True,
+    # Specify the package data to include your .pyi stubs.
+    package_data={
+        "": ["*.pyi"],  # Include any .pyi files found in any package
+        "CReader": ["stubs/*.pyi"],  # Specifically include .pyi files in the CReader package
+    },
+    python_requires=">=3.9",
 )

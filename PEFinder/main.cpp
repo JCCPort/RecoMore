@@ -51,6 +51,10 @@ int main(int argc, char** argv) {
 	program.add_argument("--save_waveforms")
 		.default_value(false)
 		.help("Save waveforms with initial and final fits to csv files.");
+    program.add_argument("--parameter_tolerance")
+        .default_value(1e-8)
+        .help("Tolerance for the fit.")
+        .scan<'e', float>();
 	
 	program.parse_args(argc, argv);
 	
@@ -61,13 +65,19 @@ int main(int argc, char** argv) {
 	} else {
 		outputFileName = defaultOutputName(program.get<std::string>("-i"));
 	}
+
+    if(outputFileName == inputFileName){
+        throw std::runtime_error("Input and output file names are the same. Please specify a different output file name.");
+    }
+
 	auto pdfDir = program.get<std::string>("--pdf_dir");
 	unsigned int numThreads = program.get<int>("--n_threads");
 	unsigned int batchNumber = program.get<int>("--num_batches");
 	skipChannels = program.get<std::vector<int>>("--skip_channels");
 	saveWaveforms = program.get<bool>("--save_waveforms");
-	WCData data = ReadWCDataFile(inputFileName);
-  
+    parameterTolerance = program.get<float>("--parameter_tolerance");
+	DigitiserRun data = ReadWCDataFile(inputFileName);
+ 
 	std::shared_ptr<SyncFile> file;
 	bool textOutput = program.get<bool>("--txt-output");
 	if(!textOutput) {
@@ -79,21 +89,22 @@ int main(int argc, char** argv) {
 	Writer writer(file);
 
 	static std::atomic<unsigned long> count{0};
-	std::mutex m;
+	std::mutex                        lock;
 
-	std::vector<std::vector<double>> idealWaveforms{64};
-	for (int ch = 0; ch < 64; ch++) {
+    unsigned int numChannels = 16;
+	std::vector<std::vector<double>> idealWaveforms{numChannels};
+	for (int ch = 0; ch < numChannels; ch++) {
 		if (std::count(skipChannels.begin(), skipChannels.end(), ch)) {
 			continue;
 		}
-		idealWaveforms.at(ch) = readIdealWFs(ch, 10, pdfDir, pdfNSamples);
+		idealWaveforms.at(ch) = readIdealWFs(ch, pdfInternalInterpFactor, pdfDir, pdfNSamples);
 	}
 
-	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(m),
+	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(lock),
 	                           data.getEvents().size());
 
 	if (numThreads == 1) {
-		fitBatchPEs(data.getEvents(), count, m, &idealWaveforms, file);
+		batchFitEvents(data.getEvents(), std::reference_wrapper(count), std::reference_wrapper(lock), &idealWaveforms, file);
 	} else {
 		// Determining how many events each thread should run over.
 		unsigned int threadRepeatCount[batchNumber];
@@ -108,12 +119,12 @@ int main(int argc, char** argv) {
 			}
 		}
 
-		ThreadPool pool(numThreads);
+		BS::thread_pool pool(numThreads);
 
 		unsigned int eventPos = 0;
 		for(int i = 0; i < batchNumber; i++){
 			std::vector passData = slice(data.getEvents(), eventPos, eventPos + threadRepeatCount[i] - 1);
-			pool.push_task(fitBatchPEs, passData, std::reference_wrapper(count), std::reference_wrapper(m), &idealWaveforms,
+			pool.push_task(batchFitEvents, passData, std::reference_wrapper(count), std::reference_wrapper(lock), &idealWaveforms,
 			               file);
 			eventPos += threadRepeatCount[i];
 		}

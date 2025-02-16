@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
@@ -16,31 +18,49 @@ def hitAmpDistribution(x, A, c, mu, Q, sigma1, sigma2, ratio):
     for i in range(1, int(n)):
         fact = fact * i
         poissonPart = ((mu**i) / fact) * expMinusMu
-        gaussPart1 = (ratio / (i*sigma1RootPi)) * np.exp(-(((x-c) - i * Q) ** 2) / (4 * (i * sigma1) ** 2))
-        gaussPart2 = ((1-ratio) / (i*sigma2RootPi)) * np.exp(-(((x-c) - i * Q) ** 2) / (4 * (i * sigma2) ** 2))
+        gaussPart1 = (ratio / (i*sigma1RootPi)) * np.exp(-(((x) - (i * Q)) ** 2) / (4 * (i * sigma1) ** 2))
+        gaussPart2 = ((1-ratio) / (i*sigma2RootPi)) * np.exp(-(((x) - (i * Q)) ** 2) / (4 * (i * sigma2) ** 2))
         val += poissonPart*(gaussPart1 + gaussPart2)
     return val*A
 
 
 def fit(amps):
-    n, bins = np.histogram(amps, bins=1600)
+    n, bins = np.histogram(amps, bins=600)
     bins = [(bins[i] + bins[i+1])/2 for i in range(len(bins)-1)]
 
-    p0 = [np.max(n)/10.5, 0.54136343e-02, 9.6*2, 3.44230966e-02/2, 1.82453950e-04, 1.8453950e-04, 1]
+    w = np.fft.fft(n)
+    freqs = np.fft.fftfreq(len(n), d=bins[1]-bins[0])
+
+    w = w[freqs > 10]
+    freqs = freqs[freqs > 10]
+    maxFreq = freqs[w == np.max(w)][0]
+
+    # plt.plot(freqs, w)
+    # plt.show()
+    # print(maxFreq)
+    print(np.mean(amps))
+
+    p0 = [np.max(n)/10.5, 0.54136343e-02, np.mean(amps)*maxFreq*0.55, 1/maxFreq, 0.0005, 0.0005, 1]
     # p0 = [np.max(n), 0, 35, 30, np.mean(amps) / 350, 0.005, np.mean(amps) / 350, 0.005]
 
-    bounds = [[1, -np.inf, 0, 0, 0, 0, -1],
+
+    bounds = [[1, 0, 0, 0, 0, 0, -1],
               [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, 1]]
 
     try:
         pOpt, pCov = curve_fit(hitAmpDistribution, xdata=bins, ydata=n, p0=p0, sigma=np.sqrt(n+1), bounds=bounds)
     except RuntimeError:
-        pOpt = p0
+        pOpt = copy.copy(p0)
+
+    for i in range(len(pOpt)):
+        # for j in range(len(pOpt)):
+            print("i:{},\tpOpt[i]/pOpt[j]:{}".format(i, np.mean(amps)/pOpt[i]))
 
     fitVals = np.linspace(np.min(bins), np.max(bins), 5000)
 
     params = [p0, bounds[0], bounds[1], pOpt]
 
+    # Getting reduced chisq for guesses, bounds and fit
     chiSq = [0, 0, 0, 0]
     for idx, chiSq_ in enumerate(chiSq):
         for i in range(0, len(bins)):
@@ -52,7 +72,8 @@ def fit(amps):
     p0.append(reducedChiSq[0])
     bounds[0].append(reducedChiSq[1])
     bounds[1].append(reducedChiSq[2])
-    displayPOpt = list(pOpt)
+    displayPOpt = []
+    displayPOpt.extend(pOpt)
     displayPOpt.append(reducedChiSq[3])
 
     # TODO(josh): Add this to be displayed on the graph
@@ -62,10 +83,18 @@ def fit(amps):
                    floatfmt=['.1f', '.2f', '.4f', '.2f', '.3f', '.5f', '.5f', '.2f', '.2f'],
                    numalign='left'))
 
+    print(pOpt)
+
+    # Set upper x limit to where there are no more bins with a height greater than two.
+    upperXLim = bins[np.where(n > 2)[0][-1]]
+
+    plt.figure(figsize=(12, 9))
     plt.plot(fitVals, hitAmpDistribution(fitVals, *pOpt), label="Fit")
     plt.step(bins, n, label="Data")
     plt.xlabel("Amplitude (V)")
     plt.ylabel("Count")
+    plt.xlim(0, upperXLim)
     plt.legend()
+    plt.grid()
     plt.tight_layout()
     plt.show()

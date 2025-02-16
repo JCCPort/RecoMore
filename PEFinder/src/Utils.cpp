@@ -9,6 +9,8 @@
 #include <iomanip>
 #include "../Globals.h"
 #include <mutex>
+#include <vector>
+#include <cmath> // for std::sqrt
 
 
 /**
@@ -19,7 +21,7 @@
  */
 void displayProgress(std::atomic<unsigned long> &count, std::mutex &m, unsigned int dataLength) {
 	while (count != dataLength) {
-		std::this_thread::sleep_for(std::chrono::seconds(1));
+		std::this_thread::sleep_for(std::chrono::milliseconds (100));
 		m.lock();
 		std::cout << "Processed: " << std::setw(20) << count << "/" << dataLength << " \r" << std::flush;
 		m.unlock();
@@ -44,6 +46,7 @@ std::string defaultOutputName(std::string inputName){
 	std::string outputFile = directory + fileExtSplit[0] + "PES.dat";
 	return outputFile;
 }
+
 
 #endif //RECOMORE_UTILS_H
 
