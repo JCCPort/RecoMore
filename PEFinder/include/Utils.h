@@ -50,8 +50,7 @@ template<typename T>
 float averageVector(std::vector<T> vec, float cut) {
 	float sum = 0;
 	for (auto val: vec) {
-		float temp = val;
-		if (std::abs(temp) < cut) {
+		if (float temp = val; std::abs(temp) < cut) {
 			sum += val;
 		}
 	}
@@ -86,7 +85,7 @@ std::vector<T> slice(std::vector<T> const &v, unsigned int m, unsigned int n) {
 }
 
 
-void displayProgress(std::atomic<unsigned long> &count, std::mutex &m, unsigned int dataLength);
+void displayProgress(const std::atomic<unsigned long> &count, std::mutex &m, unsigned int dataLength);
 
 std::string defaultOutputName(std::string inputName);
 

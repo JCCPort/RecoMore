@@ -55,7 +55,7 @@ bool SystemTest1::runOverTestData() {
 	outputFileName = defaultOutputName(inputFileName);
 	auto pdfDir = "../TestData/pdf/";
 	saveWaveforms = false;
-	DigitiserRun data       = ReadWCDataFile(inputFileName);
+	DigitiserRun data       = ReadWCDataFile(inputFileName, TODO);
 	int numThreads  = 1;
 	int batchNumber = 1;
 	
@@ -95,7 +95,7 @@ bool SystemTest1::runOverTestData() {
 		if (std::count(skipChannels.begin(), skipChannels.end(), ch)) {
 			continue;
 		}
-		idealWaveforms.at(ch) = readIdealWFs(ch, 10, pdfDir, pdfNSamples);
+		idealWaveforms.at(ch) = readIdealWFs(ch, 10, pdfDir, pdfNSamples, TODO);
 	}
 	
 	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(m),

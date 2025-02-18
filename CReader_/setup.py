@@ -53,6 +53,12 @@ class CMakeBuild(build_ext):
             f"-DCMAKE_BUILD_TYPE={cfg}",  # not used on MSVC, but no harm
         ]
 
+        cmake_args += [
+            f"-DBoost_INCLUDE_DIR={os.environ['CONDA_PREFIX']}/include",
+            f"-DBoost_LIBRARY_DIR={os.environ['CONDA_PREFIX']}/lib",
+            f"-DCMAKE_PREFIX_PATH={os.environ['CONDA_PREFIX']}"
+        ]
+
         conda_prefix = os.environ.get("CONDA_PREFIX")
         if conda_prefix:
             cmake_args.append(f"-DCMAKE_PREFIX_PATH={conda_prefix}")

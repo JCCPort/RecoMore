@@ -22,17 +22,18 @@ std::string to_string_with_precision(const T aValue, const int n) {
 /**
  * Wrapper around the binary and plaintext file readers so that either can be read from the same function call.
  * @param fileName Path to the data file you want to run RecoMore over.
+ * @param positivePulse
  * @return Raw data events parsed into a WCData instance that contains a list of events to be split across multiple threads.
  */
-DigitiserRun ReadWCDataFile(const std::string &fileName){
+DigitiserRun ReadWCDataFile(const std::string &fileName, const bool positivePulse){
 	// TODO(josh): Add error checking to if the data file is corrupted/invalid
 	std::string  ending = fileName.substr(fileName.length() - 4);
 	DigitiserRun returnDat;
 	if(ending == ".dat"){
-		returnDat = ReadWCDataFileDat(fileName);
+		returnDat = ReadWCDataFileDat(fileName, TODO);
 	}
 	else if(ending == ".bin"){
-		returnDat = ReadWCDataFileBinary(fileName);
+		returnDat = ReadWCDataFileBinary(fileName, TODO);
 	}
 	else{
 		throw std::runtime_error("Provided data file (" + fileName + ") is not one of the accepted formats .dat, .bin.");
@@ -77,9 +78,10 @@ namespace client {
 /**
  *
  * @param fileName Path to the raw data file to run RecoMore over.
+ * @param positivePulse
  * @return Raw data events parsed into a WCData instance that contains a list of events to be split across multiple threads.
  */
-DigitiserRun ReadWCDataFileDat(const std::string &fileName) {
+DigitiserRun ReadWCDataFileDat(const std::string &fileName, const bool positivePulse) {
 	// Defining regular expression searches to be used for getting event and channel numbers.
 	std::regex eventNumberRegex("=== EVENT (\\d*) ===\\r");
 	std::regex channelNumberRegex(R"(=== CH: (\d*) EVENTID: (\d*) FCR: (\d*) ===\r)");
@@ -174,9 +176,10 @@ struct WCChannelDataNoMeasurement {
 /**
  *
  * @param fileName Path to the raw data file to run RecoMore over.
+ * @param positivePulse
  * @return Raw data events parsed into a WCData instance that contains a list of events to be split across multiple threads.
  */
-DigitiserRun ReadWCDataFileBinary(const std::string &fileName) {
+DigitiserRun ReadWCDataFileBinary(const std::string &fileName, const bool positivePulse) {
 	DigitiserRun     readData;
 	DigitiserChannel wf;
 	
@@ -250,10 +253,11 @@ DigitiserRun ReadWCDataFileBinary(const std::string &fileName) {
  * @param interpFactor Number of points in interpolated waveform divided by number of points in original waveform.
  * @param idealWFDir Path to directory containing ideal PDFs for each channel.
  * @param expectedSize Check that the PDF is the expected length.
+ * @param positivePulse
  * @return
  */
 std::vector<double>
-readIdealWFs(unsigned int ch, unsigned int interpFactor, const std::string &idealWFDir, unsigned int expectedSize) {
+readIdealWFs(unsigned int ch, unsigned int interpFactor, const std::string &idealWFDir, unsigned int expectedSize, const bool positivePulse) {
 	std::string idealWFPath = idealWFDir + "ch" + std::to_string(ch) + ".txt";
 	std::ifstream idealWFFile(idealWFPath, std::ifstream::in);
 	
