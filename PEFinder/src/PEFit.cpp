@@ -123,7 +123,7 @@ inline bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE,
     pesFoundLocal.push_back(*guessPE);
 
     std::vector<float> paramsLocal;
-    paramsLocal.reserve(2 * pesFound_.size() + 2);
+    paramsLocal.reserve(2 * pesFoundLocal.size() + 2);
     paramsLocal.push_back(static_cast<float>(paramsLocal.size()));
     paramsLocal.push_back(static_cast<float>(baseline));
     for (const auto &pe: pesFoundLocal) {
@@ -133,7 +133,6 @@ inline bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE,
 
     std::vector<float> tempResidual = channel_.waveform;
     for (unsigned int  k = 0; k < tempResidual.size(); ++k) {
-        // TODO(josh): Should it be k or k + 0.5?
         const float fitVal = NPEPDFFunc(static_cast<float>(k) * trueSamplingRate, paramsLocal, idealWF_);
         tempResidual[k] = tempResidual[k] - fitVal + static_cast<float>(baseline);
     }

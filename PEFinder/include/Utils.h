@@ -16,7 +16,8 @@
 #include <sstream>
 
 struct comparePETime {
-	inline bool operator()(const Photoelectron &PE1, const Photoelectron &PE2) {
+	inline bool operator()(const Photoelectron &PE1, const Photoelectron &PE2) const
+	{
 		return (PE1.time < PE2.time);
 	}
 };
@@ -34,15 +35,14 @@ template<typename T>
 
 
 template<typename T>
-[[maybe_unused]] float averageVector(std::vector<T> vec, int start, int end, float cut) {
+[[maybe_unused]] float averageVector(std::vector<T> vec, const int start, const int end, float cut) {
 	float sum = 0;
 	for (int i = start; i < end; i++) {
-		float temp = vec[i];
-		if (std::abs(temp) < cut) {
+		if (float temp = vec[i]; std::abs(temp) < cut) {
 			sum += vec[i];
 		}
 	}
-	return sum / ((float) end - (float) start);
+	return sum / (static_cast<float>(end) - static_cast<float>(start));
 }
 
 
@@ -62,7 +62,7 @@ template<typename T>
 void writeVector(const std::string &fileName, std::vector<T> vector) {
 	std::ofstream file;
 	file.open(fileName, std::ofstream::trunc);
-	for (float k: vector) {
+	for (const float k: vector) {
 		file << k << "\n";
 	}
 	file.close();
@@ -117,23 +117,23 @@ double calculateVariance(const std::vector<T>& numbers, double mean) {
 
 template<typename T>
 double calculateStandardDeviation(const std::vector<T>& numbers) {
-    double mean = calculateMean(numbers);
-    double variance = calculateVariance(numbers, mean);
+    const double mean = calculateMean(numbers);
+    const double variance = calculateVariance(numbers, mean);
     return std::sqrt(variance);
 }
 
 template<typename T>
 double logLikelihood(const std::vector<T>& observed,
                      const std::vector<T>& predicted,
-                     double stdDev) {
-    const double pi = 3.14159265358979323846;
+                     const double stdDev) {
+	constexpr double pi = 3.14159265358979323846;
     double term2 = 0.0;
-    size_t n = observed.size();
+    const size_t n = observed.size();
 
-    double term1 = (-(double)n/2) * std::log(2 * pi * stdDev * stdDev);
+    const double term1 = (-static_cast<double>(n)/2) * std::log(2 * pi * stdDev * stdDev);
 
     for (size_t i = 0; i < n; ++i) {
-        double residual = observed[i] - predicted[i];
+        const double residual = observed[i] - predicted[i];
         term2 += (residual * residual);
     }
     term2 = term2 / (2 * stdDev * stdDev);

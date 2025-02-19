@@ -7,7 +7,7 @@
  * @param PEVar
  * @return
  */
-std::string Writer::writeFitPE(Photoelectron PEVar) {
+std::string Writer::writeFitPE(const Photoelectron& PEVar) {
 	std::string writeString;
 	writeString += std::to_string(PEVar.amplitude);
 	writeString += ',';
@@ -51,7 +51,8 @@ std::string Writer::writeWaveformInfo(const FitChannel &wfDat) {
  *
  * @param evData
  */
-void Writer::writeEventInfo(const FitEvent &evData) {
+void Writer::writeEventInfo(const FitEvent &evData) const
+{
 	if(writeMode_ == text){
 		std::string writeString;
 		writeString += "EVENT=";

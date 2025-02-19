@@ -27,13 +27,13 @@ std::string to_string_with_precision(const T aValue, const int n) {
  */
 DigitiserRun ReadWCDataFile(const std::string &fileName, const bool positivePulse){
 	// TODO(josh): Add error checking to if the data file is corrupted/invalid
-	std::string  ending = fileName.substr(fileName.length() - 4);
+	const std::string ending = fileName.substr(fileName.length() - 4);
 	DigitiserRun returnDat;
 	if(ending == ".dat"){
-		returnDat = ReadWCDataFileDat(fileName, TODO);
+		returnDat = ReadWCDataFileDat(fileName, positivePulse);
 	}
 	else if(ending == ".bin"){
-		returnDat = ReadWCDataFileBinary(fileName, TODO);
+		returnDat = ReadWCDataFileBinary(fileName, positivePulse);
 	}
 	else{
 		throw std::runtime_error("Provided data file (" + fileName + ") is not one of the accepted formats .dat, .bin.");

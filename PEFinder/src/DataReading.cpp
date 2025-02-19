@@ -1,7 +1,6 @@
 #include <string>
 #include <filesystem>
 #include <regex>
-#include <boost/fusion/adapted.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/phoenix.hpp>
 #include <fstream>
@@ -310,6 +309,7 @@ readIdealWFs(unsigned int ch, unsigned int interpFactor, const std::string &idea
 	} else {
 		signFactor = 1.f;
 	}
+
 	
 	double idealWFTime;
 	double idealWFAmp;
@@ -326,9 +326,9 @@ readIdealWFs(unsigned int ch, unsigned int interpFactor, const std::string &idea
 		double delta_v = (idealWFAmp - prevAmp) / static_cast<double>(interpFactor);
 
 		for (unsigned int step = 1; step < interpFactor; ++step)  // Add linearly interpolated points to ideal PDF
-			waveform.emplace_back(prevAmp + static_cast<double>(step) * delta_v);
+			waveform.emplace_back(prevAmp + static_cast<double>(step) * delta_v * signFactor);
 
-		waveform.emplace_back(idealWFAmp * signFactor);
+		waveform.emplace_back(idealWFAmp);
 		prevAmp = idealWFAmp;
 	}
 	
