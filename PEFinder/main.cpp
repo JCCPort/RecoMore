@@ -102,7 +102,8 @@ int main(int argc, char** argv) {
 	std::mutex                        progressTrackerLock;
 	std::mutex						  meanReducedChiSqLock;
 
-    unsigned int numChannels = 1;
+	// TODO(josh): Implement checking of channels from the data file to ensure the correct number of ideal waveforms are read in.
+    unsigned int numChannels = 16;
 	std::vector<std::vector<double>> idealWaveforms{numChannels};
 	for (int ch = 0; ch < numChannels; ch++) {
 		if (std::ranges::count(skipChannels, ch)) {

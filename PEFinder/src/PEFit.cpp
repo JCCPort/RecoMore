@@ -13,7 +13,14 @@ struct NPEPDFFunctor {
 	NPEPDFFunctor(std::vector<float> waveformTimes, std::vector<float> waveformAmplitudes,
 	              ceres::CubicInterpolator<ceres::Grid1D<float, true>> *PDFInterpolator, const unsigned int numPES)
 			: waveformTimes_(std::move(waveformTimes)), waveformAmplitudes_(std::move(waveformAmplitudes)), PDFInterpolator_(PDFInterpolator), numPES_(numPES) {};
-	
+
+	/**
+	 *
+	 * @tparam T
+	 * @param params Array of parameters to fit. The first two are the amplitude and time of the first PE, the next two are the amplitude and time of the second PE, and so on.
+	 * @param residual Sum difference between the fit and the data.
+	 * @return
+	 */
 	template<typename T>
 	inline bool operator()(T const *const *params, T *__restrict__ residual) const {
 		const T baseline = params[0][0];  // The "DC offset" or baseline
@@ -38,11 +45,17 @@ struct NPEPDFFunctor {
 		return true;
 	}
 
+	void updateNumPEs(const unsigned int numPEs) {
+		if (numPEs != numPES_) {
+			numPES_ = numPEs;
+		}
+	}
+
 private:
 	const std::vector<float>                        waveformTimes_;
 	const std::vector<float>                        waveformAmplitudes_;
 	ceres::CubicInterpolator<ceres::Grid1D<float> > *PDFInterpolator_;
-	const unsigned int                              numPES_;
+	unsigned int                              numPES_;
 };
 
 /**
@@ -202,6 +215,9 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
         pdfResidualRMS = static_cast<float>(stdDevNoise);
 		
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
+		if (ch > idealWaveforms->size() - 1) {
+			throw std::runtime_error("Channel number exceeds the number of ideal waveforms");
+		}
 		const std::vector<double> *chIdealWF = &(*idealWaveforms)[ch];
 		
 		// Baseline calculation
@@ -214,6 +230,25 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 
 		// This is getting estimate PEs that will then be passed as initial guesses to the minimiser.
 		Photoelectron guessPE{};
+
+		// Creating the x values that the solver will use. These are the index positions on the ideal WF for the positions on the real WF.
+		std::vector<float> xValues;
+		for (unsigned int  j = 0; j < channel.waveform.size(); j++) {
+			xValues.push_back((static_cast<float>(j) * static_cast<float>(totalInterpFactor)) + pdfT0SampleConv);  // Multiplying index to match position on ideal PDF
+		}
+
+		// Creating interpolator to allow for the ideal waveform to be used as a continuous (and differentiable) function.
+		std::vector<float> temp(chIdealWF->begin(), chIdealWF->end());
+		auto grid                 = ceres::Grid1D<float>(temp.data(), 0, static_cast<int>(chIdealWF->size()));
+		auto               idealPDFInterpolator = new ceres::CubicInterpolator<ceres::Grid1D<float> >(grid);
+
+		// Set up the only cost function (also known as residual). This uses
+		// auto-differentiation to obtain the derivative (Jacobian).
+		auto functor = new NPEPDFFunctor(xValues,
+										 channel.waveform,
+										 idealPDFInterpolator,
+										 pesFound.size());
+		auto costFunction = new ceres::DynamicAutoDiffCostFunction<NPEPDFFunctor>(functor);
 
 		// Initial baseline removal.
 		for (float &k: residualWF.waveform) {
@@ -239,7 +274,6 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 
 			// Compute residual
 			for (unsigned int  k = 0; k < residualWF.waveform.size(); ++k) {
-				// TODO(josh): Should it be k or k + 0.5?
 				const float fitVal = NPEPDFFunc(static_cast<float>(k) * trueSamplingRate, params, chIdealWF);
 				residualWF.waveform[k] = residualWF.waveform[k] - fitVal + initBaseline;
 			}
@@ -307,11 +341,6 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			time = time * samplingRate2Inv;
 		}
 		
-		// Creating interpolator to allow for the ideal waveform to be used as a continuous (and differentiable) function.
-		std::vector<float> temp(chIdealWF->begin(), chIdealWF->end());
-		auto grid                 = ceres::Grid1D<float>(temp.data(), 0, static_cast<int>(chIdealWF->size()));
-		auto               idealPDFInterpolator = new ceres::CubicInterpolator<ceres::Grid1D<float> >(grid);
-		
 		
 		// Creating vector of references to parameter values that the fitter will use and modify. Note this means that
 		// the references are the initial values before the fit and the final values after the fit.
@@ -322,20 +351,8 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			params.push_back(&amplitudes[i]);
 			params.push_back(&times[i]);
 		}
-		
-		// Creating the x values that the solver will use. These are the index positions on the ideal WF for the positions on the real WF.
-		std::vector<float> xValues;
-		for (unsigned int  j = 0; j < channel.waveform.size(); j++) {
-			xValues.push_back((static_cast<float>(j) * static_cast<float>(totalInterpFactor)) + pdfT0SampleConv);  // Multiplying index to match position on ideal PDF
-		}
-		
-		// Set up the only cost function (also known as residual). This uses
-		// auto-differentiation to obtain the derivative (Jacobian).
-		auto functor = new NPEPDFFunctor(xValues,
-		                                 channel.waveform,
-		                                 idealPDFInterpolator,
-		                                 pesFound.size());
-		auto costFunction = new ceres::DynamicAutoDiffCostFunction<NPEPDFFunctor>(functor);
+
+		functor->updateNumPEs(pesFound.size());
 
 		costFunction->SetNumResiduals(static_cast<int>(channel.waveform.size()));
 
