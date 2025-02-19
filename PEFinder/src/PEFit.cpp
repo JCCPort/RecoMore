@@ -9,6 +9,25 @@
 #include <utility>
 
 
+template<typename T>
+inline T diffAtTime(T const& baseline, const unsigned int numPEs, T const *const *params, T const& X, ceres::CubicInterpolator<ceres::Grid1D<float> > *PDFInterpolator_) {
+	T accum = baseline;
+	for (unsigned int i = 0; i < numPEs; i++) {
+		const unsigned int i2 = 2 * i;
+		const T amplitude = params[i2 + 1][0];
+		const T timeShift = params[i2 + 2][0];
+
+		const T pos = X - timeShift;
+		if (pos >= T(0) && pos < T(pdfNSamples)) {
+			T f;
+			PDFInterpolator_->Evaluate(pos, &f);
+			accum += amplitude * f;
+		}
+	}
+	return accum;
+}
+
+
 struct NPEPDFFunctor {
 	NPEPDFFunctor(std::vector<float> waveformTimes, std::vector<float> waveformAmplitudes,
 	              ceres::CubicInterpolator<ceres::Grid1D<float, true>> *PDFInterpolator, const unsigned int numPES)
@@ -25,21 +44,7 @@ struct NPEPDFFunctor {
 	inline bool operator()(T const *const *params, T *__restrict__ residual) const {
 		const T baseline = params[0][0];  // The "DC offset" or baseline
 		for (unsigned int j = 0; j < waveformTimes_.size(); j++) {
-			T accum = baseline;
-			const T X = T(waveformTimes_[j]);
-			for (unsigned int i = 0; i < numPES_; i++) {
-				const unsigned int i2 = 2 * i;
-				const T amplitude = params[i2 + 1][0];
-				const T timeShift = params[i2 + 2][0];
-
-				const T pos = X - timeShift;
-				if (pos >= T(0) && pos < T(pdfNSamples)) {
-					T f;
-					PDFInterpolator_->Evaluate(pos, &f);
-					accum += amplitude * f;
-				}
-			}
-			residual[j] = accum - T(waveformAmplitudes_[j]);
+			residual[j] = diffAtTime(baseline, numPES_, params, T(waveformTimes_[j]), PDFInterpolator_) - T(waveformAmplitudes_[j]);
 		}
 
 		return true;
@@ -55,7 +60,7 @@ private:
 	const std::vector<float>                        waveformTimes_;
 	const std::vector<float>                        waveformAmplitudes_;
 	ceres::CubicInterpolator<ceres::Grid1D<float> > *PDFInterpolator_;
-	unsigned int                              numPES_;
+	unsigned int									numPES_;
 };
 
 /**
@@ -96,6 +101,52 @@ inline float NPEPDFFunc(const float X, const std::vector<float> &p, const std::v
 	}
 	return value;
 }
+
+inline float NPEPDFFuncCubic(
+	const float X,
+	const std::vector<float>& p,
+	const ceres::CubicInterpolator<ceres::Grid1D<float, true>>* PDFInterpolator,
+	const int pdfT0Sample,       // Same offset you had before
+	const float samplingRate2Inv, // Or whichever rate factor you used
+	const unsigned int pdfNSamples)
+{
+	// p[0] = NPE, p[1] = baseline, etc.
+	const int   NPE      = static_cast<int>(p[0]);
+	const float BASELINE = p[1];
+
+	float value = BASELINE;
+
+	for (int PE = 0; PE < NPE; ++PE) {
+		const float PE_CHARGE = p[2 + PE * 2];
+		const float PE_TIME   = p[3 + PE * 2];
+
+		// Reproduce your original approach to computing bin/time difference
+		// but as a floating-point "pos".
+		// Example: floor(0.5 + (X - PE_TIME) * samplingRate2Inv)
+		//
+		// Instead of forcibly flooring, we let the CubicInterpolator do
+		// true interpolation. For a minimal change, we keep the same
+		// center shift of +0.5, but that’s optional.
+		const auto rawBinFloat = static_cast<float>(
+			pdfT0Sample + (0.5 + (X - PE_TIME) * samplingRate2Inv)
+		);
+
+		// Now we want to interpolate if we're in range
+		if (rawBinFloat >= 0.0f && rawBinFloat < static_cast<float>(pdfNSamples)) {
+			// Call the double overload
+			auto posDouble = static_cast<double>(rawBinFloat);
+			double pdfValDouble = 0.0;
+			PDFInterpolator->Evaluate(posDouble, &pdfValDouble);
+
+			// Accumulate
+			const auto pdfVal = static_cast<float>(pdfValDouble);
+			value += PE_CHARGE * pdfVal;
+		}
+	}
+
+	return value;
+}
+
 
 
 inline void updateGuessCorrector(const std::vector<double>& amps, const std::vector<double>& times,
@@ -273,8 +324,16 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 			amplitudeCorrection(&pesFound, &params, channel.waveform, chIdealWF);
 
 			// Compute residual
-			for (unsigned int  k = 0; k < residualWF.waveform.size(); ++k) {
-				const float fitVal = NPEPDFFunc(static_cast<float>(k) * trueSamplingRate, params, chIdealWF);
+			for (unsigned int k = 0; k < residualWF.waveform.size(); ++k) {
+				float X = static_cast<float>(k) * trueSamplingRate;
+				float fitVal = NPEPDFFuncCubic(
+					X,                    // time in ns
+					params,              // vector of parameters
+					idealPDFInterpolator, // your cubic interpolator
+					pdfT0Sample,
+					samplingRate2Inv,
+					pdfNSamples
+				);
 				residualWF.waveform[k] = residualWF.waveform[k] - fitVal + initBaseline;
 			}
 
