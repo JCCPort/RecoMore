@@ -93,12 +93,14 @@ inline void updateGuessCorrector(const std::vector<double>& amps, const std::vec
 		ampDiff  = ampDiff + ((amps[k] - initialAmps[k]) - ampDiff) / sysProcPECount;
 		timeDiff = timeDiff + ((times[k] - initialTimes[k]) - timeDiff) / sysProcPECount;
 		// TODO(josh): Keep the below but only for debug builds
-        // if(ampDiff != ampDiff){
-        //     throw std::runtime_error("AmpDiff is NaN");
-        // }
-        // if(timeDiff != timeDiff){
-        //     throw std::runtime_error("TimeDiff is NaN");
-        // }
+#ifdef IS_DEBUG
+        if(ampDiff != ampDiff){
+            throw std::runtime_error("AmpDiff is NaN");
+        }
+        if(timeDiff != timeDiff){
+            throw std::runtime_error("TimeDiff is NaN");
+        }
+#endif
 	}
 	baselineDiff = baselineDiff + ((baseline - initBaseline) - baselineDiff) / sysProcPECount;
 }
