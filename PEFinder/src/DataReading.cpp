@@ -333,7 +333,7 @@ readIdealWFs(unsigned int ch, unsigned int interpFactor, const std::string &idea
 	}
 	
 	if (waveform.size() != expectedSize) {
-		throw std::runtime_error("Unexpected number of samples in " + idealWFPath);
+		throw std::runtime_error("Unexpected number of samples in " + idealWFPath + ". Expected " + std::to_string(expectedSize) + " but got " + std::to_string(waveform.size()));
 	}
 	
 	return waveform;

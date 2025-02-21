@@ -1,5 +1,6 @@
 #include "../include/PEFit.h"
 #include "../include/Utils.h"
+#include "../include/PETemplate.h"
 #include <mutex>
 #include <atomic>
 #include <cmath>
@@ -248,11 +249,13 @@ inline void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vecto
 
 
 void
-fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> outputFile, std::mutex &lock) {
+fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PETemplate>& PETemplates, std::shared_ptr<SyncFile> outputFile, std::mutex &lock) {
 	std::vector<FitChannel> chFits;
 	for (const auto &channel: event->channels) { // Looping through all channels for a given event
 		auto residualWF = channel; // This will be the variable that is modified to be the residual distribution after each iteration
-		
+
+		// TODO(josh): Use time instead of index position for fitting procedure. Should just be that I need to create the interpolator using times and then remove the time->index conversion. Okay Ceres' interpolator cannot handle that. So will need
+		//  to make some tool for making the interpolator. The requirement will be even spacing of the time values and passing the t0.
 		FitChannel         chFit{};
 		const unsigned int ch = channel.ID;
 		if (std::ranges::count(skipChannels, ch)) {
@@ -260,16 +263,19 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
 		}
 		chFit.ID = ch;
 
-        std::vector<float> preSignalWF(residualWF.waveform.begin(), residualWF.waveform.begin() + static_cast<int>(18 / 0.3125));
+		constexpr float preSigWindowTime = 18.f;  // ns. This is the time window before the signal that is used to calculate the noise level.
+        std::vector<float> preSignalWF(residualWF.waveform.begin(), residualWF.waveform.begin() + static_cast<int>(preSigWindowTime / trueSamplingRate));
 //        auto stdDevNoise = calculateVariance(preSignalWF, calculateMean(preSignalWF));
         auto stdDevNoise = calculateStandardDeviation(preSignalWF);
         pdfResidualRMS = static_cast<float>(stdDevNoise);
 		
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
-		if (ch > idealWaveforms->size() - 1) {
+		if (ch > PETemplates.size() - 1) {
 			throw std::runtime_error("Channel number exceeds the number of ideal waveforms");
 		}
-		const std::vector<double> *chIdealWF = &(*idealWaveforms)[ch];
+
+		const PETemplate* ChPETemplate = &PETemplates.at(ch);
+		const std::vector<double>* chIdealWF = ChPETemplate->getVoltagesRef();
 		
 		// Baseline calculation
 		float initBaseline = averageVector(residualWF.waveform, 0.01);
@@ -546,17 +552,17 @@ fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *id
  * @param events
  * @param count
  * @param lock
- * @param idealWaveforms
+ * @param PETemplates
  * @param file
  * @return
  */
 bool batchFitEvents(const std::vector<DigitiserEvent> &events, std::atomic<unsigned long> &count, std::mutex &lock,
-                    const std::vector<std::vector<double>> *idealWaveforms, const std::shared_ptr<SyncFile> &file) {
+                    const std::unordered_map<unsigned int, PETemplate>& PETemplates, const std::shared_ptr<SyncFile> &file) {
 	for (const auto &event: events) {
 		lock.lock();
 		++count;
 		lock.unlock();
-		fitEvent(&event, idealWaveforms, file, lock);
+		fitEvent(&event, PETemplates, file, lock);
 	}
 	return true;
 }

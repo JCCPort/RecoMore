@@ -16,7 +16,7 @@ struct DigitiserChannel {
 };
 
 struct DigitiserEvent {
-    DigitiserChannel getChannel(unsigned int channelNumber) {
+    DigitiserChannel getChannel(const unsigned int channelNumber) {
         for (auto &channel: channels) {
             if (channel.ID == channelNumber) {
                 return channel;
@@ -110,7 +110,7 @@ struct FitEvent {
         ar & channels;
     }
 
-    FitChannel getChannel(unsigned int channelNumber) {
+    FitChannel getChannel(const unsigned int channelNumber) {
         for (auto &channelWF: channels) {
             if (channelWF.ID == channelNumber) {
                 return channelWF;

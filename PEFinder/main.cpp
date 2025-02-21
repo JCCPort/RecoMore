@@ -4,6 +4,7 @@
 #include "include/Utils.h"
 #include "include/DataReading.h"
 #include "include/DataStructures.h"
+#include "include/PETemplate.h"
 #include "include/PEFit.h"
 #include "Globals.h"
 #include "include/DataWriting.h"
@@ -103,13 +104,21 @@ int main(int argc, char** argv) {
 	std::mutex						  meanReducedChiSqLock;
 
 	// TODO(josh): Implement checking of channels from the data file to ensure the correct number of ideal waveforms are read in.
-    unsigned int numChannels = 16;
-	std::vector<std::vector<double>> idealWaveforms{numChannels};
-	for (int ch = 0; ch < numChannels; ch++) {
-		if (std::ranges::count(skipChannels, ch)) {
+	unsigned int numChannels = 16;
+	std::unordered_map<unsigned int, PETemplate> idealWaveforms;
+	idealWaveforms.reserve(numChannels);  // Optional but can help performance
+
+	for (int ch = 0; ch < numChannels; ++ch) {
+		// If ch is in skipChannels, we continue (skip it)
+		if (std::ranges::count(skipChannels, ch) > 0) {
 			continue;
 		}
-		idealWaveforms.at(ch) = readIdealWFs(ch, pdfInternalInterpFactor, pdfDir, pdfNSamples, positivePulse);
+
+		// Otherwise, construct the PETemplate and store it under key = ch
+		idealWaveforms.emplace(
+			ch,
+			PETemplate(ch, pdfInternalInterpFactor, pdfDir, positivePulse)
+		);
 	}
 
 	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(progressTrackerLock),
@@ -120,7 +129,7 @@ int main(int argc, char** argv) {
 
 	if (numThreads == 1) {
 		std::cout << "Processing with one thread." << std::endl;
-		batchFitEvents(data.getEvents(), std::reference_wrapper(count), std::reference_wrapper(meanReducedChiSqLock), &idealWaveforms, file);
+		batchFitEvents(data.getEvents(), std::reference_wrapper(count), std::reference_wrapper(meanReducedChiSqLock), idealWaveforms, file);
 	} else {
 		std::cout << "Processing with " << numThreads << " threads." << std::endl;
 		// Determining how many events each thread should run over.
@@ -141,7 +150,7 @@ int main(int argc, char** argv) {
 		unsigned int eventPos = 0;
 		for(int i = 0; i < batchNumber; i++){
 			std::vector<DigitiserEvent> passData = slice(data.getEvents(), eventPos, eventPos + threadRepeatCount[i] - 1);
-			pool.push_task(batchFitEvents, passData, std::reference_wrapper(count), std::reference_wrapper(meanReducedChiSqLock), &idealWaveforms,
+			pool.push_task(batchFitEvents, passData, std::reference_wrapper(count), std::reference_wrapper(meanReducedChiSqLock), idealWaveforms,
 			               file);
 			eventPos += threadRepeatCount[i];
 		}

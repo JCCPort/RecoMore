@@ -1,13 +1,13 @@
 #include "Globals.h"
 
 std::vector<int>    skipChannels{32, 36, 40, 44, 48, 52, 56, 60, 15};
-unsigned int pdfExternalInterpFactor = 10;
-unsigned int pdfInternalInterpFactor = 10;
-unsigned int totalInterpFactor = pdfExternalInterpFactor * pdfInternalInterpFactor;
-unsigned int                 pdfNSamples        = 105601; // This is a count, not an index position
+unsigned int        pdfExternalInterpFactor = 10;
+unsigned int        pdfInternalInterpFactor = 10;
+unsigned int        totalInterpFactor  = pdfExternalInterpFactor * pdfInternalInterpFactor;
+unsigned int        pdfNSamples        = (10560 * pdfInternalInterpFactor) + 1; // This is a count, not an index position
 float               pdfSamplingRate    = 0.3125f / static_cast<float>(totalInterpFactor); // 0.3125 is true sampling rate
 float               trueSamplingRate   = 0.3125f;
-int                 pdfT0Sample        = 3201; // TODO(Josh): Now this IS an index position?
+int                 pdfT0Sample        = static_cast<int>(320 * pdfInternalInterpFactor) + 1;
 float               pdfResidualRMS     = 0.827/1000;
 double              meanReducedChiSq   = 0;
 std::vector<double> reducedChiSqs{};
