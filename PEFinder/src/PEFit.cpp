@@ -30,6 +30,13 @@ inline T diffAtTime(T const& baseline, const unsigned int numPEs, T const *const
 
 
 struct NPEPDFFunctor {
+	/**
+	 * 
+	 * @param waveformTimes These need to be the indices of the PETemplate corresponding to the samples of the waveform being processed,
+	 * @param waveformAmplitudes 
+	 * @param PDFInterpolator 
+	 * @param numPES 
+	 */
 	NPEPDFFunctor(std::vector<float> waveformTimes, std::vector<float> waveformAmplitudes,
 	              ceres::CubicInterpolator<ceres::Grid1D<float, true>> *PDFInterpolator, const unsigned int numPES)
 			: waveformTimes_(std::move(waveformTimes)), waveformAmplitudes_(std::move(waveformAmplitudes)), PDFInterpolator_(PDFInterpolator), numPES_(numPES) {};
