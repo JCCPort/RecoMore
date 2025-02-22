@@ -114,7 +114,7 @@ inline float NPEPDFFuncCubic(
 	const float X,
 	const std::vector<float>& p,
 	const ceres::CubicInterpolator<ceres::Grid1D<float, true>>* PDFInterpolator,
-	const unsigned int pdfNSamples)
+	const unsigned int pdfNSamples, const PETemplate* ChPETemplate)
 {
 	// p[0] = NPE, p[1] = baseline, etc.
 	const int   NPE      = static_cast<int>(p[0]);
@@ -124,7 +124,9 @@ inline float NPEPDFFuncCubic(
 
 	for (int PE = 0; PE < NPE; ++PE) {
 		const float PE_CHARGE = p[2 + PE * 2];
-		const float PE_TIME   = p[3 + PE * 2]  * samplingRate2Inv;
+		//TODO(josh): Replace samplingRate2Inv with member of PETemplate.
+		// const float PE_TIME   = p[3 + PE * 2]  * samplingRate2Inv;
+		const float PE_TIME   = p[3 + PE * 2]  / ChPETemplate->getTimeSpacing();
 
 		// Reproduce your original approach to computing bin/time difference
 		// but as a floating-point "pos".
@@ -343,7 +345,8 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 					X,                    // time in index position
 					params,              // vector of parameters
 					idealPDFInterpolator, // your cubic interpolator
-					pdfNSamples
+					pdfNSamples,
+					ChPETemplate
 				);
 				residualWF.waveform[k] = residualWF.waveform[k] - fitVal + initBaseline;
 			}
