@@ -124,8 +124,7 @@ inline float NPEPDFFuncCubic(
 
 	for (int PE = 0; PE < NPE; ++PE) {
 		const float PE_CHARGE = p[2 + PE * 2];
-		//TODO(josh): Replace samplingRate2Inv with member of PETemplate.
-		// const float PE_TIME   = p[3 + PE * 2]  * samplingRate2Inv;
+
 		const float PE_TIME   = p[3 + PE * 2]  / ChPETemplate->getTimeSpacing();
 
 		// Reproduce your original approach to computing bin/time difference
