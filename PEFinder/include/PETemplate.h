@@ -197,7 +197,11 @@ public:
      * - If `positivePulse == true`, it is the index of the maximum amplitude.
      * - If `positivePulse == false`, it is the index of the minimum amplitude.
      */
-    inline float getTMaxIntensity() const { return tMaxIntensity; }
+    inline float getTMaxIntensity() const { return static_cast<float>(tMaxIntensity); }
+
+    float getFractionalIndex(const float t) const {
+        return (t / static_cast<float>(timeSpacing)) + static_cast<float>(tMaxIntensity);
+    }
 
 private:
     std::vector<double> voltages;      ///< The interpolated waveform amplitudes

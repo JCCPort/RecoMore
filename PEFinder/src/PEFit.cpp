@@ -114,8 +114,6 @@ inline float NPEPDFFuncCubic(
 	const float X,
 	const std::vector<float>& p,
 	const ceres::CubicInterpolator<ceres::Grid1D<float, true>>* PDFInterpolator,
-	const int pdfT0Sample,       // Same offset you had before
-	const float samplingRate2Inv, // Or whichever rate factor you used
 	const unsigned int pdfNSamples)
 {
 	// p[0] = NPE, p[1] = baseline, etc.
@@ -126,7 +124,7 @@ inline float NPEPDFFuncCubic(
 
 	for (int PE = 0; PE < NPE; ++PE) {
 		const float PE_CHARGE = p[2 + PE * 2];
-		const float PE_TIME   = p[3 + PE * 2];
+		const float PE_TIME   = p[3 + PE * 2]  * samplingRate2Inv;
 
 		// Reproduce your original approach to computing bin/time difference
 		// but as a floating-point "pos".
@@ -135,14 +133,12 @@ inline float NPEPDFFuncCubic(
 		// Instead of forcibly flooring, we let the CubicInterpolator do
 		// true interpolation. For a minimal change, we keep the same
 		// center shift of +0.5, but that’s optional.
-		const auto rawBinFloat = static_cast<float>(
-			pdfT0Sample + (0.5 + (X - PE_TIME) * samplingRate2Inv)
-		);
+		const auto pos = static_cast<float>(X - PE_TIME);
 
 		// Now we want to interpolate if we're in range
-		if (rawBinFloat >= 0.0f && rawBinFloat < static_cast<float>(pdfNSamples)) {
+		if (pos >= 0.0f && pos < static_cast<float>(pdfNSamples)) {
 			// Call the double overload
-			auto posDouble = static_cast<double>(rawBinFloat);
+			auto posDouble = static_cast<double>(pos);
 			double pdfValDouble = 0.0;
 			PDFInterpolator->Evaluate(posDouble, &pdfValDouble);
 
@@ -297,9 +293,13 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 
 		// Creating the x values that the solver will use. These are the index positions on the ideal WF for the positions on the real WF.
 		std::vector<float> xValues;
+		// std::vector<double> xValues2;
 		for (unsigned int  j = 0; j < channel.waveform.size(); j++) {
-			xValues.push_back((static_cast<float>(j) * static_cast<float>(totalInterpFactor)) + pdfT0SampleConv);  // Multiplying index to match position on ideal PDF
+			// xValues.push_back((static_cast<float>(j) * static_cast<float>(totalInterpFactor)) + pdfT0SampleConv);  // Multiplying index to match position on ideal PDF
+			xValues.push_back(ChPETemplate->getFractionalIndex(static_cast<float>(j) * trueSamplingRate) + 1.f);
 		}
+		// TODO(josh): So what Ceres needs is corresponding index positions of waveform times, given that it uses an interpolator, and xValues are floats anyway, shouldn't need to have positions in the template that perfectly
+		//  match those in the waveform. So we can just use the times of the waveform and convert them to the index positions on the ideal waveform.
 
 		// Creating interpolator to allow for the ideal waveform to be used as a continuous (and differentiable) function.
 		std::vector<float> temp(chIdealWF->begin(), chIdealWF->end());
@@ -337,14 +337,12 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 			amplitudeCorrection(&pesFound, &params, channel.waveform, chIdealWF);
 
 			// Compute residual
-			for (unsigned int k = 0; k < residualWF.waveform.size(); ++k) {
-				float X = static_cast<float>(k) * trueSamplingRate;
+			for (unsigned int k = 0; k < xValues.size(); ++k) {
+				float X = xValues[k];
 				float fitVal = NPEPDFFuncCubic(
-					X,                    // time in ns
+					X,                    // time in index position
 					params,              // vector of parameters
 					idealPDFInterpolator, // your cubic interpolator
-					pdfT0Sample,
-					samplingRate2Inv,
 					pdfNSamples
 				);
 				residualWF.waveform[k] = residualWF.waveform[k] - fitVal + initBaseline;
