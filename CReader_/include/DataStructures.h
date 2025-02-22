@@ -166,8 +166,8 @@ public:
 
     [[maybe_unused]] int getNumParams() const;
 
-    unsigned int numPEs_;
-    double baseline_;
+    unsigned int numPEs;
+    double baseline;
     std::vector<double> PEParams_;
 };
 

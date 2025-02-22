@@ -39,9 +39,9 @@ struct NPEPDFFunctor {
 			for (unsigned int i = 0; i < numPES_; i++) {
 				const unsigned int i2 = 2 * i;
 				const T amplitude = params[i2 + 1][0];
-				const T timeShift = params[i2 + 2][0];
+				const T time = params[i2 + 2][0];
 
-				const T pos = X - timeShift;
+				const T pos = X - time;
 				if (pos >= T(0) && pos < T(numPDFSamples_)) {
 					T f;
 					PDFInterpolator_->Evaluate(pos, &f);
@@ -75,17 +75,14 @@ inline float NPEPDFFuncCubic(
 	const ceres::CubicInterpolator<ceres::Grid1D<float, true>>* PDFInterpolator,
 	const PETemplate* ChPETemplate)
 {
-	float value = fitParams.baseline_;
+	float value = fitParams.baseline;
 
-	for (int PE = 0; PE < fitParams.numPEs_; ++PE) {
-		const float PE_CHARGE = fitParams.PEParams_[PE].amplitude;
-		const float PE_TIME   = fitParams.PEParams_[PE].time  / ChPETemplate->getTimeSpacing();
+	for (int PE = 0; PE < fitParams.numPEs; ++PE) {
+		const float amplitude = fitParams.PEs[PE].amplitude;
+		const float time   = fitParams.PEs[PE].time  / ChPETemplate->getTimeSpacing();
 
-		// pos is the position on the PE template waveform relative to the PE time in terms of index position
-		const float pos = X - PE_TIME;
-
-		// Now we want to interpolate if we're in range
-		if (pos >= 0.0f && pos < static_cast<float>(ChPETemplate->getNumberOfSamples())) {
+		// Now we want to interpolate if we're in range. pos is the position on the PE template waveform relative to the PE time in terms of index position
+		if (const float pos = X - time; pos >= 0.0f && pos < static_cast<float>(ChPETemplate->getNumberOfSamples())) {
 			// Call the double overload
 			auto posDouble = static_cast<double>(pos);
 			double pdfValDouble = 0.0;
@@ -93,7 +90,7 @@ inline float NPEPDFFuncCubic(
 
 			// Accumulate
 			const auto pdfVal = static_cast<float>(pdfValDouble);
-			value += PE_CHARGE * pdfVal;
+			value += amplitude * pdfVal;
 		}
 	}
 
@@ -140,19 +137,19 @@ inline bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE)
 
 
 inline void amplitudeCorrection(FitParams fitParams, const std::vector<float>& waveform, const ceres::CubicInterpolator<ceres::Grid1D<float>>* PDFInterpolator, const PETemplate* ChPETemplate){
-	for (int i = 0; i < fitParams.numPEs_; ++i) {
+	for (int i = 0; i < fitParams.numPEs; ++i) {
 		// TODO(josh): Improve the adjustment by averaging the shift based off of a few bins around the PE time
-		const unsigned int peTimeBinPos   = std::floor(fitParams.PEParams_[i].time / trueSamplingRate);
+		const unsigned int peTimeBinPos   = std::floor(fitParams.PEs[i].time / trueSamplingRate);
 
 		const float fitVal = NPEPDFFuncCubic(
-			ChPETemplate->getFractionalIndex(fitParams.PEParams_[i].time),                    // time in index position
+			ChPETemplate->getFractionalIndex(fitParams.PEs[i].time),                    // time in index position
 			fitParams,              // vector of parameters
 			PDFInterpolator, // your cubic interpolator
 			ChPETemplate
 		);
 		const float        extraAmplitude = fitVal - waveform[peTimeBinPos];
-		if (const float newAmplitude   = fitParams.PEParams_[i].amplitude + extraAmplitude; newAmplitude > WFSigThresh) { // TODO(josh): We need to consider the situations that this would ever be true
-			fitParams.PEParams_[i].amplitude = newAmplitude;
+		if (const float newAmplitude   = fitParams.PEs[i].amplitude + extraAmplitude; newAmplitude > WFSigThresh) { // TODO(josh): We need to consider the situations that this would ever be true
+			fitParams.PEs[i].amplitude = newAmplitude;
 		}
 	}
 }
@@ -207,8 +204,8 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 		auto grid                 = ceres::Grid1D<float>(temp.data(), 0, static_cast<int>(chIdealWF->size()));
 		auto               idealPDFInterpolator = new ceres::CubicInterpolator<ceres::Grid1D<float> >(grid);
 
-		// Set up the only cost function (also known as residual). This uses
-		// auto-differentiation to obtain the derivative (Jacobian).
+		// Set up the only cost function (also known as residual). This uses auto-differentiation to obtain the derivative (Jacobian).
+		// Creating them here to be able to re-use them.
 		auto functor = new NPEPDFFunctor(xValues,
 										 channel.waveform,
 										 idealPDFInterpolator,
@@ -225,7 +222,7 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 
 		while (true) {
 			fitParams.sortPEsByTime();
-			fitParams.baseline_ = initBaseline;
+			fitParams.baseline = initBaseline;
 
 			// Amplitude adjustment: if the latest PE found is before other one(s),
 			//  its tail is going to add some amplitude to the following one. Compares
@@ -244,7 +241,7 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 			}
 
 			// Keep correcting baseline as new PEs are found.
-			if(fitParams.numPEs_ != 0){
+			if(fitParams.numPEs != 0){
 				initBaseline = averageVector(residualWF.waveform, 0.01);
 				for (float &k: residualWF.waveform) {
 					k = k - initBaseline;
@@ -281,18 +278,17 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 		// Want to create a copy of the initial estimates for later improvement of correction factors.
 		std::vector<double> initialTimes;
 		std::vector<double> initialAmplitudes;
-		for (auto &k: fitParams.PEParams_) {
+		for (auto &k: fitParams.PEs) {
 			initialAmplitudes.push_back(k.amplitude);
 			initialTimes.push_back(k.time);
 		}
 		
 
+		// Creating vector of references to parameter values that the fitter will use and modify. Note this means that
+		// the references are the initial values before the fit and the final values after the fit.
 		std::vector<double> times;
 		std::vector<double> amplitudes;
 		double              baseline;
-
-		// Creating vector of references to parameter values that the fitter will use and modify. Note this means that
-		// the references are the initial values before the fit and the final values after the fit.
 		std::vector<double*> params   = {};
 		fitParams.makeSolverParams(&params, &times, &amplitudes, &baseline);
 
@@ -310,15 +306,15 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 		costFunction->SetNumResiduals(static_cast<int>(channel.waveform.size()));
 
 		costFunction->AddParameterBlock(1); // Baseline param
-		for ([[maybe_unused]]const auto &pe: fitParams.PEParams_) {
+		for ([[maybe_unused]]const auto &pe: fitParams.PEs) {
 			costFunction->AddParameterBlock(1); // Params for one PE amplitude
 			costFunction->AddParameterBlock(1); // Params for one PE time
 		}
 
-		functor->updateNumPEs(fitParams.numPEs_);
+		functor->updateNumPEs(fitParams.numPEs);
 
 		ceres::Problem::Options option;
-		option.loss_function_ownership = ceres::Ownership::DO_NOT_TAKE_OWNERSHIP;
+		option.loss_function_ownership = ceres::Ownership::DO_NOT_TAKE_OWNERSHIP; // Necessary to allow reuse whilst preventing double deletion.
 		option.cost_function_ownership = ceres::Ownership::DO_NOT_TAKE_OWNERSHIP;
 		option.manifold_ownership = ceres::Ownership::DO_NOT_TAKE_OWNERSHIP;
 		ceres::Problem problem(option);
@@ -338,7 +334,7 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 
 			// Add parameter blocks to the ordering object
             ordering->AddElementToGroup(params[0], 0);
-            for (int i = 0; i < fitParams.numPEs_; i++) {
+            for (int i = 0; i < fitParams.numPEs; i++) {
                 ordering->AddElementToGroup(params[2*i + 1], i);
                 ordering->AddElementToGroup(params[2*i + 2], i);
             }
@@ -376,9 +372,9 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 			time = time * ChPETemplate->getTimeSpacing();
 		}
 
-		FitParams finalFitParams{fitParams.numPEs_, baseline, amplitudes, times};
+		FitParams finalFitParams{fitParams.numPEs, baseline, amplitudes, times};
 
-		chFit.PEs      = finalFitParams.PEParams_;
+		chFit.PEs      = finalFitParams.PEs;
 		chFit.baseline = static_cast<float>(baseline);
 
         std::vector<double> observedValues;
@@ -390,8 +386,8 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 			const float observed = channel.waveform[j];
 			float expected = NPEPDFFuncCubic(
 				xValues[j],                    // time in index position
-				finalFitParams,              // vector of parameters
-				idealPDFInterpolator, // your cubic interpolator
+				finalFitParams,                // vector of parameters
+				idealPDFInterpolator,
 				ChPETemplate
 			);
             observedValues.push_back(observed);
@@ -412,7 +408,7 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 		chFits.push_back(chFit);
 		
 		// Update correction values for initial guesses
-		updateGuessCorrector(amplitudes, times, initialAmplitudes, initialTimes, baseline, initBaseline, finalFitParams.numPEs_);
+		updateGuessCorrector(amplitudes, times, initialAmplitudes, initialTimes, baseline, initBaseline, finalFitParams.numPEs);
 		
 		delete idealPDFInterpolator;
 		delete functor;

@@ -167,21 +167,19 @@ class FitParams {
 
     void makeSolverParams(std::vector<double*>* solverParams, std::vector<double>* times, std::vector<double>* amplitudes, double* baseline);
 
-    std::vector<float> makeGuesserParams();
-
     int getNumParams() const;
 
     void sortPEsByTime();
 
     void addPE(const Photoelectron &pe)
     {
-        PEParams_.push_back(pe);
-        numPEs_++;
+        PEs.push_back(pe);
+        numPEs++;
     }
 
-    unsigned int numPEs_ = 0;
-    double baseline_ = 0.;
-    std::vector<Photoelectron> PEParams_;
+    unsigned int numPEs = 0;
+    double baseline = 0.;
+    std::vector<Photoelectron> PEs;
 };
 
 #endif //RECOMORE_DATASTRUCTURES_H

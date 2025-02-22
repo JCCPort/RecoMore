@@ -80,62 +80,49 @@ FitParams::FitParams(const unsigned int numPEs, const double baseline,
         throw std::runtime_error("Amplitude vector and time vector must be the same size");
     }
     // In this constructor, numPEs is expected to equal amplitudes.size()
-    numPEs_ = numPEs;
-    baseline_ = baseline;
+    numPEs = numPEs;
+    baseline = baseline;
     // Create a Photoelectron for each amplitude/time pair.
     for (unsigned int i = 0; i < amplitudes.size(); i++) {
         Photoelectron pe{static_cast<float>(amplitudes[i]), 0.f,
                             static_cast<float>(times[i]), 0.f,
                             0.f, 0.f};
-        PEParams_.push_back(pe);
+        PEs.push_back(pe);
     }
 }
 
 FitParams::FitParams(const double baseline, const std::vector<Photoelectron> &PEs)
 {
-    numPEs_ = PEs.size();
-    baseline_ = baseline;
-    PEParams_ = PEs;
+    numPEs = PEs.size();
+    baseline = baseline;
+    PEs = PEs;
 }
 
 void FitParams::makeSolverParams(std::vector<double*>* solverParams, std::vector<double>* times, std::vector<double>* amplitudes, double* baseline) {
-    *baseline = baseline_;
-    for (const auto &pe: PEParams_) {
+    *baseline = baseline;
+    for (const auto &pe: PEs) {
         amplitudes->push_back(pe.amplitude);
         times->push_back(pe.time);
     }
 
 
     // Reserve space for baseline plus two pointers per photoelectron.
-    solverParams->reserve(1 + 2 * PEParams_.size());
+    solverParams->reserve(1 + 2 * PEs.size());
     // First parameter: baseline
-    solverParams->push_back(&baseline_);
+    solverParams->push_back(&baseline);
     // For each photoelectron, add pointers to amplitude and time.
-    for (unsigned int i = 0; i < PEParams_.size(); i++) {
+    for (unsigned int i = 0; i < PEs.size(); i++) {
         solverParams->push_back(&amplitudes->at(i));
         solverParams->push_back(&times->at(i));
     }
 }
 
-std::vector<float> FitParams::makeGuesserParams() {
-    // Create a vector with the first element as the number of photoelectrons,
-    // followed by the baseline and then each photoelectron's amplitude and time.
-    std::vector<float> temp_;
-    temp_.push_back(static_cast<float>(numPEs_));
-    temp_.push_back(static_cast<float>(baseline_));
-    for (const auto &pe: PEParams_) {
-        temp_.push_back(pe.amplitude);
-        temp_.push_back(pe.time);
-    }
-    return temp_;
-}
-
 int FitParams::getNumParams() const {
     // Here the total number of parameters is:
     // 1 (baseline) + 2 per photoelectron + 1 (for numPEs_) = 2 * numPEs_ + 2.
-    return static_cast<int>(2 * PEParams_.size() + 2);
+    return static_cast<int>(2 * PEs.size() + 2);
 }
 
 void FitParams::sortPEsByTime() {
-    std::ranges::sort(PEParams_, comparePETime());
+    std::ranges::sort(PEs, comparePETime());
 }

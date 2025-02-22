@@ -73,8 +73,8 @@ std::vector<unsigned int> FitRun::getEventIDs() {
 // TODO(josh): Implement this at some point to reduce the number of different ways the parameters are stored and moved.
 FitParams::FitParams(const unsigned int numPEs, double baseline, const std::vector<double>& amplitudes,
                                       const std::vector<double>& times) {
-    numPEs_ = numPEs;
-    baseline_ = baseline;
+    numPEs = numPEs;
+    baseline = baseline;
     PEParams_.emplace_back(baseline);
     if (amplitudes.size() != times.size()) {
         throw std::runtime_error("Amplitude vector and time vector must be the same size");
@@ -87,8 +87,8 @@ FitParams::FitParams(const unsigned int numPEs, double baseline, const std::vect
 
 
 FitParams::FitParams(double baseline, const std::vector<Photoelectron> &PEs) {
-    numPEs_ = PEs.size();
-    baseline_ = baseline;
+    numPEs = PEs.size();
+    baseline = baseline;
     for (const auto pe: PEs) {
         PEParams_.push_back(pe.amplitude);
         PEParams_.push_back(pe.time);
@@ -98,7 +98,7 @@ FitParams::FitParams(double baseline, const std::vector<Photoelectron> &PEs) {
 
 void FitParams::makeSolverParams(std::vector<double*>* solverParams, std::vector<double>* times, std::vector<double>* amplitudes, double* baseline) {
     solverParams->reserve(PEParams_.size());
-    solverParams->push_back(&baseline_);
+    solverParams->push_back(&baseline);
     for (auto &param: PEParams_) {
         solverParams->push_back(&param);
     }
@@ -106,7 +106,7 @@ void FitParams::makeSolverParams(std::vector<double*>* solverParams, std::vector
 
 std::vector<float> FitParams::makeGuesserParams() {
     std::vector<float> temp_;
-    temp_.push_back((float) numPEs_);
+    temp_.push_back((float) numPEs);
     for (auto param: PEParams_) {
         temp_.push_back((float) param);
     }
