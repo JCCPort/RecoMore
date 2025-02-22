@@ -137,6 +137,8 @@ public:
             voltages.push_back(rawAmps[i]);
         }
 
+        numberOfSamples = voltages.size();
+
         // Find the index of the amplitude extremum
         //   - min amplitude if positivePulse == false
         //   - max amplitude if positivePulse == true
@@ -169,7 +171,7 @@ public:
         // For positive pulses: amplitude should be near +1
         const double amplitudeAtExtremum = voltages[extremumIndex];
         const double expectedValue = positivePulse ? 1.0 : -1.0;
-        const double checkTolerance = 0.00001; // for example: ±0.00001 from target
+        constexpr double checkTolerance = 0.00001; // for example: ±0.00001 from target
         const double diff = std::fabs(amplitudeAtExtremum - expectedValue);
 
         if (diff > checkTolerance) {
@@ -185,6 +187,7 @@ public:
     inline std::vector<double> getVoltages() const { return voltages; }
     inline std::vector<double> const *getVoltagesRef() const { return &voltages; }
     inline unsigned int getChannelNumber() const { return channelNumber; }
+    inline unsigned int getNumberOfSamples() const { return numberOfSamples; }
 
     /**
      * Time spacing between consecutive interpolated points
@@ -208,6 +211,7 @@ private:
     unsigned int channelNumber;        ///< E.g., 0, 1, 2, ...
     float timeSpacing = 0.0f;          ///< Interpolated spacing between consecutive samples
     unsigned int tMaxIntensity = 0;    ///< Index of the extremum amplitude
+    unsigned int numberOfSamples = 0;  ///< Number of samples in the PE template waveform
 };
 
 

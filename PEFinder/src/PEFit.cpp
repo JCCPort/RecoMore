@@ -10,36 +10,18 @@
 #include <utility>
 
 
-template<typename T>
-inline T diffAtTime(T const& baseline, const unsigned int numPEs, T const *const *params, T const& X, ceres::CubicInterpolator<ceres::Grid1D<float> > *PDFInterpolator_) {
-	T accum = baseline;
-	for (unsigned int i = 0; i < numPEs; i++) {
-		const unsigned int i2 = 2 * i;
-		const T amplitude = params[i2 + 1][0];
-		const T timeShift = params[i2 + 2][0];
-
-		const T pos = X - timeShift;
-		if (pos >= T(0) && pos < T(pdfNSamples)) {
-			T f;
-			PDFInterpolator_->Evaluate(pos, &f);
-			accum += amplitude * f;
-		}
-	}
-	return accum;
-}
-
-
 struct NPEPDFFunctor {
 	/**
 	 * 
 	 * @param waveformTimes These need to be the indices of the PETemplate corresponding to the samples of the waveform being processed,
 	 * @param waveformAmplitudes 
-	 * @param PDFInterpolator 
+	 * @param PDFInterpolator
+	 * @param numPDFSamples
 	 * @param numPES 
 	 */
 	NPEPDFFunctor(std::vector<float> waveformTimes, std::vector<float> waveformAmplitudes,
-	              ceres::CubicInterpolator<ceres::Grid1D<float, true>> *PDFInterpolator, const unsigned int numPES)
-			: waveformTimes_(std::move(waveformTimes)), waveformAmplitudes_(std::move(waveformAmplitudes)), PDFInterpolator_(PDFInterpolator), numPES_(numPES) {};
+	              ceres::CubicInterpolator<ceres::Grid1D<float, true>> *PDFInterpolator, const unsigned int numPDFSamples, const unsigned int numPES)
+			: waveformTimes_(std::move(waveformTimes)), waveformAmplitudes_(std::move(waveformAmplitudes)), PDFInterpolator_(PDFInterpolator), numPDFSamples_(numPDFSamples), numPES_(numPES) {};
 
 	/**
 	 *
@@ -52,7 +34,21 @@ struct NPEPDFFunctor {
 	inline bool operator()(T const *const *params, T *__restrict__ residual) const {
 		const T baseline = params[0][0];  // The "DC offset" or baseline
 		for (unsigned int j = 0; j < waveformTimes_.size(); j++) {
-			residual[j] = diffAtTime(baseline, numPES_, params, T(waveformTimes_[j]), PDFInterpolator_) - T(waveformAmplitudes_[j]);
+			T accum = baseline;
+			const T X = T(waveformTimes_[j]);
+			for (unsigned int i = 0; i < numPES_; i++) {
+				const unsigned int i2 = 2 * i;
+				const T amplitude = params[i2 + 1][0];
+				const T timeShift = params[i2 + 2][0];
+
+				const T pos = X - timeShift;
+				if (pos >= T(0) && pos < T(numPDFSamples_)) {
+					T f;
+					PDFInterpolator_->Evaluate(pos, &f);
+					accum += amplitude * f;
+				}
+			}
+			residual[j] = accum - T(waveformAmplitudes_[j]);
 		}
 
 		return true;
@@ -68,6 +64,7 @@ private:
 	const std::vector<float>                        waveformTimes_;
 	const std::vector<float>                        waveformAmplitudes_;
 	ceres::CubicInterpolator<ceres::Grid1D<float> > *PDFInterpolator_;
+	unsigned int 									numPDFSamples_;
 	unsigned int									numPES_;
 };
 
@@ -88,7 +85,7 @@ inline float NPEPDFFuncCubic(
 	const float X,
 	const std::vector<float>& p,
 	const ceres::CubicInterpolator<ceres::Grid1D<float, true>>* PDFInterpolator,
-	const unsigned int pdfNSamples, const PETemplate* ChPETemplate)
+	const PETemplate* ChPETemplate)
 {
 	// p[0] = NPE, p[1] = baseline, etc.
 	const int   NPE      = static_cast<int>(p[0]);
@@ -104,7 +101,7 @@ inline float NPEPDFFuncCubic(
 		const float pos = X - PE_TIME;
 
 		// Now we want to interpolate if we're in range
-		if (pos >= 0.0f && pos < static_cast<float>(pdfNSamples)) {
+		if (pos >= 0.0f && pos < static_cast<float>(ChPETemplate->getNumberOfSamples())) {
 			// Call the double overload
 			auto posDouble = static_cast<double>(pos);
 			double pdfValDouble = 0.0;
@@ -118,7 +115,6 @@ inline float NPEPDFFuncCubic(
 
 	return value;
 }
-
 
 
 inline void updateGuessCorrector(const std::vector<double>& amps, const std::vector<double>& times,
@@ -175,7 +171,6 @@ inline bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE,
 			X,                    // time in index position
 			paramsLocal,              // vector of parameters
 			PDFInterpolator, // your cubic interpolator
-			pdfNSamples,
 			ChPETemplate
 		);
 		tempResidual[k] = tempResidual[k] - fitVal + static_cast<float>(baseline);
@@ -222,7 +217,6 @@ inline void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vecto
 			ChPETemplate->getFractionalIndex(pesFound->at(i).time),                    // time in index position
 			*params,              // vector of parameters
 			PDFInterpolator, // your cubic interpolator
-			pdfNSamples,
 			ChPETemplate
 		);
 		const float        extraAmplitude = fitVal - waveform[peTimeBinPos];
@@ -294,6 +288,7 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 		auto functor = new NPEPDFFunctor(xValues,
 										 channel.waveform,
 										 idealPDFInterpolator,
+										 ChPETemplate->getNumberOfSamples(),
 										 pesFound.size());
 		auto costFunction = new ceres::DynamicAutoDiffCostFunction<NPEPDFFunctor>(functor);
 
@@ -326,7 +321,6 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 					X,                    // time in index position
 					params,              // vector of parameters
 					idealPDFInterpolator, // your cubic interpolator
-					pdfNSamples,
 					ChPETemplate
 				);
 				residualWF.waveform[k] = residualWF.waveform[k] - fitVal + initBaseline;
@@ -392,7 +386,7 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 		
 		// Converting the time into an ideal waveform PDF index to simplify NPEPDFFunctor method call
 		for (double &time: times) {
-			time = time * samplingRate2Inv;
+			time = time / ChPETemplate->getTimeSpacing();
 		}
 		
 		
@@ -471,7 +465,7 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 		
 		// Going back from ideal waveform PDF index to time
 		for (double &time: times) {
-			time = time / samplingRate2Inv;
+			time = time * ChPETemplate->getTimeSpacing();
 		}
 		
 		std::vector<Photoelectron> FitPEs;
@@ -503,7 +497,6 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 				X,                    // time in index position
 				finalParams,              // vector of parameters
 				idealPDFInterpolator, // your cubic interpolator
-				pdfNSamples,
 				ChPETemplate
 			);
             observedValues.push_back(observed);
