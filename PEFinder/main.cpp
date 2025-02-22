@@ -32,9 +32,9 @@ int main(int argc, char** argv) {
          	.default_value(false)
 	        .implicit_value(true)
 		.help("Output reco file saved as text. Binary is default.");
-	program.add_argument("--pdf_dir")
-		.default_value(std::string("../pdf/"))
-		.help("Path for ideal PDFs to use for fitting.");
+	program.add_argument("--template_dir")
+		.default_value(std::string("../templates/"))
+		.help("Path for PE templates to use for fitting.");
 	program.add_argument("--n_threads")
 		.default_value(1)
 		.help("Number of threads to run RecoMore on.")
@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
         throw std::runtime_error("Input and output file names are the same. Please specify a different output file name.");
     }
 
-	auto pdfDir = program.get<std::string>("--pdf_dir");
+	auto templateDir = program.get<std::string>("--template_dir");
 	unsigned int numThreads = program.get<int>("--n_threads");
 	unsigned int batchNumber = program.get<int>("--num_batches");
 	skipChannels = program.get<std::vector<int>>("--skip_channels");
@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
 	{
 		std::cout << "WARNING: Number of batches is less than number of threads. Not all threads will be used." << std::endl;
 	}
- 
+
 	std::shared_ptr<SyncFile> file;
 	const bool textOutput = program.get<bool>("--txt-output");
 	if(!textOutput) {
@@ -117,7 +117,7 @@ int main(int argc, char** argv) {
 		// Otherwise, construct the PETemplate and store it under key = ch
 		idealWaveforms.emplace(
 			ch,
-			PETemplate(ch, pdfInternalInterpFactor, pdfDir, positivePulse)
+			PETemplate(ch, templateInternalInterpFactor, templateDir, positivePulse)
 		);
 	}
 

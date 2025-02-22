@@ -165,7 +165,7 @@ class FitParams {
     // Constructor that accepts a vector of Photoelectron directly.
     FitParams(double, const std::vector<Photoelectron> &);
 
-    void makeSolverParams(std::vector<double*>* solverParams, std::vector<double>* times, std::vector<double>* amplitudes, double* baseline);
+    void makeSolverParams(std::vector<double*>* solverParams, std::vector<double>* times, std::vector<double>* amplitudes, double* baseline_);
 
     int getNumParams() const;
 

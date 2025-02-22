@@ -45,13 +45,13 @@ public:
 
         // Basic file checks:
         if (!idealWFFile.is_open()) {
-            throw std::runtime_error("Ideal PE PDF file: " + idealWFPath + " not found.");
+            throw std::runtime_error("Ideal PE template file: " + idealWFPath + " not found.");
         }
         if (idealWFFile.peek() == std::ifstream::traits_type::eof()) {
-            throw std::runtime_error("Ideal PE PDF file: " + idealWFPath + " is empty.");
+            throw std::runtime_error("Ideal PE template file: " + idealWFPath + " is empty.");
         }
         if (idealWFFile.fail()) {
-            throw std::runtime_error("Ideal PE PDF file: " + idealWFPath + " could not be opened.");
+            throw std::runtime_error("Ideal PE template file: " + idealWFPath + " could not be opened.");
         }
 
         // Read all times and amplitudes from the file.

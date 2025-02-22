@@ -52,7 +52,7 @@ bool SystemTest1::runOverTestData() {
 	// Input arguments
 	const std::string inputFileName = "../TestData/R185.bin";
 	std::string outputFileName = defaultOutputName(inputFileName);
-	auto pdfDir = "../TestData/pdf/";
+	auto pdfDir = "../TestData/templates/";
 	saveWaveforms = false;
 	constexpr bool positivePulse = false;
 	DigitiserRun data       = ReadWCDataFile(inputFileName, positivePulse);
@@ -61,14 +61,14 @@ bool SystemTest1::runOverTestData() {
 	
 	// Global parameters
 	skipChannels               = {32, 36, 40, 44, 48, 52, 56, 60};
-	pdfExternalInterpFactor    = 10;
-	pdfInternalInterpFactor    = 10;
-	totalInterpFactor          = pdfExternalInterpFactor * pdfInternalInterpFactor;
+	templateExternalInterpFactor    = 10;
+	templateInternalInterpFactor    = 10;
+	totalInterpFactor          = templateExternalInterpFactor * templateInternalInterpFactor;
 	unsigned int pdfNSamples                = 105601; // This is a count, not an index position
 	float pdfSamplingRate            = 0.3125f / totalInterpFactor; // 0.3125 is true sampling rate
 	float trueSamplingRate           = 0.3125f;
 	int pdfT0Sample                = 3201; // TODO(Josh): Now this IS an index position?
-	pdfResidualRMS             = 0.827/1000;
+	templateResidualRMS             = 0.827/1000;
 	meanReducedChiSq           = 0;
 	reducedChiSqs              = {};
 	float samplingRate2Inv           = 1.0f / pdfSamplingRate; //TODO(Josh): Change to double? Loss of precision isn't too significant

@@ -86,9 +86,9 @@ FitParams::FitParams(const unsigned int numPEs, double baseline, const std::vect
 }
 
 
-FitParams::FitParams(double baseline, const std::vector<Photoelectron> &PEs) {
+FitParams::FitParams(double baseline_, const std::vector<Photoelectron> &PEs) {
     numPEs = PEs.size();
-    baseline = baseline;
+    baseline_ = baseline_;
     for (const auto pe: PEs) {
         PEParams_.push_back(pe.amplitude);
         PEParams_.push_back(pe.time);

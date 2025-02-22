@@ -1,10 +1,10 @@
 #include "Globals.h"
 
 std::vector<int>    skipChannels{32, 36, 40, 44, 48, 52, 56, 60, 15};
-unsigned int        pdfExternalInterpFactor = 10;
-unsigned int        pdfInternalInterpFactor = 10;
+unsigned int        templateExternalInterpFactor = 10;
+unsigned int        templateInternalInterpFactor = 10;
 float               trueSamplingRate   = 0.3125f;
-float               pdfResidualRMS     = 0.827/1000;
+float               templateResidualRMS     = 0.827/1000;
 double              meanReducedChiSq   = 0;
 std::vector<double> reducedChiSqs{};
 double              WFSigThresh        = 0.0075;

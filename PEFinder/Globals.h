@@ -5,12 +5,12 @@
 
 extern std::vector<int> skipChannels; // Channels to skip (main use is if a channel is a trigger).
 
-extern unsigned int pdfExternalInterpFactor; // How much oversampling was done when making the ideal waveform PDFs.
-extern unsigned int pdfInternalInterpFactor; // How much more oversampling is done in RecoMore when the PDFs are read in.
+extern unsigned int templateExternalInterpFactor; // How much oversampling was done when making the ideal waveform templates.
+extern unsigned int templateInternalInterpFactor; // How much more oversampling is done in RecoMore when the templates are read in.
 
 extern float trueSamplingRate; // True sampling rate of the data.
 
-extern float pdfResidualRMS; // Average RMS in amplitude for a point on the waveform. Used as uncertainty in y value for chi-sq calculation.
+extern float templateResidualRMS; // Average RMS in amplitude for a point on the waveform. Used as uncertainty in y value for chi-sq calculation.
 
 extern double meanReducedChiSq; // Average reduced chi-sq, printed at end of run to quickly check things are working/a change improved things.
 extern std::vector<double> reducedChiSqs; // Used for making CSV of reduced chi-sq for debugging. DEPRECATED.

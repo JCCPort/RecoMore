@@ -279,12 +279,12 @@ DigitiserRun ReadWCDataFileBinary(const std::string &fileName, const bool positi
 
 
 /**
- * This function reads the ideal PDFs for each channel which is then used for finding PEs in data by overlapping the ideal PDF with
+ * This function reads the ideal templates for each channel which is then used for finding PEs in data by overlapping the ideal template with
  * data PEs and subtracting them until none remain.
  * @param ch The channel to fill in.
  * @param interpFactor Number of points in interpolated waveform divided by number of points in original waveform.
- * @param idealWFDir Path to directory containing ideal PDFs for each channel.
- * @param expectedSize Check that the PDF is the expected length.
+ * @param idealWFDir Path to directory containing ideal templates for each channel.
+ * @param expectedSize Check that the template is the expected length.
  * @param positivePulse
  * @return
  */
@@ -294,13 +294,13 @@ readIdealWFs(unsigned int ch, unsigned int interpFactor, const std::string &idea
 	std::ifstream idealWFFile(idealWFPath, std::ifstream::in);
 	
 	if (!idealWFFile.is_open()) {
-		throw std::runtime_error("Ideal PE PDF file: " + idealWFPath + " not found.");
+		throw std::runtime_error("Ideal PE template file: " + idealWFPath + " not found.");
 	}
     if(idealWFFile.peek() == std::ifstream::traits_type::eof()){
-        throw std::runtime_error("Ideal PE PDF file: " + idealWFPath + " is empty.");
+        throw std::runtime_error("Ideal PE template file: " + idealWFPath + " is empty.");
     }
     if (idealWFFile.fail()){
-        throw std::runtime_error("Ideal PE PDF file: " + idealWFPath + " could not be opened.");
+        throw std::runtime_error("Ideal PE template file: " + idealWFPath + " could not be opened.");
     }
 
 	float signFactor = 0.f;
@@ -325,7 +325,7 @@ readIdealWFs(unsigned int ch, unsigned int interpFactor, const std::string &idea
 	while (idealWFFile >> idealWFTime >> idealWFAmp) {
 		double delta_v = (idealWFAmp - prevAmp) / static_cast<double>(interpFactor);
 
-		for (unsigned int step = 1; step < interpFactor; ++step)  // Add linearly interpolated points to ideal PDF
+		for (unsigned int step = 1; step < interpFactor; ++step)  // Add linearly interpolated points to ideal template
 			waveform.emplace_back(prevAmp + static_cast<double>(step) * delta_v * signFactor);
 
 		waveform.emplace_back(idealWFAmp);

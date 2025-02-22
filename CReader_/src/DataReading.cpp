@@ -247,12 +247,12 @@ DigitiserRun ReadWCDataFileBinary(const std::string &fileName, const bool positi
 
 
 /**
- * This function reads the ideal PDFs for each channel which is then used for finding PEs in data by overlapping the ideal PDF with
+ * This function reads the ideal templates for each channel which is then used for finding PEs in data by overlapping the ideal template with
  * data PEs and subtracting them until none remain.
  * @param ch The channel to fill in.
  * @param interpFactor Number of points in interpolated waveform divided by number of points in original waveform.
- * @param idealWFDir Path to directory containing ideal PDFs for each channel.
- * @param expectedSize Check that the PDF is the expected length.
+ * @param idealWFDir Path to directory containing ideal templates for each channel.
+ * @param expectedSize Check that the template is the expected length.
  * @param positivePulse
  * @return
  */
@@ -262,7 +262,7 @@ readIdealWFs(unsigned int ch, unsigned int interpFactor, const std::string &idea
 	std::ifstream idealWFFile(idealWFPath, std::ifstream::in);
 	
 	if (!idealWFFile.is_open()) {
-		throw std::runtime_error("Ideal PE PDF: " + idealWFPath + " not found.");
+		throw std::runtime_error("Ideal PE template: " + idealWFPath + " not found.");
 	}
 	
 	double idealWFTime;
@@ -277,10 +277,10 @@ readIdealWFs(unsigned int ch, unsigned int interpFactor, const std::string &idea
 	
 	// Parse next line
 	while (idealWFFile >> idealWFTime >> idealWFAmp) {
-		double delta_v = (idealWFAmp - prevAmp) / double(interpFactor);
+		double delta_v = (idealWFAmp - prevAmp) / static_cast<double>(interpFactor);
 		
-		for (int step = 1; step < interpFactor; ++step)  // Add linearly interpolated points to ideal PDF
-			waveform.emplace_back(prevAmp + double(step) * delta_v);
+		for (int step = 1; step < interpFactor; ++step)  // Add linearly interpolated points to ideal template
+			waveform.emplace_back(prevAmp + static_cast<double>(step) * delta_v);
 		
 		waveform.emplace_back(idealWFAmp);
 		prevAmp = idealWFAmp;

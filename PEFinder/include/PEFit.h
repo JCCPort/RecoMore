@@ -10,24 +10,18 @@
 #include "DataWriting.h"
 #include "PETemplate.h"
 
-float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double> *idealWaveform);
-
-void
-fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PETemplate>& PETemplates, std::shared_ptr<SyncFile> outputFile, std::mutex &lock);
+void fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PETemplate>& PETemplates, std::shared_ptr<SyncFile> outputFile, std::mutex &lock);
 
 bool batchFitEvents(const std::vector<DigitiserEvent> &events, std::atomic<unsigned long> &count, std::mutex &lock,
                     const std::unordered_map<unsigned int, PETemplate>& PETemplates, const std::shared_ptr<SyncFile> &file);
 
 void updateGuessCorrector(const std::vector<double>& amps, const std::vector<double>& times,
                                  const std::vector<double>& initialAmps, const std::vector<double>& initialTimes,
-                                 double baseline, double initBaseline, const std::vector<Photoelectron>& pesFound);
+                                 const double baseline, const double initBaseline, const unsigned int numPEs);
 
-// bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE, const double baseline, std::vector<Photoelectron> pesFound_, const DigitiserChannel& channel_, const ceres::CubicInterpolator<ceres::Grid1D<float>>* PDFInterpolator, const std
-//                            ::vector<float>& xValues, const PETemplate* ChPETemplate);
-bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE);
+bool getNextPEGuess(const std::vector<float>& residualWF, Photoelectron *guessPE);
 
-// void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vector<float> *params, const std::vector<float>& waveform, const ceres::CubicInterpolator<ceres::Grid1D<float>>* PDFInterpolator, const PETemplate* ChPETemplate);
-void amplitudeCorrection(FitParams fitParams, const std::vector<float>& waveform, const ceres::CubicInterpolator<ceres::Grid1D<float>>* PDFInterpolator, const PETemplate* ChPETemplate);
+void amplitudeCorrection(FitParams fitParams, const std::vector<float>& waveform, const ceres::CubicInterpolator<ceres::Grid1D<float>>* templateInterpolator, const PETemplate* ChPETemplate);
 
 
 #endif //RECOMORE_PEFIT_H

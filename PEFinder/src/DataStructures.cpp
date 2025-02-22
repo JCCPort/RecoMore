@@ -72,16 +72,15 @@ std::vector<unsigned int> FitRun::getEventIDs() {
 
 
 // TODO(josh): Implement this at some point to reduce the number of different ways the parameters are stored and moved.
-FitParams::FitParams(const unsigned int numPEs, const double baseline,
+FitParams::FitParams(const unsigned int numPEs_, const double baseline_,
                                         const std::vector<double>& amplitudes,
-                                        const std::vector<double>& times)
-{
+                                        const std::vector<double>& times){
     if (amplitudes.size() != times.size()) {
         throw std::runtime_error("Amplitude vector and time vector must be the same size");
     }
     // In this constructor, numPEs is expected to equal amplitudes.size()
-    numPEs = numPEs;
-    baseline = baseline;
+    numPEs = numPEs_;
+    baseline = baseline_;
     // Create a Photoelectron for each amplitude/time pair.
     for (unsigned int i = 0; i < amplitudes.size(); i++) {
         Photoelectron pe{static_cast<float>(amplitudes[i]), 0.f,
@@ -91,25 +90,30 @@ FitParams::FitParams(const unsigned int numPEs, const double baseline,
     }
 }
 
-FitParams::FitParams(const double baseline, const std::vector<Photoelectron> &PEs)
-{
+FitParams::FitParams(const double baseline_, const std::vector<Photoelectron> &PEs_){
     numPEs = PEs.size();
-    baseline = baseline;
-    PEs = PEs;
+    baseline = baseline_;
+    PEs = PEs_;
 }
 
-void FitParams::makeSolverParams(std::vector<double*>* solverParams, std::vector<double>* times, std::vector<double>* amplitudes, double* baseline) {
-    *baseline = baseline;
+/**
+ * This method fills the solverParams vector with pointers to the parameters that the solver will adjust.
+ * @param solverParams
+ * @param times
+ * @param amplitudes
+ * @param baseline_
+ */
+void FitParams::makeSolverParams(std::vector<double*>* solverParams, std::vector<double>* times, std::vector<double>* amplitudes, double* baseline_) {
+    *baseline_ = baseline;
     for (const auto &pe: PEs) {
         amplitudes->push_back(pe.amplitude);
         times->push_back(pe.time);
     }
 
-
     // Reserve space for baseline plus two pointers per photoelectron.
     solverParams->reserve(1 + 2 * PEs.size());
     // First parameter: baseline
-    solverParams->push_back(&baseline);
+    solverParams->push_back(baseline_);
     // For each photoelectron, add pointers to amplitude and time.
     for (unsigned int i = 0; i < PEs.size(); i++) {
         solverParams->push_back(&amplitudes->at(i));
