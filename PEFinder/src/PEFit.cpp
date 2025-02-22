@@ -175,7 +175,8 @@ inline void updateGuessCorrector(const std::vector<double>& amps, const std::vec
 }
 
 
-inline bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE, const double baseline, std::vector<Photoelectron> pesFound_, const DigitiserChannel& channel_, const std::vector<double> *idealWF_) {
+inline bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE, const double baseline, std::vector<Photoelectron> pesFound_, const DigitiserChannel& channel_, const std::vector<double> *idealWF_, ceres::CubicInterpolator<ceres::Grid1D<float>>* PDFInterpolator, std
+                           ::vector<float> xValues, const PETemplate* ChPETemplate) {
 	// Get initial guesses for the next PE
 	const auto         minPosIt   = std::ranges::min_element(residualWF->waveform);
 	const unsigned int minTimePos = std::distance(residualWF->waveform.begin(), minPosIt);
@@ -200,11 +201,18 @@ inline bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE,
         paramsLocal.push_back(pe.time);
     }
 
-    std::vector<float> tempResidual = channel_.waveform;
-    for (unsigned int  k = 0; k < tempResidual.size(); ++k) {
-        const float fitVal = NPEPDFFunc(static_cast<float>(k) * trueSamplingRate, paramsLocal, idealWF_);
-        tempResidual[k] = tempResidual[k] - fitVal + static_cast<float>(baseline);
-    }
+	std::vector<float> tempResidual = channel_.waveform;
+	for (unsigned int  k = 0; k < tempResidual.size(); ++k) {
+		const float X = xValues[k];
+		const float fitVal = NPEPDFFuncCubic(
+			X,                    // time in index position
+			paramsLocal,              // vector of parameters
+			PDFInterpolator, // your cubic interpolator
+			pdfNSamples,
+			ChPETemplate
+		);
+		tempResidual[k] = tempResidual[k] - fitVal + static_cast<float>(baseline);
+	}
 
 //     // This is effectively checking in what direction the residual is skewed.
 //     // (t1*a1)/(a1*a2*a3) + (t2*a2)/(a1*a2*a3) + (t3*a3)/(a1*a2*a3)
@@ -358,7 +366,7 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 				}
 			}
 
-			if(!getNextPEGuess(&residualWF, &guessPE, initBaseline, pesFound, channel, chIdealWF)){
+			if(!getNextPEGuess(&residualWF, &guessPE, initBaseline, pesFound, channel, chIdealWF, idealPDFInterpolator, xValues, ChPETemplate)){
 				break;
 			}
 
