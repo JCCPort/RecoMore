@@ -71,9 +71,10 @@ std::vector<unsigned int> FitRun::getEventIDs() {
 
 
 // TODO(josh): Implement this at some point to reduce the number of different ways the parameters are stored and moved.
-[[maybe_unused]] FitParams::FitParams(unsigned int numPEs, double baseline, std::vector<double> amplitudes,
-                                      std::vector<double> times) {
+FitParams::FitParams(const unsigned int numPEs, double baseline, const std::vector<double>& amplitudes,
+                                      const std::vector<double>& times) {
     numPEs_ = numPEs;
+    baseline_ = baseline;
     PEParams_.emplace_back(baseline);
     if (amplitudes.size() != times.size()) {
         throw std::runtime_error("Amplitude vector and time vector must be the same size");
@@ -85,7 +86,7 @@ std::vector<unsigned int> FitRun::getEventIDs() {
 }
 
 
-[[maybe_unused]] FitParams::FitParams(double baseline, const std::vector<Photoelectron> &PEs) {
+FitParams::FitParams(double baseline, const std::vector<Photoelectron> &PEs) {
     numPEs_ = PEs.size();
     baseline_ = baseline;
     for (const auto pe: PEs) {
@@ -95,15 +96,15 @@ std::vector<unsigned int> FitRun::getEventIDs() {
 }
 
 
-[[maybe_unused]] void FitParams::makeFitterParams(std::vector<double *> temp_) {
-    temp_.reserve(PEParams_.size());
-    temp_.push_back(&baseline_);
+void FitParams::makeSolverParams(std::vector<double*>* solverParams, std::vector<double>* times, std::vector<double>* amplitudes, double* baseline) {
+    solverParams->reserve(PEParams_.size());
+    solverParams->push_back(&baseline_);
     for (auto &param: PEParams_) {
-        temp_.push_back(&param);
+        solverParams->push_back(&param);
     }
 }
 
-[[maybe_unused]] std::vector<float> FitParams::makeGuesserParams() {
+std::vector<float> FitParams::makeGuesserParams() {
     std::vector<float> temp_;
     temp_.push_back((float) numPEs_);
     for (auto param: PEParams_) {
@@ -113,5 +114,5 @@ std::vector<unsigned int> FitRun::getEventIDs() {
 }
 
 int FitParams::getNumParams() const {
-    return (int) PEParams_.size() + 2;
+    return static_cast<int>(PEParams_.size() * 2) + 1;
 }

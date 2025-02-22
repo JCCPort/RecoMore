@@ -156,11 +156,11 @@ private:
 
 class [[maybe_unused]] FitParams {
 public:
-    [[maybe_unused]] FitParams(unsigned int, double, std::vector<double>, std::vector<double>);
+    [[maybe_unused]] FitParams(unsigned int, double, const std::vector<double>&, const std::vector<double>&);
 
     [[maybe_unused]] FitParams(double, const std::vector<Photoelectron> &);
 
-    [[maybe_unused]] void makeFitterParams(std::vector<double *>);
+    [[maybe_unused]] void makeSolverParams(std::vector<double*>* solverParams, std::vector<double>* times, std::vector<double>* amplitudes, double* baseline);
 
     [[maybe_unused]] std::vector<float> makeGuesserParams();
 

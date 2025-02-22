@@ -154,21 +154,34 @@ private:
 };
 
 
-class [[maybe_unused]] FitParams {
-public:
-    [[maybe_unused]] FitParams(unsigned int, double, std::vector<double>, std::vector<double>);
+class FitParams {
+    public:
 
-    [[maybe_unused]] FitParams(double, const std::vector<Photoelectron> &);
+    FitParams() = default;
 
-    [[maybe_unused]] void makeFitterParams(std::vector<double *>);
+    // Constructor that creates Photoelectron objects from amplitude/time vectors.
+    FitParams(unsigned int, double, const std::vector<double>&, const std::vector<double>&);
 
-    [[maybe_unused]] std::vector<float> makeGuesserParams();
+    // Constructor that accepts a vector of Photoelectron directly.
+    FitParams(double, const std::vector<Photoelectron> &);
 
-    [[maybe_unused]] int getNumParams() const;
+    void makeSolverParams(std::vector<double*>* solverParams, std::vector<double>* times, std::vector<double>* amplitudes, double* baseline);
 
-    unsigned int numPEs_;
-    double baseline_;
-    std::vector<double> PEParams_;
+    std::vector<float> makeGuesserParams();
+
+    int getNumParams() const;
+
+    void sortPEsByTime();
+
+    void addPE(const Photoelectron &pe)
+    {
+        PEParams_.push_back(pe);
+        numPEs_++;
+    }
+
+    unsigned int numPEs_ = 0;
+    double baseline_ = 0.;
+    std::vector<Photoelectron> PEParams_;
 };
 
 #endif //RECOMORE_DATASTRUCTURES_H
