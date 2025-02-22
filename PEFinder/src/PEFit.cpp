@@ -246,11 +246,18 @@ inline bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE,
 }
 
 
-inline void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vector<float> *params, const std::vector<float>& waveform, const std::vector<double> *chIdealWF){
+inline void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vector<float> *params, const std::vector<float>& waveform, const std::vector<double> *chIdealWF, ceres::CubicInterpolator<ceres::Grid1D<float>>* PDFInterpolator, std
+						   ::vector<float> xValues, const PETemplate* ChPETemplate){
 	for (int i = 0; i < pesFound->size(); i++) {
 		// TODO(josh): Improve the adjustment by averaging the shift based off of a few bins around the PE time
 		const unsigned int peTimeBinPos   = std::floor(pesFound->at(i).time / trueSamplingRate);
-		const float        fitVal         = NPEPDFFunc(pesFound->at(i).time, *params, chIdealWF);
+		const float fitVal = NPEPDFFuncCubic(
+			ChPETemplate->getFractionalIndex(pesFound->at(i).time),                    // time in index position
+			*params,              // vector of parameters
+			PDFInterpolator, // your cubic interpolator
+			pdfNSamples,
+			ChPETemplate
+		);
 		const float        extraAmplitude = fitVal - waveform[peTimeBinPos];
 		if (const float newAmplitude   = pesFound->at(i).amplitude + extraAmplitude; newAmplitude > WFSigThresh) { // TODO(josh): We need to consider the situations that this would ever be true
 			params->at(2 + (2 * i)) = newAmplitude;
@@ -343,7 +350,7 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
 			// Amplitude adjustment: if the latest PE found is before other one(s),
 			//  its tail is going to add some amplitude to the following one. Compares
 			//  real and fit amplitude at the time bin corresponding to the PE time.
-			amplitudeCorrection(&pesFound, &params, channel.waveform, chIdealWF);
+			amplitudeCorrection(&pesFound, &params, channel.waveform, chIdealWF, idealPDFInterpolator, xValues, ChPETemplate);
 
 			// Compute residual
 			for (unsigned int k = 0; k < xValues.size(); ++k) {
@@ -388,7 +395,7 @@ fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PET
             params2.push_back(pe.amplitude);
             params2.push_back(pe.time);
         }
-        amplitudeCorrection(&pesFound, &params2, channel.waveform, chIdealWF);
+        amplitudeCorrection(&pesFound, &params2, channel.waveform, chIdealWF, idealPDFInterpolator, xValues, ChPETemplate);
 
         initBaseline = averageVector(residualWF.waveform, 0.01);
         // =========================================

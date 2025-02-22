@@ -25,6 +25,7 @@ void updateGuessCorrector(const std::vector<double>& amps, const std::vector<dou
 bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE, const double baseline, std::vector<Photoelectron> pesFound_, const DigitiserChannel& channel_, const std::vector<double> *idealWF_, ceres::CubicInterpolator<ceres::Grid1D<float>>* PDFInterpolator, std
                            ::vector<float> xValues, const PETemplate* ChPETemplate);
 
-void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vector<float> *params, const std::vector<float>& waveform, const std::vector<double> *);
+void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vector<float> *params, const std::vector<float>& waveform, const std::vector<double> *, ceres::CubicInterpolator<ceres::Grid1D<float>>* PDFInterpolator, std
+                           ::vector<float> xValues, const PETemplate* ChPETemplate);
 
 #endif //RECOMORE_PEFIT_H
