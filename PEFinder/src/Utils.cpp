@@ -7,10 +7,8 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <iomanip>
-#include "../Globals.h"
 #include <mutex>
 #include <vector>
-#include <cmath> // for std::sqrt
 
 
 /**

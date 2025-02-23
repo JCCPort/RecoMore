@@ -1,6 +1,7 @@
 #include "../include/PEFit.h"
 #include "../include/Utils.h"
 #include "../include/PETemplate.h"
+#include "../Globals.h"
 #include <mutex>
 #include <atomic>
 #include <cmath>
@@ -19,75 +20,69 @@
  * and the actual waveform value is returned as the residual for fitting in Ceres.
  */
 struct TemplateFunctor {
-    /**
-     * @brief Constructor.
-     *
-     * @param waveformTimes         Indices (on the PETemplate) corresponding to the samples of the waveform.
-     * @param waveformAmplitudes    The observed waveform amplitudes.
-     * @param templateInterpolator       A pointer to a ceres::CubicInterpolator for the single PE template.
-     * @param numTemplateSamples         Number of samples in the single PE template.
-     * @param numPES                Number of photoelectrons (PEs) to consider in the model.
-     */
-    TemplateFunctor(std::vector<float> waveformTimes,
-                  std::vector<float> waveformAmplitudes,
-                  ceres::CubicInterpolator<ceres::Grid1D<float, true>>* templateInterpolator,
-                  const unsigned int numTemplateSamples,
-                  const unsigned int numPES)
-        : waveformTimes_(std::move(waveformTimes))
-        , waveformAmplitudes_(std::move(waveformAmplitudes))
-        , templateInterpolator_(templateInterpolator)
-        , numTemplateSamples_(numTemplateSamples)
-        , numPES_(numPES) {}
+	/**
+	 * @brief Constructor.
+	 *
+	 * @param waveformTimes         Indices (on the PETemplate) corresponding to the samples of the waveform.
+	 * @param waveformAmplitudes    The observed waveform amplitudes.
+	 * @param templateInterpolator       A pointer to a ceres::CubicInterpolator for the single PE template.
+	 * @param numTemplateSamples         Number of samples in the single PE template.
+	 * @param numPES                Number of photoelectrons (PEs) to consider in the model.
+	 */
+	TemplateFunctor(std::vector<float> waveformTimes, std::vector<float> waveformAmplitudes, ceres::CubicInterpolator<ceres::Grid1D<float, true>>* templateInterpolator, const unsigned int numTemplateSamples, const unsigned int numPES)
+		: waveformTimes_(std::move(waveformTimes)), waveformAmplitudes_(std::move(waveformAmplitudes)), templateInterpolator_(templateInterpolator), numTemplateSamples_(numTemplateSamples), numPES_(numPES) {}
 
-    /**
-     * @brief The operator that computes the residuals for Ceres.
-     *
-     * @tparam T       The scalar type for autodifferentiation.
-     * @param params   Array of parameter blocks. The first element contains the baseline;
-     *                 each subsequent pair contains [amplitude, time] for one PE.
-     * @param residual The array of residuals (difference between model and observed data).
-     * @return True if successful, otherwise false.
-     */
-    template<typename T>
-    inline bool operator()(T const* const* params, T* __restrict__ residual) const {
-        const T baseline = params[0][0];  // The "DC offset" or baseline
-        for (unsigned int j = 0; j < waveformTimes_.size(); j++) {
-            T accum = baseline;
-            const T X = T(waveformTimes_[j]);
+	/**
+	 * @brief The operator that computes the residuals for Ceres.
+	 *
+	 * @tparam T       The scalar type for autodifferentiation.
+	 * @param params   Array of parameter blocks. The first element contains the baseline;
+	 *                 each subsequent pair contains [amplitude, time] for one PE.
+	 * @param residual The array of residuals (difference between model and observed data).
+	 * @return True if successful, otherwise false.
+	 */
+	template <typename T>
+	bool operator()(T const* const* params, T* __restrict__ residual) const {
+		const T baseline = params[0][0]; // The "DC offset" or baseline
+		for (unsigned int j = 0; j < waveformTimes_.size(); j++) {
+			T       accum = baseline;
+			const T X     = T(waveformTimes_[j]);
 
-            for (unsigned int i = 0; i < numPES_; i++) {
-                const unsigned int i2 = 2 * i;
-                const T amplitude = params[i2 + 1][0];
-                const T time = params[i2 + 2][0];
+			for (unsigned int i = 0; i < numPES_; i++) {
+				const unsigned int i2        = 2 * i;
+				const T            amplitude = params[i2 + 1][0];
+				const T            time      = params[i2 + 2][0];
 
-                const T pos = X - time;
-                if (pos >= T(0) && pos < T(numTemplateSamples_)) {
-                    T f;
-                    templateInterpolator_->Evaluate(pos, &f);
-                    accum += amplitude * f;
-                }
-            }
-            residual[j] = accum - T(waveformAmplitudes_[j]);
-        }
-        return true;
-    }
+				const T pos = X - time;
+				if (pos >= T(0) && pos < T(numTemplateSamples_)) {
+					T f;
+					templateInterpolator_->Evaluate(pos, &f);
+					accum += amplitude * f;
+				}
+			}
+			residual[j] = accum - T(waveformAmplitudes_[j]);
+		}
+		return true;
+	}
 
-    /**
-     * @brief Update the number of photoelectrons in the model.
-     * @param numPEs  The new number of PEs.
-     */
-    void updateNumPEs(const unsigned int numPEs) {
-        if (numPEs != numPES_) {
-            numPES_ = numPEs;
-        }
-    }
+	/**
+	 * @brief Update the number of photoelectrons in the model.
+	 * @param numPEs  The new number of PEs.
+	 */
+	void updateNumPEs(const unsigned int numPEs) {
+		if (numPEs != numPES_) {
+			numPES_ = numPEs;
+		}
+	}
 
 private:
-    const std::vector<float> waveformTimes_;       ///< Index positions on the template.
-    const std::vector<float> waveformAmplitudes_;  ///< Measured waveform values.
-    ceres::CubicInterpolator<ceres::Grid1D<float, true>>* templateInterpolator_; ///< Interpolator for the single PE template.
-    unsigned int numTemplateSamples_;                   ///< Number of samples in the single PE template.
-    unsigned int numPES_;                          ///< Number of photoelectrons in the model.
+	const std::vector<float>                              waveformTimes_;      ///< Index positions on the template.
+	const std::vector<float>                              waveformAmplitudes_; ///< Measured waveform values.
+	ceres::CubicInterpolator<ceres::Grid1D<float, true>>* templateInterpolator_;
+	///< Interpolator for the single PE template.
+	unsigned int numTemplateSamples_;
+	///< Number of samples in the single PE template.
+	unsigned int numPES_; ///< Number of photoelectrons in the model.
 };
 
 
@@ -100,22 +95,17 @@ private:
  * @param ChPETemplate     Pointer to the PETemplate object describing the single PE waveform.
  * @return                 The computed model value at index @p X.
  */
-inline float currentFitAmp(
-	const float X,
-	const FitParams& fitParams,
-	const ceres::CubicInterpolator<ceres::Grid1D<float, true>>* templateInterpolator,
-	const PETemplate* ChPETemplate)
-{
+inline float currentFitAmp(const float X, const FitParams& fitParams, const ceres::CubicInterpolator<ceres::Grid1D<float, true>>* templateInterpolator, const PETemplate* ChPETemplate) {
 	float value = fitParams.baseline;
 
 	for (int PE = 0; PE < fitParams.numPEs; ++PE) {
 		const float amplitude = fitParams.PEs[PE].amplitude;
-		const float time   = fitParams.PEs[PE].time  / ChPETemplate->getTimeSpacing();
+		const float time      = fitParams.PEs[PE].time / ChPETemplate->getTimeSpacing();
 
 		// Now we want to interpolate if we're in range. pos is the position on the PE template waveform relative to the PE time in terms of index position
 		if (const float pos = X - time; pos >= 0.0f && pos < static_cast<float>(ChPETemplate->getNumberOfSamples())) {
 			// Call the double overload
-			auto posDouble = static_cast<double>(pos);
+			auto   posDouble         = static_cast<double>(pos);
 			double templateValDouble = 0.0;
 			templateInterpolator->Evaluate(posDouble, &templateValDouble);
 
@@ -142,21 +132,25 @@ inline float currentFitAmp(
  * @param initBaseline  The initial guessed baseline.
  * @param numPEs        Number of PEs in the current fit.
  */
-inline void updateGuessCorrector(const std::vector<double>& amps, const std::vector<double>& times,
-                                 const std::vector<double>& initialAmps, const std::vector<double>& initialTimes,
-                                 const double baseline, const double initBaseline, const unsigned int numPEs){
-	for (int k   = 0; k < numPEs; k++) {
+inline void updateGuessCorrector(const std::vector<double>& amps,
+                                 const std::vector<double>& times,
+                                 const std::vector<double>& initialAmps,
+                                 const std::vector<double>& initialTimes,
+                                 const double               baseline,
+                                 const double               initBaseline,
+                                 const unsigned int         numPEs) {
+	for (int k = 0; k < numPEs; k++) {
 		sysProcPECount++;
 		ampDiff  = ampDiff + ((amps[k] - initialAmps[k]) - ampDiff) / sysProcPECount;
 		timeDiff = timeDiff + ((times[k] - initialTimes[k]) - timeDiff) / sysProcPECount;
 		// TODO(josh): Keep the below but only for debug builds
 #ifdef IS_DEBUG
-        if(ampDiff != ampDiff){
-            throw std::runtime_error("AmpDiff is NaN");
-        }
-        if(timeDiff != timeDiff){
-            throw std::runtime_error("TimeDiff is NaN");
-        }
+		if (ampDiff != ampDiff) {
+			throw std::runtime_error("AmpDiff is NaN");
+		}
+		if (timeDiff != timeDiff) {
+			throw std::runtime_error("TimeDiff is NaN");
+		}
 #endif
 	}
 	baselineDiff = baselineDiff + ((baseline - initBaseline) - baselineDiff) / sysProcPECount;
@@ -174,7 +168,7 @@ inline void updateGuessCorrector(const std::vector<double>& amps, const std::vec
  * @param guessPE      Output parameter to store the guessed PE amplitude/time.
  * @return             True if a PE guess was found, false otherwise.
  */
-inline bool getNextPEGuess(const std::vector<float>& residualWF, Photoelectron *guessPE) {
+inline bool getNextPEGuess(const std::vector<float>& residualWF, Photoelectron* guessPE) {
 	// Get initial guesses for the next PE
 	const auto         minPosIt   = std::ranges::min_element(residualWF);
 	const unsigned int minTimePos = std::distance(residualWF.begin(), minPosIt);
@@ -202,19 +196,19 @@ inline bool getNextPEGuess(const std::vector<float>& residualWF, Photoelectron *
  * @param templateInterpolator   Pointer to the single PE template interpolator.
  * @param ChPETemplate      The single PE template.
  */
-inline void amplitudeCorrection(FitParams fitParams, const std::vector<float>& waveform, const ceres::CubicInterpolator<ceres::Grid1D<float>>* templateInterpolator, const PETemplate* ChPETemplate){
+inline void amplitudeCorrection(FitParams fitParams, const std::vector<float>& waveform, const ceres::CubicInterpolator<ceres::Grid1D<float>>* templateInterpolator, const PETemplate* ChPETemplate) {
 	for (int i = 0; i < fitParams.numPEs; ++i) {
 		// TODO(josh): Improve the adjustment by averaging the shift based off of a few bins around the PE time
-		const unsigned int peTimeBinPos   = std::floor(fitParams.PEs[i].time / trueSamplingRate);
+		const unsigned int peTimeBinPos = std::floor(fitParams.PEs[i].time / trueSamplingRate);
 
-		const float fitVal = currentFitAmp(
-			ChPETemplate->getFractionalIndex(fitParams.PEs[i].time),                    // time in index position
-			fitParams,              // vector of parameters
-			templateInterpolator, // your cubic interpolator
-			ChPETemplate
-		);
-		const float        extraAmplitude = fitVal - waveform[peTimeBinPos];
-		if (const float newAmplitude   = fitParams.PEs[i].amplitude + extraAmplitude; newAmplitude > WFSigThresh) { // TODO(josh): We need to consider the situations that this would ever be true
+		const float fitVal = currentFitAmp(ChPETemplate->getFractionalIndex(fitParams.PEs[i].time),
+		                                   // time in index position
+		                                   fitParams,            // vector of parameters
+		                                   templateInterpolator, // your cubic interpolator
+		                                   ChPETemplate);
+		const float extraAmplitude = fitVal - waveform[peTimeBinPos];
+		if (const float newAmplitude = fitParams.PEs[i].amplitude + extraAmplitude; newAmplitude > WFSigThresh) {
+			// TODO(josh): We need to consider the situations that this would ever be true
 			fitParams.PEs[i].amplitude = newAmplitude;
 		}
 	}
@@ -235,13 +229,13 @@ inline void amplitudeCorrection(FitParams fitParams, const std::vector<float>& w
  * @param outputFile    Shared pointer to the output file structure (thread-safe).
  * @param lock          Mutex for thread-safety in file writing.
  */
-void fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PETemplate>& PETemplates, std::shared_ptr<SyncFile> outputFile, std::mutex &lock) {
+void fitEvent(const DigitiserEvent* event, const std::unordered_map<unsigned int, PETemplate>& PETemplates, std::shared_ptr<SyncFile> outputFile, std::mutex& lock) {
 	std::vector<FitChannel> chFits;
-	for (const auto &channel: event->channels) { // Looping through all channels for a given event
-		auto residualWF = channel.waveform; // This will be the variable that is modified to be the residual distribution after each iteration
+	for (const auto& channel : event->channels) { // Looping through all channels for a given event
 
-		// TODO(josh): Use time instead of index position for fitting procedure. Should just be that I need to create the interpolator using times and then remove the time->index conversion. Okay Ceres' interpolator cannot handle that. So will need
-		//  to make some tool for making the interpolator. The requirement will be even spacing of the time values and passing the t0.
+		// This will be the variable that is modified to be the residual distribution after each iteration
+		auto residualWF = channel.waveform;
+
 		FitChannel         chFit{};
 		const unsigned int ch = channel.ID;
 		if (std::ranges::count(skipChannels, ch)) {
@@ -249,54 +243,46 @@ void fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int
 		}
 		chFit.ID = ch;
 
-		constexpr float preSigWindowTime = 18.f;  // ns. This is the time window before the signal that is used to calculate the noise level.
-        std::vector<float> preSignalWF(residualWF.begin(), residualWF.begin() + static_cast<int>(preSigWindowTime / trueSamplingRate));
-//        auto stdDevNoise = calculateVariance(preSignalWF, calculateMean(preSignalWF));
-        auto stdDevNoise = calculateStandardDeviation(preSignalWF);
-        templateResidualRMS = static_cast<float>(stdDevNoise);
+		constexpr float    preSigWindowTime = 18.f; // ns. This is the time window before the signal that is used to calculate the noise level.
+		std::vector<float> preSignalWF(residualWF.begin(), residualWF.begin() + static_cast<int>(preSigWindowTime / trueSamplingRate));
+		//        auto stdDevNoise = calculateVariance(preSignalWF, calculateMean(preSignalWF));
+		auto stdDevNoise    = calculateStandardDeviation(preSignalWF);
+		templateResidualRMS = static_cast<float>(stdDevNoise);
 
 		// Making a pointer to the ideal waveform for this channel to improve speed of passing.
 		if (ch > PETemplates.size() - 1) {
 			throw std::runtime_error("Channel number exceeds the number of ideal waveforms");
 		}
 
-		const PETemplate* ChPETemplate = &PETemplates.at(ch);
-		const std::vector<double>* chIdealWF = ChPETemplate->getVoltagesRef();
+		const PETemplate*          ChPETemplate = &PETemplates.at(ch);
+		const std::vector<double>* chIdealWF    = ChPETemplate->getVoltagesRef();
 
 		// Baseline calculation
 		float initBaseline = averageVector(residualWF, 0.01);
-		chFit.baseline = initBaseline;
+		chFit.baseline     = initBaseline;
 
 		// This is getting estimate PEs that will then be passed as initial guesses to the minimiser.
 		Photoelectron guessPE{};
 
 		// Creating the x values that the solver will use. These are the index positions on the ideal WF for the positions on the real WF.
 		std::vector<float> xValues;
-		for (unsigned int  j = 0; j < channel.waveform.size(); j++) {
+		for (unsigned int j = 0; j < channel.waveform.size(); j++) {
 			xValues.push_back(ChPETemplate->getFractionalIndex(static_cast<float>(j) * trueSamplingRate) + 1.f);
 		}
 
 		// Creating interpolator to allow for the ideal waveform to be used as a continuous (and differentiable) function.
 		std::vector<float> temp(chIdealWF->begin(), chIdealWF->end());
-		auto grid                 = ceres::Grid1D<float>(temp.data(), 0, static_cast<int>(chIdealWF->size()));
-		auto               templateInterpolator = new ceres::CubicInterpolator<ceres::Grid1D<float> >(grid);
+		auto               grid                 = ceres::Grid1D<float>(temp.data(), 0, static_cast<int>(chIdealWF->size()));
+		auto               templateInterpolator = new ceres::CubicInterpolator<ceres::Grid1D<float>>(grid);
 
 		// Set up the only cost function (also known as residual). This uses auto-differentiation to obtain the derivative (Jacobian).
 		// Creating them here to be able to re-use them.
-		auto functor = new TemplateFunctor(
-			xValues,
-			channel.waveform,
-			templateInterpolator,
-			ChPETemplate->getNumberOfSamples(),
-			0 /* will set numPEs later */
-		);
-		auto costFunction = new ceres::DynamicAutoDiffCostFunction<TemplateFunctor>(
-			functor,
-			ceres::Ownership::DO_NOT_TAKE_OWNERSHIP
-		);
+		auto functor = new TemplateFunctor(xValues, channel.waveform, templateInterpolator, ChPETemplate->getNumberOfSamples(), 0 /* will set numPEs later */
+		                                  );
+		auto costFunction = new ceres::DynamicAutoDiffCostFunction<TemplateFunctor>(functor, ceres::Ownership::DO_NOT_TAKE_OWNERSHIP);
 
 		// Remove initial baseline
-		for (float &k: residualWF) {
+		for (float& k : residualWF) {
 			k -= initBaseline;
 		}
 
@@ -317,24 +303,22 @@ void fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int
 
 			// Update residual waveform
 			for (unsigned int k = 0; k < xValues.size(); ++k) {
-				float fitVal = currentFitAmp(
-					xValues[k],                    // time in index position
-					fitParams,              // vector of parameters
-					templateInterpolator, // your cubic interpolator
-					ChPETemplate
-				);
+				float fitVal = currentFitAmp(xValues[k],           // time in index position
+				                             fitParams,            // vector of parameters
+				                             templateInterpolator, // your cubic interpolator
+				                             ChPETemplate);
 				residualWF[k] = residualWF[k] - fitVal + initBaseline;
 			}
 
 			// Recompute baseline if PEs exist
-			if(fitParams.numPEs != 0){
+			if (fitParams.numPEs != 0) {
 				initBaseline = averageVector(residualWF, 0.01);
-				for (float &k: residualWF) {
+				for (float& k : residualWF) {
 					k = k - initBaseline;
 				}
 			}
 
-			if(!getNextPEGuess(residualWF, &guessPE)){
+			if (!getNextPEGuess(residualWF, &guessPE)) {
 				break;
 			}
 			numPEsFound += 1;
@@ -343,38 +327,38 @@ void fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int
 			// Reset residual to original waveform.
 			residualWF = channel.waveform;
 
-			if (numPEsFound >= maxPEs) {  // To handle the possibility of the algorithm being overly keen.
+			if (numPEsFound >= maxPEs) {
+				// To handle the possibility of the algorithm being overly keen.
 				break;
 			}
 		} // End of PE find loop
 
-
-        // Carry out one final adjustment to the amplitude of the PEs found and recalculate baseline, residual.
+		// Carry out one final adjustment to the amplitude of the PEs found and recalculate baseline, residual.
 		amplitudeCorrection(fitParams, channel.waveform, templateInterpolator, ChPETemplate);
 
-        initBaseline = averageVector(residualWF, 0.01);
-        // =========================================
+		initBaseline = averageVector(residualWF, 0.01);
+		// =========================================
 
-        // TODO(JOSH): ADD A CHECKER TO SEE IF FIT IS GOOD ENOUGH AT THIS POINT AND THEN SKIP USING CERES IF IT IS.
+		// TODO(JOSH): ADD A CHECKER TO SEE IF FIT IS GOOD ENOUGH AT THIS POINT AND THEN SKIP USING CERES IF IT IS.
 
-		if(numPEsFound == 0){
+		if (numPEsFound == 0) {
 			continue;
 		}
 
 		// Want to create a copy of the initial estimates for later improvement of correction factors.
 		std::vector<double> initialTimes;
 		std::vector<double> initialAmplitudes;
-		for (auto &k: fitParams.PEs) {
+		for (auto& k : fitParams.PEs) {
 			initialAmplitudes.push_back(k.amplitude);
 			initialTimes.push_back(k.time);
 		}
 
 		// Creating vector of references to parameter values that the fitter will use and modify. Note this means that
 		// the references are the initial values before the fit and the final values after the fit.
-		std::vector<double> times;
-		std::vector<double> amplitudes;
-		double              baseline;
-		std::vector<double*> params   = {};
+		std::vector<double>  times;
+		std::vector<double>  amplitudes;
+		double               baseline;
+		std::vector<double*> params = {};
 		fitParams.makeSolverParams(&params, &times, &amplitudes, &baseline);
 
 		// Make adjustment to initial guesses with running correction factors.
@@ -384,14 +368,14 @@ void fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int
 		}
 
 		// Convert times to template index space
-		for (double &time: times) {
+		for (double& time : times) {
 			time = time / ChPETemplate->getTimeSpacing();
 		}
 
 		costFunction->SetNumResiduals(static_cast<int>(channel.waveform.size()));
 
 		costFunction->AddParameterBlock(1); // Baseline param
-		for ([[maybe_unused]]const auto &pe: fitParams.PEs) {
+		for ([[maybe_unused]] const auto& pe : fitParams.PEs) {
 			costFunction->AddParameterBlock(1); // Params for one PE amplitude
 			costFunction->AddParameterBlock(1); // Params for one PE time
 		}
@@ -400,37 +384,38 @@ void fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int
 
 		// Configure Ceres problem
 		ceres::Problem::Options option;
-		option.loss_function_ownership = ceres::Ownership::DO_NOT_TAKE_OWNERSHIP; // Necessary to allow reuse whilst preventing double deletion.
+		option.loss_function_ownership = ceres::Ownership::DO_NOT_TAKE_OWNERSHIP;
+		// Necessary to allow reuse whilst preventing double deletion.
 		option.cost_function_ownership = ceres::Ownership::DO_NOT_TAKE_OWNERSHIP;
-		option.manifold_ownership = ceres::Ownership::DO_NOT_TAKE_OWNERSHIP;
+		option.manifold_ownership      = ceres::Ownership::DO_NOT_TAKE_OWNERSHIP;
 		ceres::Problem problem(option);
 		problem.AddResidualBlock(costFunction, nullptr, params);
 
 		// Lower bound parameters except for baseline
-        for (unsigned int i = 1; i < params.size(); i++) {
-            problem.SetParameterLowerBound(params[i], 0, 0);
-        }
+		for (unsigned int i = 1; i < params.size(); i++) {
+			problem.SetParameterLowerBound(params[i], 0, 0);
+		}
 
 		// Run the solver!
-        if(std::abs(parameterTolerance) >= 1e-10){
-            ceres::Solver::Options options;
-            options.minimizer_progress_to_stdout = false;
-            options.parameter_tolerance = parameterTolerance;
+		if (std::abs(parameterTolerance) >= 1e-10) {
+			ceres::Solver::Options options;
+			options.minimizer_progress_to_stdout = false;
+			options.parameter_tolerance          = parameterTolerance;
 
-        	// (Optional) Parameter block ordering, improves performance.
-        	auto ordering = std::make_unique<ceres::ParameterBlockOrdering>();
-        	ordering->AddElementToGroup(params[0], 0); // baseline
-        	for (int i = 0; i < fitParams.numPEs; i++) {
-        		ordering->AddElementToGroup(params[2*i + 1], i); // amplitude
-        		ordering->AddElementToGroup(params[2*i + 2], i); // time
-        	}
-        	options.linear_solver_ordering = std::move(ordering);
+			// (Optional) Parameter block ordering, improves performance.
+			auto ordering = std::make_unique<ceres::ParameterBlockOrdering>();
+			ordering->AddElementToGroup(params[0], 0); // baseline
+			for (int i = 0; i < fitParams.numPEs; i++) {
+				ordering->AddElementToGroup(params[2 * i + 1], i); // amplitude
+				ordering->AddElementToGroup(params[2 * i + 2], i); // time
+			}
+			options.linear_solver_ordering = std::move(ordering);
 
-            ceres::Solver::Summary summary;
-            Solve(options, &problem, &summary);
+			ceres::Solver::Summary summary;
+			Solve(options, &problem, &summary);
 
 			//        std::cout << summary.FullReport() << "\n";
-        }
+		}
 
 		// Updating the amplitudes and times using params which is a vector of pointers to doubles
 		//		std::cout << "\n\n=====================" << std::endl;
@@ -456,7 +441,7 @@ void fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int
 		chFit.baseline = finalFitParams.baseline;
 
 		// Compute chi-squared
-		float chiSq = 0.f;
+		float               chiSq = 0.f;
 		std::vector<double> observedValues;
 		std::vector<double> predictedValues;
 		observedValues.reserve(channel.waveform.size());
@@ -464,24 +449,17 @@ void fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int
 
 		for (unsigned int j = 0; j < channel.waveform.size(); j++) {
 			const float observed = channel.waveform[j];
-			const float expected = currentFitAmp(
-				xValues[j],
-				finalFitParams,
-				templateInterpolator,
-				ChPETemplate
-			);
+			const float expected = currentFitAmp(xValues[j], finalFitParams, templateInterpolator, ChPETemplate);
 			observedValues.push_back(observed);
 			predictedValues.push_back(expected);
 
 			const float diff = observed - expected;
 			chiSq += (diff * diff) / (templateResidualRMS * templateResidualRMS);
 		}
-		float redChiSq = chiSq /
-						 (static_cast<float>(channel.waveform.size()) -
-						  static_cast<float>(finalFitParams.getNumParams()));
+		float redChiSq = chiSq / (static_cast<float>(channel.waveform.size()) - static_cast<float>(finalFitParams.getNumParams()));
 
 		sysProcWFCount++;
-		meanReducedChiSq = meanReducedChiSq + (redChiSq - meanReducedChiSq) / sysProcWFCount;
+		meanReducedChiSq   = meanReducedChiSq + (redChiSq - meanReducedChiSq) / sysProcWFCount;
 		chFit.reducedChiSq = redChiSq;
 
 		{
@@ -492,26 +470,17 @@ void fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int
 
 		chFits.push_back(chFit);
 
-
 		// Update correction factors for future initial guesses
-		updateGuessCorrector(
-			amplitudes,
-			times,
-			initialAmplitudes,
-			initialTimes,
-			finalFitParams.baseline,
-			initBaseline,
-			finalFitParams.numPEs
-		);
+		updateGuessCorrector(amplitudes, times, initialAmplitudes, initialTimes, finalFitParams.baseline, initBaseline, finalFitParams.numPEs);
 
 		// Cleanup
 		delete templateInterpolator;
 		delete functor;
 		delete costFunction;
 	}
-	
+
 	FitEvent evFitDat{event->ID, event->correctedTime, event->date, chFits};
-	
+
 	Writer writer(std::move(outputFile));
 	writer.writeEventInfo(evFitDat);
 }
@@ -526,9 +495,8 @@ void fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int
  * @param file         A shared pointer to a thread-safe output file structure.
  * @return             True if processing is successful for all events, otherwise false.
  */
-bool batchFitEvents(const std::vector<DigitiserEvent> &events, std::atomic<unsigned long> &count, std::mutex &lock,
-                    const std::unordered_map<unsigned int, PETemplate>& PETemplates, const std::shared_ptr<SyncFile> &file) {
-	for (const auto &event: events) {
+bool batchFitEvents(const std::vector<DigitiserEvent>& events, std::atomic<unsigned long>& count, std::mutex& lock, const std::unordered_map<unsigned int, PETemplate>& PETemplates, const std::shared_ptr<SyncFile>& file) {
+	for (const auto& event : events) {
 		lock.lock();
 		++count;
 		lock.unlock();

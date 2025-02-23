@@ -3,20 +3,15 @@
 
 #include <list>
 #include <cmath>
-#include <exception>
-#include <iostream>
 #include <atomic>
 #include <mutex>
-#include <thread>
 #include <boost/algorithm/string.hpp>
 #include "DataStructures.h"
-#include "DataReading.h"
-#include "../Globals.h"
 #include <fstream>
 #include <sstream>
 
 struct comparePETime {
-	inline bool operator()(const Photoelectron &PE1, const Photoelectron &PE2) const
+	bool operator()(const Photoelectron &PE1, const Photoelectron &PE2) const
 	{
 		return (PE1.time < PE2.time);
 	}
@@ -27,7 +22,8 @@ template<typename T>
 	for (auto entry: list) {
 		if (std::isnan(entry)) {
 			throw std::runtime_error("Number should not be NaN.");
-		} else if (std::isinf(entry)) {
+		}
+		if (std::isinf(entry)) {
 			throw std::runtime_error("Number should not be inf.");
 		}
 	}

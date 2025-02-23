@@ -71,7 +71,6 @@ std::vector<unsigned int> FitRun::getEventIDs() {
 }
 
 
-// TODO(josh): Implement this at some point to reduce the number of different ways the parameters are stored and moved.
 FitParams::FitParams(const unsigned int numPEs_, const double baseline_,
                                         const std::vector<double>& amplitudes,
                                         const std::vector<double>& times){

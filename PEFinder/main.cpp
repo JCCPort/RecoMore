@@ -32,9 +32,10 @@ int main(int argc, char** argv) {
          	.default_value(false)
 	        .implicit_value(true)
 		.help("Output reco file saved as text. Binary is default.");
-	program.add_argument("--template_dir")
+	auto &arg= program.add_argument("--template_dir")
 		.default_value(std::string("../templates/"))
 		.help("Path for PE templates to use for fitting.");
+	program.add_hidden_alias_for(arg, "--pdf_dir");
 	program.add_argument("--n_threads")
 		.default_value(1)
 		.help("Number of threads to run RecoMore on.")
@@ -60,6 +61,9 @@ int main(int argc, char** argv) {
 		.default_value(false)
 		.implicit_value(true)
 		.help("Use flag if SiPM pulse is positive. Default is negative.");
+	program.add_argument("--sample_spacing")
+		.default_value(0.3125f)
+		.help("Sample spacing in ns.");
 	
 	program.parse_args(argc, argv);
 	
@@ -83,6 +87,7 @@ int main(int argc, char** argv) {
     parameterTolerance = program.get<float>("--parameter_tolerance");
 	const bool positivePulse = program.get<bool>("--positive_pulse");
 	DigitiserRun data = ReadWCDataFile(inputFileName, positivePulse);
+	const float trueSamplingSpacing = program.get<float>("--sample_spacing");
 
 	if (batchNumber < numThreads)
 	{
@@ -90,8 +95,7 @@ int main(int argc, char** argv) {
 	}
 
 	std::shared_ptr<SyncFile> file;
-	const bool textOutput = program.get<bool>("--txt-output");
-	if(!textOutput) {
+	if(const bool textOutput = program.get<bool>("--txt-output"); !textOutput) {
 	  file = std::make_shared<SyncFile>(outputFileName, binary);
 	} else {
 	  file = std::make_shared<SyncFile>(outputFileName, text);
