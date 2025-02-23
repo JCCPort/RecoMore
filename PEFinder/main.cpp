@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
     parameterTolerance = program.get<float>("--parameter_tolerance");
 	const bool positivePulse = program.get<bool>("--positive_pulse");
 	DigitiserRun data = ReadWCDataFile(inputFileName, positivePulse);
-	const float trueSamplingSpacing = program.get<float>("--sample_spacing");
+	const float sampleSpacing = program.get<float>("--sample_spacing");
 
 	if (batchNumber < numThreads)
 	{
@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
 
 	if (numThreads == 1) {
 		std::cout << "Processing with one thread." << std::endl;
-		batchFitEvents(data.getEvents(), std::reference_wrapper(count), std::reference_wrapper(meanReducedChiSqLock), idealWaveforms, file);
+		batchFitEvents(data.getEvents(), std::reference_wrapper(count), std::reference_wrapper(meanReducedChiSqLock), idealWaveforms, file, sampleSpacing);
 	} else {
 		std::cout << "Processing with " << numThreads << " threads." << std::endl;
 		// Determining how many events each thread should run over.
@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
 		for(int i = 0; i < batchNumber; i++){
 			std::vector<DigitiserEvent> passData = slice(data.getEvents(), eventPos, eventPos + threadRepeatCount[i] - 1);
 			pool.push_task(batchFitEvents, passData, std::reference_wrapper(count), std::reference_wrapper(meanReducedChiSqLock), idealWaveforms,
-			               file);
+			               file, sampleSpacing);
 			eventPos += threadRepeatCount[i];
 		}
 	}

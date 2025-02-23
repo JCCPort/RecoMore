@@ -27,7 +27,7 @@ void displayProgress(const std::atomic<unsigned long> &count, std::mutex &m, con
 
 	// Final update after the loop:
 	m.lock();
-	std::cout << "\nProcessed: " << std::setw(20) << count << "/" << dataLength << "    " << std::endl;
+	std::cout << "\rProcessed: " << std::setw(20) << count << "/" << dataLength << "    " << std::endl;
 	m.unlock();
 }
 

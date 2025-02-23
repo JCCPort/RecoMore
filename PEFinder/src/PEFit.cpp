@@ -28,9 +28,20 @@ struct TemplateFunctor {
 	 * @param templateInterpolator       A pointer to a ceres::CubicInterpolator for the single PE template.
 	 * @param numTemplateSamples         Number of samples in the single PE template.
 	 * @param numPES                Number of photoelectrons (PEs) to consider in the model.
+	 * @param dataSampleSpacing     The time spacing between samples in the observed waveform.
+	 * @param templateSampleSpacing  The time spacing between samples in the single PE template.
+	 * @param templateMaxIntensityIdx The index of the maximum intensity in the single PE template.
 	 */
-	TemplateFunctor(std::vector<float> waveformTimes, std::vector<float> waveformAmplitudes, ceres::CubicInterpolator<ceres::Grid1D<float, true>>* templateInterpolator, const unsigned int numTemplateSamples, const unsigned int numPES)
-		: waveformTimes_(std::move(waveformTimes)), waveformAmplitudes_(std::move(waveformAmplitudes)), templateInterpolator_(templateInterpolator), numTemplateSamples_(numTemplateSamples), numPES_(numPES) {}
+	TemplateFunctor(std::vector<float> waveformTimes, std::vector<float> waveformAmplitudes, ceres::CubicInterpolator<ceres::Grid1D<float, true>>* templateInterpolator,
+		const unsigned int numTemplateSamples, const unsigned int numPES, const float dataSampleSpacing, const float templateSampleSpacing, const unsigned int templateMaxIntensityIdx)
+		: waveformTimes_(std::move(waveformTimes)), waveformAmplitudes_(std::move(waveformAmplitudes)), templateInterpolator_(templateInterpolator), numTemplateSamples_(numTemplateSamples), numPES_(numPES),
+		dataSampleSpacing_(dataSampleSpacing), templateSampleSpacing_(templateSampleSpacing), templateMaxIntensityIdx_(templateMaxIntensityIdx) {
+		waveformSize_ = waveformTimes_.size();
+		sampleSpacingRatio_ = dataSampleSpacing_ / templateSampleSpacing_;
+
+		lowerOffset_ = (templateMaxIntensityIdx_ + 1) / sampleSpacingRatio_;
+		upperOffset_ = (numTemplateSamples_ - (templateMaxIntensityIdx_ + 1))/ sampleSpacingRatio_;
+	}
 
 	/**
 	 * @brief The operator that computes the residuals for Ceres.
@@ -42,28 +53,49 @@ struct TemplateFunctor {
 	 * @return True if successful, otherwise false.
 	 */
 	template <typename T>
-	bool operator()(T const* const* params, T* __restrict__ residual) const {
-		const T baseline = params[0][0]; // The "DC offset" or baseline
-		for (unsigned int j = 0; j < waveformTimes_.size(); j++) {
-			T       accum = baseline;
-			const T X     = T(waveformTimes_[j]);
+	inline bool operator()(T const* const* params, T* __restrict__ residual) const {
+		const T baseline = params[0][0];
 
-			for (unsigned int i = 0; i < numPES_; i++) {
-				const unsigned int i2        = 2 * i;
-				const T            amplitude = params[i2 + 1][0];
-				const T            time      = params[i2 + 2][0];
-
-				const T pos = X - time;
-				if (pos >= T(0) && pos < T(numTemplateSamples_)) {
-					T f;
-					templateInterpolator_->Evaluate(pos, &f);
-					accum += amplitude * f;
-				}
-			}
-			residual[j] = accum - T(waveformAmplitudes_[j]);
+		// 1) Initialize residual with (baseline - observed) for all j
+		for (unsigned int j = 0; j < waveformSize_; j++) {
+			residual[j] = baseline - T(waveformAmplitudes_[j]);
 		}
+
+		// 2) Accumulate each PE’s contribution
+		for (unsigned int i = 0; i < numPES_; i++) {
+			const unsigned int i2 = 2 * i;
+			const T amplitude     = params[i2 + 1][0];
+			const T time          = params[i2 + 2][0];
+
+			// Precompute the wave time window where this PE is valid
+			// we want 0 <= (X - time) < numTemplateSamples_
+			// => time <= X < time + numTemplateSamples_
+
+			// Extract scalar value from time: if T is a Jet, use time.a, else time itself, divide by sampleSpacingRatio_ here to reduce the number of divisions.
+			double ratioAdjustedTime;
+			if constexpr (std::is_same_v<T, double>) {
+				ratioAdjustedTime = time/sampleSpacingRatio_;
+			} else {
+				ratioAdjustedTime = time.a/sampleSpacingRatio_;
+			}
+
+			// Compute indices as ints
+			const unsigned int j1 = std::max(0, static_cast<int>(std::ceil(ratioAdjustedTime - lowerOffset_)));
+			const unsigned int j2 = std::min(waveformSize_, static_cast<int>(std::ceil(ratioAdjustedTime + upperOffset_)));
+
+			// 3) Loop only over valid j’s for this PE
+			for (unsigned int j = j1; j < j2; j++) {
+				const T pos = T(waveformTimes_[j]) - time;
+				// pos should now be guaranteed to be in [0, numTemplateSamples_)
+				T f;
+				templateInterpolator_->Evaluate(pos, &f);
+				residual[j] += amplitude * f;
+			}
+		}
+
 		return true;
 	}
+
 
 	/**
 	 * @brief Update the number of photoelectrons in the model.
@@ -78,11 +110,17 @@ struct TemplateFunctor {
 private:
 	const std::vector<float>                              waveformTimes_;      ///< Index positions on the template.
 	const std::vector<float>                              waveformAmplitudes_; ///< Measured waveform values.
-	ceres::CubicInterpolator<ceres::Grid1D<float, true>>* templateInterpolator_;
-	///< Interpolator for the single PE template.
-	unsigned int numTemplateSamples_;
-	///< Number of samples in the single PE template.
+	ceres::CubicInterpolator<ceres::Grid1D<float, true>>* templateInterpolator_; ///< Interpolator for the single PE template.
+	unsigned int numTemplateSamples_; ///< Number of samples in the single PE template.
 	unsigned int numPES_; ///< Number of photoelectrons in the model.
+	const float dataSampleSpacing_;
+	const float templateSampleSpacing_;
+	const unsigned int templateMaxIntensityIdx_;
+
+	int waveformSize_;
+	double sampleSpacingRatio_;
+	double lowerOffset_;
+	double upperOffset_;
 };
 
 
@@ -166,9 +204,10 @@ inline void updateGuessCorrector(const std::vector<double>& amps,
  *
  * @param residualWF   Pointer to the digitizer channel representing the current residual waveform.
  * @param guessPE      Output parameter to store the guessed PE amplitude/time.
+ * @param sampleSpacing
  * @return             True if a PE guess was found, false otherwise.
  */
-inline bool getNextPEGuess(const std::vector<float>& residualWF, Photoelectron* guessPE) {
+inline bool getNextPEGuess(const std::vector<float>& residualWF, Photoelectron* guessPE, const float sampleSpacing) {
 	// Get initial guesses for the next PE
 	const auto         minPosIt   = std::ranges::min_element(residualWF);
 	const unsigned int minTimePos = std::distance(residualWF.begin(), minPosIt);
@@ -179,7 +218,7 @@ inline bool getNextPEGuess(const std::vector<float>& residualWF, Photoelectron* 
 	}
 
 	guessPE->amplitude = -residualWF[minTimePos];
-	guessPE->time      = static_cast<float>(minTimePos) * trueSamplingRate;
+	guessPE->time      = static_cast<float>(minTimePos) * sampleSpacing;
 
 	return true;
 }
@@ -195,11 +234,12 @@ inline bool getNextPEGuess(const std::vector<float>& residualWF, Photoelectron* 
  * @param waveform          The observed waveform.
  * @param templateInterpolator   Pointer to the single PE template interpolator.
  * @param ChPETemplate      The single PE template.
+ * @param sampleSpacing
  */
-inline void amplitudeCorrection(FitParams fitParams, const std::vector<float>& waveform, const ceres::CubicInterpolator<ceres::Grid1D<float>>* templateInterpolator, const PETemplate* ChPETemplate) {
+inline void amplitudeCorrection(FitParams fitParams, const std::vector<float>& waveform, const ceres::CubicInterpolator<ceres::Grid1D<float>>* templateInterpolator, const PETemplate* ChPETemplate, const float sampleSpacing) {
 	for (int i = 0; i < fitParams.numPEs; ++i) {
 		// TODO(josh): Improve the adjustment by averaging the shift based off of a few bins around the PE time
-		const unsigned int peTimeBinPos = std::floor(fitParams.PEs[i].time / trueSamplingRate);
+		const unsigned int peTimeBinPos = std::floor(fitParams.PEs[i].time / sampleSpacing);
 
 		const float fitVal = currentFitAmp(ChPETemplate->getFractionalIndex(fitParams.PEs[i].time),
 		                                   // time in index position
@@ -228,8 +268,9 @@ inline void amplitudeCorrection(FitParams fitParams, const std::vector<float>& w
  * @param PETemplates   A map of channel ID to PETemplate, used to get the single PE template for each channel.
  * @param outputFile    Shared pointer to the output file structure (thread-safe).
  * @param lock          Mutex for thread-safety in file writing.
+ * @param sampleSpacing
  */
-void fitEvent(const DigitiserEvent* event, const std::unordered_map<unsigned int, PETemplate>& PETemplates, std::shared_ptr<SyncFile> outputFile, std::mutex& lock) {
+void fitEvent(const DigitiserEvent* event, const std::unordered_map<unsigned int, PETemplate>& PETemplates, std::shared_ptr<SyncFile> outputFile, std::mutex& lock, const float sampleSpacing) {
 	std::vector<FitChannel> chFits;
 	for (const auto& channel : event->channels) { // Looping through all channels for a given event
 
@@ -244,7 +285,7 @@ void fitEvent(const DigitiserEvent* event, const std::unordered_map<unsigned int
 		chFit.ID = ch;
 
 		constexpr float    preSigWindowTime = 18.f; // ns. This is the time window before the signal that is used to calculate the noise level.
-		std::vector<float> preSignalWF(residualWF.begin(), residualWF.begin() + static_cast<int>(preSigWindowTime / trueSamplingRate));
+		std::vector<float> preSignalWF(residualWF.begin(), residualWF.begin() + static_cast<int>(preSigWindowTime / sampleSpacing));
 		//        auto stdDevNoise = calculateVariance(preSignalWF, calculateMean(preSignalWF));
 		auto stdDevNoise    = calculateStandardDeviation(preSignalWF);
 		templateResidualRMS = static_cast<float>(stdDevNoise);
@@ -267,7 +308,7 @@ void fitEvent(const DigitiserEvent* event, const std::unordered_map<unsigned int
 		// Creating the x values that the solver will use. These are the index positions on the ideal WF for the positions on the real WF.
 		std::vector<float> xValues;
 		for (unsigned int j = 0; j < channel.waveform.size(); j++) {
-			xValues.push_back(ChPETemplate->getFractionalIndex(static_cast<float>(j) * trueSamplingRate) + 1.f);
+			xValues.push_back(ChPETemplate->getFractionalIndex(static_cast<float>(j) * sampleSpacing) + 1.f);
 		}
 
 		// Creating interpolator to allow for the ideal waveform to be used as a continuous (and differentiable) function.
@@ -277,9 +318,9 @@ void fitEvent(const DigitiserEvent* event, const std::unordered_map<unsigned int
 
 		// Set up the only cost function (also known as residual). This uses auto-differentiation to obtain the derivative (Jacobian).
 		// Creating them here to be able to re-use them.
-		auto functor = new TemplateFunctor(xValues, channel.waveform, templateInterpolator, ChPETemplate->getNumberOfSamples(), 0 /* will set numPEs later */
-		                                  );
-		auto costFunction = new ceres::DynamicAutoDiffCostFunction<TemplateFunctor>(functor, ceres::Ownership::DO_NOT_TAKE_OWNERSHIP);
+		auto functor = new TemplateFunctor(xValues, channel.waveform, templateInterpolator, ChPETemplate->getNumberOfSamples(), 0, /* will set numPEs later */
+		                                  sampleSpacing, ChPETemplate->getTimeSpacing(), ChPETemplate->getTMaxIntensity());
+		auto costFunction = new ceres::DynamicAutoDiffCostFunction<TemplateFunctor, 16>(functor, ceres::Ownership::DO_NOT_TAKE_OWNERSHIP);
 
 		// Remove initial baseline
 		for (float& k : residualWF) {
@@ -299,7 +340,7 @@ void fitEvent(const DigitiserEvent* event, const std::unordered_map<unsigned int
 			// Amplitude adjustment: if the latest PE found is before other one(s),
 			//  its tail is going to add some amplitude to the following one. Compares
 			//  real and fit amplitude at the time bin corresponding to the PE time.
-			amplitudeCorrection(fitParams, channel.waveform, templateInterpolator, ChPETemplate);
+			amplitudeCorrection(fitParams, channel.waveform, templateInterpolator, ChPETemplate, sampleSpacing);
 
 			// Update residual waveform
 			for (unsigned int k = 0; k < xValues.size(); ++k) {
@@ -318,7 +359,7 @@ void fitEvent(const DigitiserEvent* event, const std::unordered_map<unsigned int
 				}
 			}
 
-			if (!getNextPEGuess(residualWF, &guessPE)) {
+			if (!getNextPEGuess(residualWF, &guessPE, sampleSpacing)) {
 				break;
 			}
 			numPEsFound += 1;
@@ -334,7 +375,7 @@ void fitEvent(const DigitiserEvent* event, const std::unordered_map<unsigned int
 		} // End of PE find loop
 
 		// Carry out one final adjustment to the amplitude of the PEs found and recalculate baseline, residual.
-		amplitudeCorrection(fitParams, channel.waveform, templateInterpolator, ChPETemplate);
+		amplitudeCorrection(fitParams, channel.waveform, templateInterpolator, ChPETemplate, sampleSpacing);
 
 		initBaseline = averageVector(residualWF, 0.01);
 		// =========================================
@@ -397,7 +438,7 @@ void fitEvent(const DigitiserEvent* event, const std::unordered_map<unsigned int
 		}
 
 		// Run the solver!
-		if (std::abs(parameterTolerance) >= 1e-10) {
+		if (std::abs(parameterTolerance) >= 1e-10f) {
 			ceres::Solver::Options options;
 			options.minimizer_progress_to_stdout = false;
 			options.parameter_tolerance          = parameterTolerance;
@@ -431,8 +472,8 @@ void fitEvent(const DigitiserEvent* event, const std::unordered_map<unsigned int
 		//		std::cout << "=====================" << std::endl;
 
 		// Convert times back from index space
-		for (int i = 0; i < static_cast<int>(times.size()); i++) {
-			times[i] = times[i] * ChPETemplate->getTimeSpacing();
+		for (double & time : times) {
+			time = time * ChPETemplate->getTimeSpacing();
 		}
 
 		// Build final FitParams object
@@ -493,14 +534,15 @@ void fitEvent(const DigitiserEvent* event, const std::unordered_map<unsigned int
  * @param lock         A mutex to serialize access to shared resources.
  * @param PETemplates  A map of channel ID to PETemplate objects for single PE shapes.
  * @param file         A shared pointer to a thread-safe output file structure.
+ * @param sampleSpacing
  * @return             True if processing is successful for all events, otherwise false.
  */
-bool batchFitEvents(const std::vector<DigitiserEvent>& events, std::atomic<unsigned long>& count, std::mutex& lock, const std::unordered_map<unsigned int, PETemplate>& PETemplates, const std::shared_ptr<SyncFile>& file) {
+bool batchFitEvents(const std::vector<DigitiserEvent>& events, std::atomic<unsigned long>& count, std::mutex& lock, const std::unordered_map<unsigned int, PETemplate>& PETemplates, const std::shared_ptr<SyncFile>& file, const float sampleSpacing) {
 	for (const auto& event : events) {
 		lock.lock();
 		++count;
 		lock.unlock();
-		fitEvent(&event, PETemplates, file, lock);
+		fitEvent(&event, PETemplates, file, lock, sampleSpacing);
 	}
 	return true;
 }

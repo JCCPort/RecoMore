@@ -1,9 +1,7 @@
 #include "Globals.h"
 
 std::vector<int>    skipChannels{32, 36, 40, 44, 48, 52, 56, 60, 15};
-unsigned int        templateExternalInterpFactor = 10;
 unsigned int        templateInternalInterpFactor = 10;
-float               trueSamplingRate   = 0.3125f;
 float               templateResidualRMS     = 0.827/1000;
 double              meanReducedChiSq   = 0;
 std::vector<double> reducedChiSqs{};
@@ -18,4 +16,4 @@ int                 sysProcWFCount     = 0;
 bool         saveWaveforms = false;
 unsigned int waveformCount = 0;
 
-float parameterTolerance = 1e-8;
+float parameterTolerance = 1e-6f;
