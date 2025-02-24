@@ -10,6 +10,11 @@ The dependencies are all easily installable on OSX and Linux systems, however Ce
 - pybind11 (for CReader)
 - pybind11-stubgen (for CReader type hints)
 
+For Debian systems, these packages are easily available using apt install:
+- libboost-all-dev
+- libceres-dev
+- cmake
+
 ## RecoMore
 
 To build RecoMore:
