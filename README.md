@@ -5,7 +5,7 @@ The dependencies are all easily installable on OSX and Linux systems, however Ce
 **Dependencies**:
 
 - Boost
-- Ceres-solver
+- Ceres-solver (≥ 2.1)
 - CMake
 - pybind11 (for CReader)
 - pybind11-stubgen (for CReader type hints)
