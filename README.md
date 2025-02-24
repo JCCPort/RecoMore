@@ -10,7 +10,73 @@ The dependencies are all easily installable on OSX and Linux systems, however Ce
 - pybind11 (for CReader)
 - pybind11-stubgen (for CReader type hints)
 
-## RecoMore
+## Installing Ceres Solver
+
+### Ubuntu
+
+```bash
+sudo apt-get update
+sudo apt-get install -y libceres-dev
+```
+
+### Debian
+
+```bash
+sudo apt-get update
+sudo apt-get install -y libceres-dev
+```
+
+### Fedora
+
+```bash
+sudo dnf install ceres-solver
+```
+
+### Arch Linux
+
+```bash
+sudo pacman -S ceres-solver
+```
+
+### openSUSE
+
+For openSUSE, you can install Ceres Solver directly from the Science repository:
+
+### openSUSE Tumbleweed
+
+```bash
+sudo zypper addrepo https://download.opensuse.org/repositories/science/openSUSE_Tumbleweed/science.repo
+sudo zypper refresh
+sudo zypper install ceres-solver
+```
+
+### openSUSE Factory PowerPC
+
+```bash
+sudo zypper addrepo https://download.opensuse.org/repositories/science/openSUSE_Factory_PowerPC/science.repo
+sudo zypper refresh
+sudo zypper install ceres-solver
+```
+
+### openSUSE Leap 15.6
+
+```bash
+sudo zypper addrepo https://download.opensuse.org/repositories/science/15.6/science.repo
+sudo zypper refresh
+sudo zypper install ceres-solver
+```
+
+### macOS (using Homebrew)
+
+```bash
+brew install ceres-solver
+```
+
+For other Linux distributions, you may need to build Ceres Solver from source.  
+Please refer to the [official installation guide](http://ceres-solver.org/installation.html) for detailed instructions.
+
+
+## Installing RecoMore
 
 To build RecoMore:
 - Make a build directory
@@ -20,7 +86,7 @@ To build RecoMore:
 
 To run RecoMore:
 
-```./PEFinder -i <pathToDataFile> --pdf_dir <pathToIdealPDFsDir> --n_threads <numberOFThreads> --n_batches <numberOfBatches>```
+```./PEFinder -i <pathToDataFile> --template_dir <pathToIdealPDFsDir> --n_threads <numberOFThreads> --n_batches <numberOfBatches>```
 
 For more info run `./PEFinder -h` to get the help output.
 
