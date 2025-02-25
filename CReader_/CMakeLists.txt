@@ -55,12 +55,18 @@ add_subdirectory(extern/pybind11)
 
 pybind11_add_module(CReader src/cpp_library.cpp)
 target_link_libraries(CReader PRIVATE Boost::serialization Boost::boost)
+target_link_libraries(CReader PRIVATE pefinder_core)
 
 
 target_include_directories(CReader
         INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/pybind11/include/> )
+
+target_include_directories(CReader
+        PRIVATE
+        ${CMAKE_SOURCE_DIR}/PEFinder/include
+)
 
 set_target_properties(CReader
         PROPERTIES

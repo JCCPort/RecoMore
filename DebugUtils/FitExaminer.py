@@ -370,14 +370,14 @@ if __name__ == "__main__":
     matplotlib.rcParams.update({'font.size': 20})
     matplotlib.use("TKAgg", force=True)
 
-    recoMoreFileName = "/home/joshuap/Downloads/R22121331PES.dat"
-    rawFileName = "/home/joshuap/Downloads/R22121331.bin"
+    recoMoreFileName = "../Tests/TestData/R185PES_Reference.dat"
+    rawFileName = "../Tests/TestData/R185.bin"
 
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
     examiner.plotAllEvents()
-    examiner.plotSumAmps(PEThresh=0.00)
-    examiner.plotSumAmpsRaw(PEThresh=0.00)
-    examiner.recoMoreVsRawComparison(channel=0, PEThresh=0.00, cutMode='time', runName='R22121331')
-    examiner.recoMoreVsRawComparison(channel=0, PEThresh=0.00, cutMode='timeAndNegativeAmp', runName='R22121331')
+    # examiner.plotSumAmps(PEThresh=0.00)
+    # examiner.plotSumAmpsRaw(PEThresh=0.00)
+    # examiner.recoMoreVsRawComparison(channel=0, PEThresh=0.00, cutMode='time', runName='R22121331')
+    # examiner.recoMoreVsRawComparison(channel=0, PEThresh=0.00, cutMode='timeAndNegativeAmp', runName='R22121331')
 

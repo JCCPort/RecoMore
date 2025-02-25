@@ -77,6 +77,24 @@ set(EIGEN_INCLUDE_DIR_HINTS /usr/include/eigen3)
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
+##### Making files available to CReader
+
+# Create a library with the shared files
+add_library(pefinder_core SHARED
+        src/DataReading.cpp
+        src/DataStructures.cpp
+        # (Other shared .cpp files you want to re-use)
+)
+
+#set_target_properties(pefinder_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+# Make headers visible to users of pefinder_core
+target_include_directories(pefinder_core
+        PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+
 
 ######
 

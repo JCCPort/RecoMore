@@ -37,11 +37,7 @@ To build and install CReader to be a usable python module:
 - `python3 setup.py build_ext --inplace install`
 - To rebuild the stubs (used for IDE type hints etc):
   ```
-  pybind11-stubgen CReader
-     --output-dir="./stubs/generated"
-     --root-module-suffix=""
-     --ignore-invalid=all
-     --no-setup-py
+  pybind11-stubgen CReader --output-dir="./stubs/generated" --root-module-suffix="" --ignore-invalid=all --no-setup-py
   ```
 
 Import with `from CReader import *`

@@ -9,8 +9,6 @@ DigitiserRun ReadWCDataFileDat(const std::string &, bool positivePulse);
 
 DigitiserRun ReadWCDataFileBinary(const std::string &, bool positivePulse);
 
-std::vector<double> readIdealWFs(unsigned int ch, unsigned int interpFactor, const std::string &idealWFDir, unsigned int expectedSize, bool positivePulse);
-
 FitRun ReadRecoMoreOutput(const std::string &fileName);
 
 FitRun ReadRecoMoreTextOutput(const std::string &fileName);

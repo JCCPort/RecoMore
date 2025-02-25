@@ -271,69 +271,6 @@ DigitiserRun ReadWCDataFileBinary(const std::string& fileName, const bool positi
 
 
 /**
- * This function reads the ideal templates for each channel which is then used for finding PEs in data by overlapping the ideal template with
- * data PEs and subtracting them until none remain.
- * @param ch The channel to fill in.
- * @param interpFactor Number of points in interpolated waveform divided by number of points in original waveform.
- * @param idealWFDir Path to directory containing ideal templates for each channel.
- * @param expectedSize Check that the template is the expected length.
- * @param positivePulse
- * @return
- */
-std::vector<double>
-readIdealWFs(unsigned int ch, unsigned int interpFactor, const std::string& idealWFDir, unsigned int expectedSize, const bool positivePulse) {
-	std::string   idealWFPath = idealWFDir + "ch" + std::to_string(ch) + ".txt";
-	std::ifstream idealWFFile(idealWFPath, std::ifstream::in);
-
-	if (!idealWFFile.is_open()) {
-		throw std::runtime_error("Ideal PE template file: " + idealWFPath + " not found.");
-	}
-	if (idealWFFile.peek() == std::ifstream::traits_type::eof()) {
-		throw std::runtime_error("Ideal PE template file: " + idealWFPath + " is empty.");
-	}
-	if (idealWFFile.fail()) {
-		throw std::runtime_error("Ideal PE template file: " + idealWFPath + " could not be opened.");
-	}
-
-	float signFactor = 0.f;
-	if (positivePulse) {
-		signFactor = -1.f;
-	}
-	else {
-		signFactor = 1.f;
-	}
-
-
-	double idealWFTime;
-	double idealWFAmp;
-	double prevAmp;
-
-	// Parse first line
-	idealWFFile >> idealWFTime >> idealWFAmp;
-	std::vector<double> waveform;
-	waveform.emplace_back(idealWFAmp);
-	prevAmp = idealWFAmp;
-
-	// Parse next line
-	while (idealWFFile >> idealWFTime >> idealWFAmp) {
-		double delta_v = (idealWFAmp - prevAmp) / static_cast<double>(interpFactor);
-
-		for (unsigned int step = 1; step < interpFactor; ++step) // Add linearly interpolated points to ideal template
-			waveform.emplace_back(prevAmp + static_cast<double>(step) * delta_v * signFactor);
-
-		waveform.emplace_back(idealWFAmp);
-		prevAmp = idealWFAmp;
-	}
-
-	if (waveform.size() != expectedSize) {
-		throw std::runtime_error("Unexpected number of samples in " + idealWFPath + ". Expected " + std::to_string(expectedSize) + " but got " + std::to_string(waveform.size()));
-	}
-
-	return waveform;
-}
-
-
-/**
  * Wrapper around the binary and plaintext RecoMore file readers so that either can be read from the same function call.
  * @param fileName Path to the RecoMore data file you want to read.
  * @return RecoMore data events parsed into a FitData instance that contains a list of fit events.
