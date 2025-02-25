@@ -75,7 +75,7 @@ jobs:
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
         name: Configure
         working-directory: ceres-solver/build
-        run: cmake -DCMAKE_INSTALL_PREFIX=../install -DEXPORT_BUILD_DIR=ON -DBUILD_DEPS=ON -DBUILD_TESTING=OFF ..
+        run: cmake -DCMAKE_INSTALL_PREFIX=../install -DEXPORT_BUILD_DIR=ON -DBUILD_DEPS=ON -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF -DBUILD_BENCHMARKS=OFF ..
 
       - if: steps.cache-ceres-build.outputs.cache-hit != 'true'
         name: Build
