@@ -134,6 +134,7 @@ jobs:
         # A convenient community action for installing & caching miniconda
         uses: conda-incubator/setup-miniconda@v2
         with:
+          miniconda-version: "latest"
           auto-activate-base: false
           python-version: 3.9
           channels: conda-forge
