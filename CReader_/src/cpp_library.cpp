@@ -1,8 +1,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "DataReading.h"
-#include "DataStructures.h"
+#include "../../PEFinder/include/DataReading.h"
+#include "../../PEFinder/include/DataStructures.h"
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
