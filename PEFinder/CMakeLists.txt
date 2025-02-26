@@ -93,7 +93,7 @@ add_executable(PEFinder
         src/DataWriting.cpp
         src/PEFit.cpp
         src/Utils.cpp
-        # etc.
+        Globals.h
 )
 
 target_link_libraries(PEFinder
