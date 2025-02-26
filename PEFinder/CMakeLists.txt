@@ -80,7 +80,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 ##### Making files available to CReader
 
 # Create a library with the shared files
-add_library(pefinder_core SHARED
+add_library(readers SHARED
         src/DataReading.cpp
         src/DataStructures.cpp
         # (Other shared .cpp files you want to re-use)
@@ -88,6 +88,18 @@ add_library(pefinder_core SHARED
 
 ######
 
-add_executable(PEFinder main.cpp src/DataWriting.cpp src/DataReading.cpp src/DataStructures.cpp Globals.h Globals.cpp src/PEFit.cpp include/ThreadPool.h include/Utils.h src/Utils.cpp)
-target_link_libraries(PEFinder Ceres::ceres)
-target_link_libraries(PEFinder Boost::thread Boost::serialization)
+add_executable(PEFinder
+        main.cpp
+        src/DataWriting.cpp
+        src/PEFit.cpp
+        src/Utils.cpp
+        # etc.
+)
+
+target_link_libraries(PEFinder
+        PRIVATE
+        readers           # Pull in the library with DataReading, DataStructures, etc.
+        Boost::thread
+        Boost::serialization
+        Ceres::ceres
+)

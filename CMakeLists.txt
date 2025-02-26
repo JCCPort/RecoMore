@@ -6,16 +6,17 @@ project(RecoMore)
 #Subdirs
 
 
-option(BUILD_SUBDIR1 "Enable building CReader" ON)
-option(BUILD_SUBDIR2 "Enable building PEFitter" ON)
+option(BUILD_SUBDIR1 "Enable building PEFitter" ON)
+option(BUILD_SUBDIR2 "Enable building CReader" ON)
 option(BUILD_SUBDIR3 "Enable building Tests" ON)
 
+
 if(BUILD_SUBDIR1)
-    add_subdirectory(CReader_)
+    add_subdirectory(PEFinder)
 endif()
 
 if(BUILD_SUBDIR2)
-    add_subdirectory(PEFinder)
+    add_subdirectory(CReader_)
 endif()
 
 if(BUILD_SUBDIR3)
