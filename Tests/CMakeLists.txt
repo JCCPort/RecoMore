@@ -82,6 +82,10 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 # Only pass test source files here, not the 'readers' library's sources.
 add_executable(Boost_Tests_run
         test1.cpp
+        ../PEFinder/Globals.cpp
+        ../PEFinder/src/PEFit.cpp
+        ../PEFinder/src/Utils.cpp
+        ../PEFinder/src/DataWriting.cpp
         # (Other test .cpp files if you have them)
 )
 
