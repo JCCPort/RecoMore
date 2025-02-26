@@ -78,9 +78,9 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 # Create a library with the shared files
 add_library(readers SHARED
-#        src/DataReading.cpp
+        src/DataReading.cpp
         include/DataReading.h
-#        src/DataStructures.cpp
+        src/DataStructures.cpp
         include/DataStructures.h
 )
 
