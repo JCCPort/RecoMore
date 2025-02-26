@@ -77,6 +77,14 @@ set(EIGEN_INCLUDE_DIR_HINTS /usr/include/eigen3)
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
+##### Making files available to CReader
+
+# Create a library with the shared files
+add_library(readers SHARED
+        src/DataReading.cpp
+        src/DataStructures.cpp
+        # (Other shared .cpp files you want to re-use)
+)
 
 ######
 
