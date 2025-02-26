@@ -134,21 +134,22 @@ jobs:
         with:
           miniconda-version: "latest"
 #          auto-activate-base: true
-          activate-environment: ""
+          activate-environment: creader
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
-          channels: conda-forge
-          channel-priority: flexible
 
       - name: Create conda environment
-        run: conda create -n creader -y python=3.9 numpy matplotlib pybind11-stubgen
+        shell: bash -el {0}
+        run: conda install python=3.9 numpy matplotlib pybind11-stubgen
 
       - name: Build & install CReader
         working-directory: RecoMoreDir/CReader_
+        shell: bash -el {0}
         run: conda run -n creader python setup.py build_ext --inplace install
 
       - name: Rebuild the stubs
         working-directory: RecoMoreDir/CReader_
+        shell: bash -el {0}
         run: |
           conda run -n creader pybind11-stubgen CReader \
             --output-dir="./stubs/generated" \
@@ -158,4 +159,5 @@ jobs:
 
       - name: Run Python test for CReader
         working-directory: RecoMoreDir/RecoMore-build/Tests
+        shell: bash -el {0}
         run: conda run -n creader python test_CReader_1.py
