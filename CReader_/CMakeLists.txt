@@ -5,9 +5,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 add_compile_options(-v)
 
-if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
-    set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "Build architectures for Mac OS X" FORCE)
-endif()
+#if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
+#    set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "Build architectures for Mac OS X" FORCE)
+#endif()
 
 # Handle build types and compiler flags
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

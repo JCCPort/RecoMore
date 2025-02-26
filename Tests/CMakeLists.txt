@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.20)
 project(Tests LANGUAGES CXX)
 
 execute_process(COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE)
-if ("${ARCHITECTURE}" STREQUAL "arm64")
-    set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE INTERNAL "" FORCE)
-endif()
+#if ("${ARCHITECTURE}" STREQUAL "arm64")
+#    set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE INTERNAL "" FORCE)
+#endif()
 
 # Only do -march=native for non-arm64 + Release
 if (NOT "${ARCHITECTURE}" STREQUAL "arm64" AND CMAKE_BUILD_TYPE STREQUAL "Release")
