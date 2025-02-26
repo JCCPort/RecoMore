@@ -1,4 +1,5 @@
 #include <string>
+#include <sstream>
 #include <filesystem>
 #include <regex>
 #include <boost/spirit/include/qi.hpp>
