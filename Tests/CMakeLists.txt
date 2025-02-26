@@ -77,9 +77,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 add_executable (Boost_Tests_run test1.cpp
         ../PEFinder/src/DataWriting.cpp ../PEFinder/src/DataReading.cpp ../PEFinder/src/DataStructures.cpp ../PEFinder/Globals.h ../PEFinder/Globals.cpp
         ../PEFinder/src/PEFit.cpp ../PEFinder/include/ThreadPool.h ../PEFinder/include/Utils.h ../PEFinder/src/Utils.cpp)
-target_link_libraries(Boost_Tests_run ${Boost_LIBRARIES})
-target_link_libraries(Boost_Tests_run Ceres::ceres)
-target_link_libraries(Boost_Tests_run PRIVATE Boost::serialization)
+target_link_libraries(Boost_Tests_run ${Boost_LIBRARIES} Boost::serialization Ceres::ceres)
 
 # Copy directories
 macro(resource_dirs dirs)
