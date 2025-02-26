@@ -1,0 +1,54 @@
+name: macOS
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: macOS-Build
+    runs-on: macos-latest
+
+    steps:
+      # Check out your project’s code (main repository).
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          # If you have submodules in your own repo, add:
+          submodules: true
+
+      # (Optional) If you have a separate repository for "RecoMoreDir"
+      # you can repeat another checkout step, but typically
+      # everything is in one repo for macOS jobs.
+
+      # Install dependencies using Homebrew
+      - name: Install Dependencies via Homebrew
+        run: |
+          brew update
+          # If you need other dependencies, install them here:
+          brew install cmake ceres-solver eigen gflags glog suite-sparse
+
+      # Create a build directory for your project
+      - name: Create build directory
+        run: mkdir -p build
+
+      # Configure your project to find Ceres installed by Homebrew
+      # and anything else you need. Adjust the prefix path if you also
+      # installed other libs via Homebrew.
+      - name: CMake configure
+        working-directory: build
+        run: |
+          cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$(brew --prefix ceres-solver)" \
+            ..
+
+      # Build your project
+      - name: Build
+        working-directory: build
+        run: make -j4
+
+      # (Optional) Run tests. Adjust as needed for your test binary names
+      - name: Run tests
+        working-directory: build
+        run: ctest --verbose
