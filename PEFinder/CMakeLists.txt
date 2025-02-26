@@ -2,9 +2,6 @@ set(CMAKE_CXX_STANDARD 20)
 cmake_minimum_required(VERSION 3.20)
 project(PEFinder)
 
-#if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
-#    set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "Build architectures for Mac OS X" FORCE)
-#endif ()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_C_FLAGS "-O0 -pthread -fno-omit-frame-pointer -g3 -DIS_DEBUG")
@@ -83,11 +80,10 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 add_library(readers SHARED
         src/DataReading.cpp
         src/DataStructures.cpp
-        # (Other shared .cpp files you want to re-use)
 )
 
 target_link_libraries(readers
-        PRIVATE                  # or PUBLIC, as you prefer
+        PRIVATE
         Boost::thread
         Boost::serialization
 )

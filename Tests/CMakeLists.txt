@@ -2,9 +2,6 @@ cmake_minimum_required(VERSION 3.20)
 project(Tests LANGUAGES CXX)
 
 execute_process(COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE)
-#if ("${ARCHITECTURE}" STREQUAL "arm64")
-#    set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE INTERNAL "" FORCE)
-#endif()
 
 # Only do -march=native for non-arm64 + Release
 if (NOT "${ARCHITECTURE}" STREQUAL "arm64" AND CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -18,8 +15,8 @@ set(USE_PROFILE FALSE)
 
 # Set build-type-specific flags
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CMAKE_C_FLAGS "-O1 -pthread")
-    set(CMAKE_CXX_FLAGS "-O1 -pthread")
+    set(CMAKE_C_FLAGS "-O0 -pthread -fsanitize=address")
+    set(CMAKE_CXX_FLAGS "-O0 -pthread -fsanitize=address")
 
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_C_FLAGS "-O3 -pthread -flto")
@@ -81,7 +78,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 # ---- TEST EXECUTABLE: Boost_Tests_run ----
 # Only pass test source files here, not the 'readers' library's sources.
 add_executable(Boost_Tests_run
-        test1.cpp
+        test_PEFinder_1.cpp
         ../PEFinder/Globals.cpp
         ../PEFinder/src/PEFit.cpp
         ../PEFinder/src/Utils.cpp
