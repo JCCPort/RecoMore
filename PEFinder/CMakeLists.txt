@@ -86,21 +86,6 @@ add_library(pefinder_core SHARED
         # (Other shared .cpp files you want to re-use)
 )
 
-#set_target_properties(pefinder_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-# Make headers visible to users of pefinder_core
-#target_include_directories(pefinder_core
-#        PUBLIC
-#        ${CMAKE_CURRENT_SOURCE_DIR}/include
-#)
-#
-#
-#target_link_libraries(pefinder_core
-#        PUBLIC
-#        Boost::serialization
-#        # other dependencies
-#)
-
 ######
 
 add_executable(PEFinder main.cpp src/DataWriting.cpp src/DataReading.cpp src/DataStructures.cpp Globals.h Globals.cpp src/PEFit.cpp include/ThreadPool.h include/Utils.h src/Utils.cpp)
