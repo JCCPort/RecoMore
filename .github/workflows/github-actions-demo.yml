@@ -135,8 +135,9 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           miniconda-version: "latest"
-          auto-activate-base: false
-          python-version: 3.9
+          auto-activate-base: true
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
           channels: conda-forge
           channel-priority: flexible
 
