@@ -86,6 +86,12 @@ add_library(readers SHARED
         # (Other shared .cpp files you want to re-use)
 )
 
+target_link_libraries(readers
+        PRIVATE                  # or PUBLIC, as you prefer
+        Boost::thread
+        Boost::serialization
+)
+
 ######
 
 add_executable(PEFinder main.cpp src/DataWriting.cpp src/DataReading.cpp src/DataStructures.cpp Globals.h Globals.cpp src/PEFit.cpp include/ThreadPool.h include/Utils.h src/Utils.cpp)
