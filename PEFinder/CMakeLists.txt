@@ -94,6 +94,8 @@ add_executable(PEFinder
         src/PEFit.cpp
         src/Utils.cpp
         Globals.h
+        Globals.cpp
+        include/ThreadPool.h include/Utils.h src/Utils.cpp
 )
 
 target_link_libraries(PEFinder
