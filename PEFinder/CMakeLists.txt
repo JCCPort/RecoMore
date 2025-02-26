@@ -95,6 +95,20 @@ target_include_directories(pefinder_core
 )
 
 
+target_link_libraries(pefinder_core
+        PUBLIC
+        Boost::serialization
+        # other dependencies
+)
+
+# If your tests also use the same code/symbols:
+target_link_libraries(Boost_Tests_run
+        PUBLIC
+        Boost::serialization
+        # other dependencies
+)
+
+
 
 ######
 

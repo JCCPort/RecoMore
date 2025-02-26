@@ -79,6 +79,7 @@ add_executable (Boost_Tests_run test1.cpp
         ../PEFinder/src/PEFit.cpp ../PEFinder/include/ThreadPool.h ../PEFinder/include/Utils.h ../PEFinder/src/Utils.cpp)
 target_link_libraries(Boost_Tests_run ${Boost_LIBRARIES})
 target_link_libraries(Boost_Tests_run Ceres::ceres)
+target_link_libraries(Boost_Tests_run PRIVATE Boost::serialization)
 
 # Copy directories
 macro(resource_dirs dirs)
