@@ -9,7 +9,7 @@ extern unsigned int pdfExternalInterpFactor; // How much oversampling was done w
 extern unsigned int pdfInternalInterpFactor; // How much more oversampling is done in RecoMore when the PDFs are read in.
 extern unsigned int totalInterpFactor;
 
-extern int pdfNSamples; // Expected number of rows in ideal waveform file.
+extern unsigned int pdfNSamples; // Expected number of rows in ideal waveform file.
 
 extern float pdfSamplingRate; // Sampling rate used to create ideal waveforms.
 extern float trueSamplingRate; // True sampling rate of the data.

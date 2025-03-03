@@ -139,8 +139,6 @@ class RecoMoreFitExaminer:
         minRunSum = 1000
         maxRunSum = 0
 
-        print(len(self.RMPEs.getEvents()))
-
         for event_ in self.RMPEs.getEvents():
             for channel_ in event_.SiPM:
                 if channel is not None:
@@ -159,16 +157,6 @@ class RecoMoreFitExaminer:
                         maxRunSum = runSum
                     if runSum < minRunSum:
                         minRunSum = runSum
-
-        allChannelSums = []
-        for key, val in sumPES.items():
-            allChannelSums.extend(val)
-            print(key, np.mean(val))
-
-        print("")
-
-        # print(np.mean(allChannelSums))
-        # print(np.mean(allChannelSums, axis=0))
 
         bins = np.linspace(minRunSum, maxRunSum, 600)
         for key, val in sumPES.items():
@@ -379,42 +367,17 @@ if __name__ == "__main__":
     print(matplotlib.font_manager.findSystemFonts(fontpaths=None, fontext='ttf')[:10])
 
     mpl.rcParams['font.family'] = 'Roboto'
-
-    # recoMoreFileName = "/Users/joshuaporter/Library/CloudStorage/OneDrive-UniversityofSussex/liquidOLab/dataSTOP_DO_NOT_WRITE_HERE/WavecatcherRuns/Runs/R193/R193PES.dat"
-    # rawFileName = "/Users/joshuaporter/Library/CloudStorage/OneDrive-UniversityofSussex/liquidOLab/dataSTOP_DO_NOT_WRITE_HERE/WavecatcherRuns/Runs/R193/R193.bin"
     matplotlib.rcParams.update({'font.size': 20})
     matplotlib.use("TKAgg", force=True)
-    # recoMoreFileName = "/home/joshuap/Software/JoshSoftware/RecoMore/R185PES.dat"
-    # rawFileName = "/home/joshuap/Software/JoshSoftware/RecoMore/R185.bin"
-
-    # Laser run
-    # recoMoreFileName = "/home/joshuap/Downloads/R15PES.dat"
-    # rawFileName = "/home/joshuap/Downloads/R15.dat"
 
     recoMoreFileName = "/home/joshuap/Downloads/R22121331PES.dat"
     rawFileName = "/home/joshuap/Downloads/R22121331.bin"
 
-    # recoMoreFileName = "/home/joshuap/Downloads/0-78PES.dat"
-    # rawFileName = "/home/joshuap/Downloads/0-78.dat"
-
-    # Scintillator run
-    # recoMoreFileName = "/home/joshuap/Downloads/R152PES.dat"
-    # rawFileName = "/home/joshuap/Downloads/R152.dat"
 
     examiner = RecoMoreFitExaminer(recoMoreDataPath=recoMoreFileName, rawDataPath=rawFileName)
     examiner.plotAllEvents()
-    # examiner.plotSumAmps(PEThresh=0.00)
-    # examiner.plotSumAmpsRaw(PEThresh=0.00)
+    examiner.plotSumAmps(PEThresh=0.00)
+    examiner.plotSumAmpsRaw(PEThresh=0.00)
     examiner.recoMoreVsRawComparison(channel=0, PEThresh=0.00, cutMode='time', runName='R22121331')
-    # examiner.recoMoreVsRawComparison(channel=0, PEThresh=0.00, cutMode='none', runName='R118')
-    # examiner.recoMoreVsRawComparison(channel=0, PEThresh=0.00, cutMode='negativeAmp', runName='R118')
     examiner.recoMoreVsRawComparison(channel=0, PEThresh=0.00, cutMode='timeAndNegativeAmp', runName='R22121331')
 
-    # examiner.recoMoreVsRawComparison(channel=8, PEThresh=0.00, cutMode='time', runName='R15')
-    # examiner.recoMoreVsRawComparison(channel=8, PEThresh=0.00, cutMode='none', runName='R15')
-    # examiner.recoMoreVsRawComparison(channel=8, PEThresh=0.00, cutMode='negativeAmp', runName='R15')
-    # examiner.recoMoreVsRawComparison(channel=8, PEThresh=0.00, cutMode='timeAndNegativeAmp', runName='R15')
-    # examiner.timeAmpCorrelation()
-    # examiner.plotAmps()
-    # examiner.plotTimes()
-    # examiner.plotChiSq()

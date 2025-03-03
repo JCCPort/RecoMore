@@ -8,14 +8,15 @@
 #include <ceres/cubic_interpolation.h>
 #include "DataStructures.h"
 #include "DataWriting.h"
+#include "PETemplate.h"
 
 float NPEPDFFunc(float X, const std::vector<float> &p, const std::vector<double> *idealWaveform);
 
 void
-fitEvent(const DigitiserEvent *event, const std::vector<std::vector<double>> *idealWaveforms, std::shared_ptr<SyncFile> outputFile, std::mutex &lock);
+fitEvent(const DigitiserEvent *event, const std::unordered_map<unsigned int, PETemplate>& PETemplates, std::shared_ptr<SyncFile> outputFile, std::mutex &lock);
 
 bool batchFitEvents(const std::vector<DigitiserEvent> &events, std::atomic<unsigned long> &count, std::mutex &lock,
-                    const std::vector<std::vector<double>> *idealWaveforms, const std::shared_ptr<SyncFile> &file);
+                    const std::unordered_map<unsigned int, PETemplate>& PETemplates, const std::shared_ptr<SyncFile> &file);
 
 void updateGuessCorrector(const std::vector<double>& amps, const std::vector<double>& times,
                                  const std::vector<double>& initialAmps, const std::vector<double>& initialTimes,
@@ -23,6 +24,6 @@ void updateGuessCorrector(const std::vector<double>& amps, const std::vector<dou
 
 bool getNextPEGuess(DigitiserChannel *residualWF, Photoelectron *guessPE, double baseline, std::vector<Photoelectron> pesFound_, const DigitiserChannel& channel_, const std::vector<double> *idealWF_);
 
-void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vector<float> *params, std::vector<float> waveform, const std::vector<double> *);
+void amplitudeCorrection(std::vector<Photoelectron> *pesFound, std::vector<float> *params, const std::vector<float>& waveform, const std::vector<double> *);
 
 #endif //RECOMORE_PEFIT_H

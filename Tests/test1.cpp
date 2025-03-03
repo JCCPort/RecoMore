@@ -14,7 +14,7 @@
 
 class SystemTest1{
 public:
-	bool runOverTestData();
+	static bool runOverTestData();
 	void openNewRunFile(){newData = ReadRecoMoreOutput("../TestData/R185PES.dat");};
 	void openOldRunFile(){oldData = ReadRecoMoreOutput("../TestData/R185PES_Reference.dat");};
 	
@@ -50,14 +50,14 @@ public:
 
 bool SystemTest1::runOverTestData() {
 	// Input arguments
-	std::string inputFileName = "../TestData/R185.bin";
-	std::string outputFileName;
-	outputFileName = defaultOutputName(inputFileName);
+	const std::string inputFileName = "../TestData/R185.bin";
+	std::string outputFileName = defaultOutputName(inputFileName);
 	auto pdfDir = "../TestData/pdf/";
 	saveWaveforms = false;
-	DigitiserRun data       = ReadWCDataFile(inputFileName);
-	int numThreads  = 1;
-	int batchNumber = 1;
+	constexpr bool positivePulse = false;
+	DigitiserRun data       = ReadWCDataFile(inputFileName, positivePulse);
+	const int numThreads  = 1;
+	const int batchNumber = 1;
 	
 	// Global parameters
 	skipChannels               = {32, 36, 40, 44, 48, 52, 56, 60};
@@ -92,10 +92,10 @@ bool SystemTest1::runOverTestData() {
 	
 	std::vector<std::vector<double>> idealWaveforms{64};
 	for (int ch = 0; ch < 64; ch++) {
-		if (std::count(skipChannels.begin(), skipChannels.end(), ch)) {
+		if (std::ranges::count(skipChannels, ch)) {
 			continue;
 		}
-		idealWaveforms.at(ch) = readIdealWFs(ch, 10, pdfDir, pdfNSamples);
+		idealWaveforms.at(ch) = readIdealWFs(ch, 10, pdfDir, pdfNSamples, positivePulse);
 	}
 	
 	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(m),
@@ -148,9 +148,8 @@ bool SystemTest1::comparisons(){
 	numEventsSameRan = true;
 	
 	// Loop over events
-	std::vector<unsigned int> newEventIDs = newData.getEventIDs();
-	
-	for(unsigned int i : newEventIDs){
+
+	for(std::vector<unsigned int> newEventIDs = newData.getEventIDs(); const unsigned int i : newEventIDs){
 		// Loop over channels in event
 		FitEvent newEventData = newData.getEvent(i);
 		FitEvent oldEventData = oldData.getEvent(i);
@@ -159,8 +158,8 @@ bool SystemTest1::comparisons(){
 		std::vector<unsigned int> oldEventChannels = oldEventData.getChannelIDs();
 		for(unsigned int j : newEventChannels){
 			
-			if(not((std::count(newEventChannels.begin(), newEventChannels.end(), j)) and
-					std::count(oldEventChannels.begin(), oldEventChannels.end(), j))) {
+			if(not((std::ranges::count(newEventChannels, j)) and
+					std::ranges::count(oldEventChannels, j))) {
 				continue;
 			}
 			
@@ -188,8 +187,8 @@ bool SystemTest1::comparisons(){
 			
 			// Checking if fit values for each PE is the same
 			for(int k = 0; k < newChannelData.PEs.size(); k++){
-				auto newPE = newChannelData.PEs[k];
-				auto oldPE = oldChannelData.PEs[k];
+				const auto newPE = newChannelData.PEs[k];
+				const auto oldPE = oldChannelData.PEs[k];
 				timesSame = timesSame and (std::abs(newPE.time - oldPE.time) <= timeSimilarity);
 				if(std::abs(newPE.time - oldPE.time) > timeSimilarity){
 					std::cout << "Mis-match in time for event " << newEventData.ID << ", channel " << newChannelData.ID << std::endl;

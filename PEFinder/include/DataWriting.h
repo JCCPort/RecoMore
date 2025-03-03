@@ -87,9 +87,9 @@ public:
 
 	static std::string writeWaveformInfo(const FitChannel &);
 
-	static std::string writeFitPE(Photoelectron);
+	static std::string writeFitPE(const Photoelectron&);
 
-	void writeEventInfo(const FitEvent &);
+	void writeEventInfo(const FitEvent &) const;
 	
 private:
 	std::shared_ptr<SyncFile> _sf;

@@ -5,7 +5,7 @@ void DigitiserRun::addEvent(const DigitiserEvent &wf) {
     events.emplace_back(wf);
 }
 
-DigitiserEvent DigitiserRun::getEvent(unsigned int eventNumber) {
+DigitiserEvent DigitiserRun::getEvent(const unsigned int eventNumber) {
     for (auto &event: events) {
         if (event.ID == eventNumber) {
             return event;
@@ -14,7 +14,7 @@ DigitiserEvent DigitiserRun::getEvent(unsigned int eventNumber) {
     throw std::runtime_error("Event " + std::to_string(eventNumber) + " not found.");
 }
 
-DigitiserChannel DigitiserRun::getEventChannel(unsigned int eventNumber, unsigned int channelNumber) {
+DigitiserChannel DigitiserRun::getEventChannel(const unsigned int eventNumber, const unsigned int channelNumber) {
     for (auto &event: events) {
         if (event.ID == eventNumber) {
             for (auto &channelWF: event.channels) {
@@ -33,7 +33,7 @@ void FitRun::addEvent(const FitEvent &eventFit) {
     events.emplace_back(eventFit);
 }
 
-FitEvent FitRun::getEvent(unsigned int eventNumber) {
+FitEvent FitRun::getEvent(const unsigned int eventNumber) {
     for (auto &event: events) {
         if (event.ID == eventNumber) {
             return event;
@@ -42,7 +42,7 @@ FitEvent FitRun::getEvent(unsigned int eventNumber) {
     throw std::runtime_error("Event " + std::to_string(eventNumber) + " not found.");
 }
 
-FitChannel FitRun::getEventChannel(unsigned int eventNumber, unsigned int channelNumber) {
+FitChannel FitRun::getEventChannel(const unsigned int eventNumber, const unsigned int channelNumber) {
     for (auto &event: events) {
         if (event.ID == eventNumber) {
             for (auto &channelWF: event.channels) {
@@ -71,7 +71,7 @@ std::vector<unsigned int> FitRun::getEventIDs() {
 
 
 // TODO(josh): Implement this at some point to reduce the number of different ways the parameters are stored and moved.
-[[maybe_unused]] FitParams::FitParams(unsigned int numPEs, double baseline, std::vector<double> amplitudes,
+[[maybe_unused]] FitParams::FitParams(const unsigned int numPEs, double baseline, std::vector<double> amplitudes,
                                       std::vector<double> times) {
     numPEs_ = numPEs;
     PEParams_.emplace_back(baseline);
@@ -85,7 +85,7 @@ std::vector<unsigned int> FitRun::getEventIDs() {
 }
 
 
-[[maybe_unused]] FitParams::FitParams(double baseline, const std::vector<Photoelectron> &PEs) {
+[[maybe_unused]] FitParams::FitParams(const double baseline, const std::vector<Photoelectron> &PEs) {
     numPEs_ = PEs.size();
     baseline_ = baseline;
     for (const auto pe: PEs) {
@@ -105,13 +105,13 @@ std::vector<unsigned int> FitRun::getEventIDs() {
 
 [[maybe_unused]] std::vector<float> FitParams::makeGuesserParams() {
     std::vector<float> temp_;
-    temp_.push_back((float) numPEs_);
-    for (auto param: PEParams_) {
-        temp_.push_back((float) param);
+    temp_.push_back(static_cast<float>(numPEs_));
+    for (const auto param: PEParams_) {
+        temp_.push_back(static_cast<float>(param));
     }
     return temp_;
 }
 
 int FitParams::getNumParams() const {
-    return (int) PEParams_.size() + 2;
+    return static_cast<int>(PEParams_.size()) + 2;
 }

@@ -4,6 +4,7 @@
 #include "include/Utils.h"
 #include "include/DataReading.h"
 #include "include/DataStructures.h"
+#include "include/PETemplate.h"
 #include "include/PEFit.h"
 #include "Globals.h"
 #include "include/DataWriting.h"
@@ -52,9 +53,13 @@ int main(int argc, char** argv) {
 		.default_value(false)
 		.help("Save waveforms with initial and final fits to csv files.");
     program.add_argument("--parameter_tolerance")
-        .default_value(1e-8)
+        .default_value(1e-8f)
         .help("Tolerance for the fit.")
         .scan<'e', float>();
+	program.add_argument("--positive_pulse")
+		.default_value(false)
+		.implicit_value(true)
+		.help("Use flag if SiPM pulse is positive. Default is negative.");
 	
 	program.parse_args(argc, argv);
 	
@@ -76,10 +81,16 @@ int main(int argc, char** argv) {
 	skipChannels = program.get<std::vector<int>>("--skip_channels");
 	saveWaveforms = program.get<bool>("--save_waveforms");
     parameterTolerance = program.get<float>("--parameter_tolerance");
-	DigitiserRun data = ReadWCDataFile(inputFileName);
+	const bool positivePulse = program.get<bool>("--positive_pulse");
+	DigitiserRun data = ReadWCDataFile(inputFileName, positivePulse);
+
+	if (batchNumber < numThreads)
+	{
+		std::cout << "WARNING: Number of batches is less than number of threads. Not all threads will be used." << std::endl;
+	}
  
 	std::shared_ptr<SyncFile> file;
-	bool textOutput = program.get<bool>("--txt-output");
+	const bool textOutput = program.get<bool>("--txt-output");
 	if(!textOutput) {
 	  file = std::make_shared<SyncFile>(outputFileName, binary);
 	} else {
@@ -89,23 +100,38 @@ int main(int argc, char** argv) {
 	Writer writer(file);
 
 	static std::atomic<unsigned long> count{0};
-	std::mutex                        lock;
+	std::mutex                        progressTrackerLock;
+	std::mutex						  meanReducedChiSqLock;
 
-    unsigned int numChannels = 16;
-	std::vector<std::vector<double>> idealWaveforms{numChannels};
-	for (int ch = 0; ch < numChannels; ch++) {
-		if (std::count(skipChannels.begin(), skipChannels.end(), ch)) {
+	// TODO(josh): Implement checking of channels from the data file to ensure the correct number of ideal waveforms are read in.
+	unsigned int numChannels = 16;
+	std::unordered_map<unsigned int, PETemplate> idealWaveforms;
+	idealWaveforms.reserve(numChannels);  // Optional but can help performance
+
+	for (int ch = 0; ch < numChannels; ++ch) {
+		// If ch is in skipChannels, we continue (skip it)
+		if (std::ranges::count(skipChannels, ch) > 0) {
 			continue;
 		}
-		idealWaveforms.at(ch) = readIdealWFs(ch, pdfInternalInterpFactor, pdfDir, pdfNSamples);
+
+		// Otherwise, construct the PETemplate and store it under key = ch
+		idealWaveforms.emplace(
+			ch,
+			PETemplate(ch, pdfInternalInterpFactor, pdfDir, positivePulse)
+		);
 	}
 
-	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(lock),
+	std::thread progressThread(displayProgress, std::reference_wrapper(count), std::reference_wrapper(progressTrackerLock),
 	                           data.getEvents().size());
 
+	// Record current time for timing purposes
+	auto start = std::chrono::high_resolution_clock::now();
+
 	if (numThreads == 1) {
-		batchFitEvents(data.getEvents(), std::reference_wrapper(count), std::reference_wrapper(lock), &idealWaveforms, file);
+		std::cout << "Processing with one thread." << std::endl;
+		batchFitEvents(data.getEvents(), std::reference_wrapper(count), std::reference_wrapper(meanReducedChiSqLock), idealWaveforms, file);
 	} else {
+		std::cout << "Processing with " << numThreads << " threads." << std::endl;
 		// Determining how many events each thread should run over.
 		unsigned int threadRepeatCount[batchNumber];
 		unsigned int threadsWithExtra = data.getEvents().size() % batchNumber;
@@ -123,8 +149,8 @@ int main(int argc, char** argv) {
 
 		unsigned int eventPos = 0;
 		for(int i = 0; i < batchNumber; i++){
-			std::vector passData = slice(data.getEvents(), eventPos, eventPos + threadRepeatCount[i] - 1);
-			pool.push_task(batchFitEvents, passData, std::reference_wrapper(count), std::reference_wrapper(lock), &idealWaveforms,
+			std::vector<DigitiserEvent> passData = slice(data.getEvents(), eventPos, eventPos + threadRepeatCount[i] - 1);
+			pool.push_task(batchFitEvents, passData, std::reference_wrapper(count), std::reference_wrapper(meanReducedChiSqLock), idealWaveforms,
 			               file);
 			eventPos += threadRepeatCount[i];
 		}
@@ -134,6 +160,11 @@ int main(int argc, char** argv) {
 
 	file->closeFile();
 	std::cout << "Mean reduced ChiSq:\t" << meanReducedChiSq << std::endl;
+
+	// Record end time for timing purposes
+	auto end = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> elapsed = end - start;
+	std::cout << "Time taken: " << elapsed.count() << "s" << std::endl;
 
 	return 0;
 }
