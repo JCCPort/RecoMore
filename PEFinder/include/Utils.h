@@ -137,4 +137,8 @@ double logLikelihood(const std::vector<T>& observed,
     return term1 - term2;
 }
 
+std::vector<unsigned int> parseCommaSeparated(const std::string &input);
+
+std::vector<int> parseChannelsFromFile(const std::string &filename);
+
 #endif //RECOMORE_UTILS_H

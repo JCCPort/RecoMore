@@ -86,7 +86,7 @@ To build RecoMore:
 
 To run RecoMore:
 
-```./PEFinder -i <pathToDataFile> --template_dir <pathToIdealPDFsDir> --n_threads <numberOFThreads> --n_batches <numberOfBatches>```
+```./PEFinder -i <pathToDataFile> --template_dir <pathToIdealPDFsDir> --n_threads <numberOFThreads> --num_batches <numberOfBatches>```
 
 For more info run `./PEFinder -h` to get the help output.
 

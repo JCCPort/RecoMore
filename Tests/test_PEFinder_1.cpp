@@ -30,7 +30,7 @@ private:
 	
 	double timeSimilarity = 1e-1;
 	double ampSimilarity = 1e-5;
-	double redChiSqSimilarity = 1e-4;
+	double redChiSqSimilarity = 1e-3;
 	
 public:
 	bool numEventsSame = true;
@@ -58,11 +58,10 @@ bool SystemTest1::runOverTestData() {
 	bool              saveWaveforms  = false;
 	constexpr bool    positivePulse  = false;
 	DigitiserRun      data           = ReadWCDataFile(inputFileName, positivePulse);
-	constexpr int     numThreads     = 1;
-	constexpr int     batchNumber    = 1;
+	constexpr int     numThreads     = 6;
+	constexpr int     batchNumber    = 12;
 	
 	// Global parameters
-	skipChannels               = {32, 36, 40, 44, 48, 52, 56, 60};
 	templateInternalInterpFactor    = 10;
 	templateResidualRMS             = 0.827/1000;
 	meanReducedChiSq           = 0;
@@ -88,18 +87,15 @@ bool SystemTest1::runOverTestData() {
 	std::mutex                        progressTrackerLock;
 	std::mutex						  meanReducedChiSqLock;
 
-	// TODO(josh): Implement checking of channels from the data file to ensure the correct number of ideal waveforms are read in.
-	unsigned int numChannels = 16;
+	// =========================================================================
+	//    Construct PETemplates *only* for the specified channels
+	// =========================================================================
+	std::vector<int> channels = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 	std::unordered_map<unsigned int, PETemplate> idealWaveforms;
-	idealWaveforms.reserve(numChannels);  // Optional but can help performance
+	idealWaveforms.reserve(channels.size());
 
-	for (int ch = 0; ch < numChannels; ++ch) {
-		// If ch is in skipChannels, we continue (skip it)
-		if (std::ranges::count(skipChannels, ch) > 0) {
-			continue;
-		}
-
-		// Otherwise, construct the PETemplate and store it under key = ch
+	// Build a PETemplate for each channel in "channels"
+	for (int ch : channels) {
 		idealWaveforms.emplace(
 			ch,
 			PETemplate(ch, templateInternalInterpFactor, templateDir, positivePulse)

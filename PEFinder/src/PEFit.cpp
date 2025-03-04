@@ -279,9 +279,6 @@ void fitEvent(const DigitiserEvent* event, const std::unordered_map<unsigned int
 
 		FitChannel         chFit{};
 		const unsigned int ch = channel.ID;
-		if (std::ranges::count(skipChannels, ch)) {
-			continue;
-		}
 		chFit.ID = ch;
 
 		constexpr float    preSigWindowTime = 18.f; // ns. This is the time window before the signal that is used to calculate the noise level.

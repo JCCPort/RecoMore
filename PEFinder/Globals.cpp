@@ -1,6 +1,5 @@
 #include "Globals.h"
 
-std::vector<int>    skipChannels{32, 36, 40, 44, 48, 52, 56, 60, 15};
 unsigned int        templateInternalInterpFactor = 10;
 float               templateResidualRMS     = 0.827/1000;
 double              meanReducedChiSq   = 0;

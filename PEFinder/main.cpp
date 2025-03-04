@@ -45,11 +45,6 @@ int main(int argc, char** argv) {
 		.help("Number of batches to split run into. Smaller values will reduce overhead, "
 			  "but increase the likelihood of one thread hanging.")
 		.scan<'i', int>();
-	program.add_argument("--skip_channels")
-		.nargs(argparse::nargs_pattern::any)
-		.default_value(skipChannels)
-		.scan<'i', int>()
-		.help("Channels to skip. Space separated.");
 	program.add_argument("--save_waveforms")
 		.default_value(false)
 		.help("Save waveforms with initial and final fits to csv files.");
@@ -63,11 +58,26 @@ int main(int argc, char** argv) {
 		.help("Use flag if SiPM pulse is positive. Default is negative.");
 	program.add_argument("--sample_spacing")
 		.default_value(0.3125f)
-		.help("Sample spacing in ns.");
+		.help("Sample spacing in data to process in ns.");
+
+	// =========================================================================
+	//    Mutually exclusive group for channels:
+	//    Either provide a list of channels or a file containing them
+	// =========================================================================
+	auto &channelsGroup = program.add_mutually_exclusive_group(/* required= */ true);
+
+	channelsGroup.add_argument("--channels-list")
+				 .help("Space-separated list of channel numbers to process.")
+				 .nargs(argparse::nargs_pattern::any)
+				 .scan<'i', int>();
+
+	channelsGroup.add_argument("--channels-file")
+				 .help("Path to a file containing channel numbers.");
+	// =========================================================================
 	
 	program.parse_args(argc, argv);
 	
-	std::string inputFileName = program.get<std::string>("-i");
+	auto inputFileName = program.get<std::string>("-i");
 	std::string outputFileName;
 	if(program.is_used("-o")){
 		outputFileName = program.get<std::string>("-o");
@@ -82,17 +92,30 @@ int main(int argc, char** argv) {
 	auto templateDir = program.get<std::string>("--template_dir");
 	unsigned int numThreads = program.get<int>("--n_threads");
 	unsigned int batchNumber = program.get<int>("--num_batches");
-	skipChannels = program.get<std::vector<int>>("--skip_channels");
 	saveWaveforms = program.get<bool>("--save_waveforms");
     parameterTolerance = program.get<float>("--parameter_tolerance");
 	const bool positivePulse = program.get<bool>("--positive_pulse");
-	DigitiserRun data = ReadWCDataFile(inputFileName, positivePulse);
-	const float sampleSpacing = program.get<float>("--sample_spacing");
+	const auto sampleSpacing = program.get<float>("--sample_spacing");
+
+
+	// =========================================================================
+	//    Determine channels to use
+	// =========================================================================
+	std::vector<int> channels;
+	if (program.is_used("--channels-list")) {
+		channels = program.get<std::vector<int>>("--channels-list");
+	} else {
+		// Must be from --channels-file
+		auto channelsPath = program.get<std::string>("--channels-file");
+		channels = parseChannelsFromFile(channelsPath);
+	}
 
 	if (batchNumber < numThreads)
 	{
 		std::cout << "WARNING: Number of batches is less than number of threads. Not all threads will be used." << std::endl;
 	}
+
+	DigitiserRun data = ReadWCDataFile(inputFileName, positivePulse);
 
 	std::shared_ptr<SyncFile> file;
 	if(const bool textOutput = program.get<bool>("--txt-output"); !textOutput) {
@@ -107,18 +130,14 @@ int main(int argc, char** argv) {
 	std::mutex                        progressTrackerLock;
 	std::mutex						  meanReducedChiSqLock;
 
-	// TODO(josh): Implement checking of channels from the data file to ensure the correct number of ideal waveforms are read in.
-	unsigned int numChannels = 16;
+	// =========================================================================
+	//    Construct PETemplates *only* for the specified channels
+	// =========================================================================
 	std::unordered_map<unsigned int, PETemplate> idealWaveforms;
-	idealWaveforms.reserve(numChannels);  // Optional but can help performance
+	idealWaveforms.reserve(channels.size());
 
-	for (int ch = 0; ch < numChannels; ++ch) {
-		// If ch is in skipChannels, we continue (skip it)
-		if (std::ranges::count(skipChannels, ch) > 0) {
-			continue;
-		}
-
-		// Otherwise, construct the PETemplate and store it under key = ch
+	// Build a PETemplate for each channel in "channels"
+	for (int ch : channels) {
 		idealWaveforms.emplace(
 			ch,
 			PETemplate(ch, templateInternalInterpFactor, templateDir, positivePulse)

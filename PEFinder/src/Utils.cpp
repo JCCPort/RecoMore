@@ -1,3 +1,4 @@
+#include <fstream>
 #ifndef RECOMORE_UTILS_H
 #define RECOMORE_UTILS_H
 
@@ -51,5 +52,49 @@ std::string defaultOutputName(std::string inputName){
 }
 
 
-#endif //RECOMORE_UTILS_H
+std::vector<unsigned int> parseCommaSeparated(const std::string &input) {
+	std::vector<unsigned int> result;
+	std::string token;
+	for (char c : input) {
+		if (c == ',') {
+			if (!token.empty()) {
+				result.push_back(static_cast<unsigned int>(std::stoul(token)));
+				token.clear();
+			}
+		} else {
+			token.push_back(c);
+		}
+	}
+	// Push last token if any
+	if (!token.empty()) {
+		result.push_back(static_cast<unsigned int>(std::stoul(token)));
+	}
+	return result;
+}
 
+
+std::vector<int> parseChannelsFromFile(const std::string &filename) {
+	std::ifstream fin(filename);
+	if (!fin) {
+		throw std::runtime_error("Failed to open channels file: " + filename);
+	}
+
+	std::vector<int> result;
+	std::string line;
+	while (std::getline(fin, line)) {
+		// Allow splitting by commas or whitespace:
+		std::stringstream ss(line);
+		std::string token;
+		while (std::getline(ss, token, ',')) {
+			// Each 'token' may still have whitespace:
+			std::stringstream inner(token);
+			int ch;
+			while (inner >> ch) {
+				result.push_back(ch);
+			}
+		}
+	}
+	return result;
+}
+
+#endif //RECOMORE_UTILS_H
